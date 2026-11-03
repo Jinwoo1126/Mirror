@@ -12,6 +12,58 @@ three paths. They differ in how automatic they are and in which services support
 Which services support custom base URLs, remote MCP or hooks changes often. Check each
 service's own documentation before you rely on one.
 
+## With the containers (the default setup)
+
+`docker compose up -d` starts one app container per person. Nothing else is needed for
+hooks. MCP, the gateway and the plain HTTP endpoints go through an **edge** container,
+one per person with its own token. It only starts when you ask for it.
+
+| | Persona A | Persona B |
+|---|---|---|
+| App and UI (no sign-in, keep on this machine) | `http://127.0.0.1:8011` | `http://127.0.0.1:8012` |
+| Edge (needs its token) | `http://127.0.0.1:8111` | `http://127.0.0.1:8112` |
+| Token variable in `.env` | `MIRROR_TOKEN_A` | `MIRROR_TOKEN_B` |
+
+```sh
+echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env     # once per person you want to expose
+docker compose --profile edge up -d
+```
+
+The edge refuses to start without its token, so it can never run open. Never publish the
+app ports (8011, 8012): they have no sign-in.
+
+**What the edge offers** (all need `Authorization: Bearer <token>`):
+
+| Address | For |
+|---|---|
+| `/mcp` | MCP clients. Tools: `mirror_context`, `mirror_scenario`, `mirror_remember`, `mirror_feedback`. |
+| `/v1/context` | Any agent that can call an HTTP API. `POST {"request": "...", "budget": 6}` returns `{"items": [...], "scenarios": [...]}`. |
+| `/v1/remember` | `POST {"text": "..."}` saves something the person said. 8 to 2000 characters. |
+| `/v1/chat/completions` | Tools that let you set an OpenAI-compatible base URL. Set `MIRROR_UPSTREAM_BASE` and `MIRROR_UPSTREAM_KEY` in `.env`. Not tested against a live upstream. |
+
+```sh
+curl -s http://127.0.0.1:8111/v1/context \
+  -H "Authorization: Bearer $MIRROR_TOKEN_A" -H "Content-Type: application/json" \
+  -d '{"request": "I am tired and need to pick dinner"}'
+```
+
+**Hooks** talk to the app directly and need no edge or token:
+
+```sh
+python3 integrations/claude_code/mirror_hook.py --install --url http://127.0.0.1:8011                    # Claude Code
+python3 integrations/claude_code/mirror_hook.py --install --target muse --url http://127.0.0.1:8011    # Muse Code
+```
+
+**Muse Code over MCP:** `python3 integrations/claude_code/mirror_hook.py --print-mcp http://127.0.0.1:8111/mcp --token-file <file holding MIRROR_TOKEN_A>`,
+then add the printed entry to `~/.config/muse/settings.json`.
+
+To reach these from your other devices, set `MIRROR_BIND` and `MIRROR_HOST` in `.env` to this
+machine's private address (for example its tailscale address). Everyone on that network can then
+reach the app ports too, which have no sign-in.
+
+The sections below describe the same pieces started by hand (the edge on port 8100, the app on
+8000). The ideas are the same; only the addresses differ.
+
 ## Architecture
 
 The main Mirror app (UI and API) owns the database and stays on your private network.
@@ -81,6 +133,33 @@ Services that run in the cloud need a public HTTPS address. A static bearer toke
 be accepted by every connector, and OAuth is not supported yet. If you expose the edge
 server (for example with Tailscale Funnel), expose only the edge port, never the main app,
 and treat the token like a password.
+
+## The Muse agent (muse.ai)
+
+This is Meta's personal agent, not Muse Code. It is not set up or tested here, and the notes
+below separate what Meta's public pages say from what is still unknown. Checked November 2026.
+
+**What Meta says.** The agent runs in a cloud VM. It has built-in connectors (email, calendar,
+Meta apps) and can write its own connectors for services that have an API or a CLI. Its network
+traffic goes through a proxy that checks the destination and blocks private network addresses.
+
+**What that means for Mirror.**
+- A cloud agent cannot reach `127.0.0.1` or a tailscale address. Those are private. To try it
+  you need a public HTTPS address in front of an **edge** container: a tunnel such as Cloudflare
+  Tunnel or ngrok pointed at port 8111 (or 8112). Point it at the edge only, never at the app
+  ports.
+- The edge token is then the only thing between the internet and that person's memories. Use a
+  fresh token for the experiment, close the tunnel when you are done, and replace the token after.
+- The endpoint to give the agent is `POST /v1/context` (and `/v1/remember`), with the token in an
+  `Authorization: Bearer` header. If the agent supports MCP connectors, `/mcp` also works.
+
+**Not known.** Whether the consumer product lets users add their own connectors, whether it can
+send an `Authorization` header, and whether it supports MCP. These can only be settled by trying
+with an account. A reasonable first try is to ask the agent to create a connector for
+`https://<your-tunnel>/v1/context` that sends the bearer token and returns the items.
+
+**What leaves your machine** when you do this: the text of each request the agent sends, and the
+memories Mirror returns for it, travel through the tunnel provider and to Meta.
 
 ## What leaves your machine
 

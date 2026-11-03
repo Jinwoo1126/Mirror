@@ -298,6 +298,34 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         return Response(r.content, status_code=r.status_code,
                         media_type=r.headers.get("content-type", "application/json"))
 
+    async def context_endpoint(request):
+        """Plain HTTP for agents that can call an API but not MCP: what Mirror knows that
+        is relevant to a task. Same bearer token as everything else here."""
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "send a JSON body"}, 400)
+        text = str(body.get("request") or "").strip()
+        if not text:
+            return JSONResponse({"error": "request is required"}, 400)
+        budget = body.get("budget", cfg.context_budget)
+        budget = max(1, min(int(budget) if isinstance(budget, int) else cfg.context_budget, 20))
+        items, scenarios = await fetch_context(text)
+        return JSONResponse({"items": items[:budget], "scenarios": scenarios})
+
+    async def remember_endpoint(request):
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "send a JSON body"}, 400)
+        text = str(body.get("text") or "").strip()
+        if not (MIN_CAPTURE_CHARS <= len(text) <= MAX_CAPTURE_CHARS):
+            return JSONResponse({"error": f"text must be {MIN_CAPTURE_CHARS}-"
+                                          f"{MAX_CAPTURE_CHARS} characters"}, 400)
+        return JSONResponse(await remember(text))
+
+    app.router.routes.append(Route("/v1/context", context_endpoint, methods=["POST"]))
+    app.router.routes.append(Route("/v1/remember", remember_endpoint, methods=["POST"]))
     app.router.routes.append(Route("/v1/chat/completions", chat_completions,
                                    methods=["POST"]))
     app.router.routes.append(Route("/v1/models", models, methods=["GET"]))

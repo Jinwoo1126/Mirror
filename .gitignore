@@ -34,7 +34,20 @@ avatar-candidates/
 .claude/
 
 # per-person generated characters (terms for publishing generated images not checked)
-data/*/avatar/
+# generated characters: keep the two fictional demo personas, skip candidates and anyone else's
+data/*/avatar/*
+!data/demo/avatar/avatar.webp
+!data/demo/avatar/avatar.json
+!data/demo/avatar/design.json
+!data/demo2/avatar/avatar.webp
+!data/demo2/avatar/avatar.json
+!data/demo2/avatar/design.json
 
 # Muse Code project-local hook config
 .muse/
+
+# Supabase CLI local state (project link, versions)
+supabase/.temp/
+
+# local secrets for docker compose (META_API_KEY etc.)
+.env

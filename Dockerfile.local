@@ -1,0 +1,26 @@
+# Local Mirror: the single-user app (Kuzu graph on disk, hybrid search). One container per
+# person, with that person's data folder mounted at /data. This is not the hosted image;
+# see Dockerfile for that.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 MIRROR_MODEL_DIR=/models
+
+WORKDIR /app
+COPY pyproject.toml ./
+COPY mirror ./mirror
+# Kuzu's file format is tied to its version: keep this equal to the version that made the
+# databases in data/*/ (see `python -c "import kuzu; print(kuzu.__version__)"`).
+ARG KUZU_VERSION=0.11.3
+RUN pip install . "kuzu==${KUZU_VERSION}"
+
+RUN useradd --create-home --uid 1000 app && mkdir -p /data /models && chown app /data /models
+USER app
+VOLUME ["/data", "/models"]
+
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+  CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/healthz', timeout=4)"
+
+# --db, --avatar-dir and --name come from the compose file, one set per person.
+ENTRYPOINT ["python", "-m", "mirror.app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["--db", "/data/mirror.kuzu"]

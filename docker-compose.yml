@@ -1,0 +1,92 @@
+# Two people, two containers. Each mounts its own data folder, so they never see each
+# other's memories. Start with:  docker compose up -d --build
+#
+#   Persona A  http://127.0.0.1:8011      data/demo
+#   Persona B  http://127.0.0.1:8012      data/demo2
+#
+# There is no sign-in here, so the ports are published on this machine only. To reach them
+# from your other devices (for example over tailscale) set MIRROR_BIND to this machine's
+# tailscale address in .env, and treat everyone on that network as able to read the data.
+#
+# Needs META_API_KEY (put it in .env, which git ignores) to learn from new memories and
+# to write chat answers. Reading what is already there works without it.
+
+x-persona: &persona
+  build:
+    context: .
+    dockerfile: Dockerfile.local
+  image: mirror-local:latest
+  restart: unless-stopped
+  environment: &env
+    META_API_KEY: ${META_API_KEY:-}
+    MIRROR_LLM_TRANSPORT: http
+    MIRROR_EXTRACTOR: spark
+    # The person switcher in the page links the two, by the address a browser can reach.
+    MIRROR_PERSONAS: '[{"name":"Persona A","url":"http://${MIRROR_HOST:-127.0.0.1}:8011"},{"name":"Persona B","url":"http://${MIRROR_HOST:-127.0.0.1}:8012"}]'
+  volumes:
+    - ./data/models:/models
+
+services:
+  persona-a:
+    <<: *persona
+    container_name: mirror-persona-a
+    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "Persona A"]
+    environment:
+      <<: *env
+      MIRROR_PERSONA_NAME: Persona A
+    ports:
+      - "${MIRROR_BIND:-127.0.0.1}:8011:8080"
+    volumes:
+      - ./data/demo:/data
+      - ./data/models:/models
+
+  persona-b:
+    <<: *persona
+    container_name: mirror-persona-b
+    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "Persona B"]
+    environment:
+      <<: *env
+      MIRROR_PERSONA_NAME: Persona B
+    ports:
+      - "${MIRROR_BIND:-127.0.0.1}:8012:8080"
+    volumes:
+      - ./data/demo2:/data
+      - ./data/models:/models
+
+  # Optional front door for tools that speak MCP or an OpenAI-style API (see docs/CONNECT.md).
+  # One per person, each guarded by its own token. Off unless you ask for it:
+  #   echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env
+  #   docker compose --profile edge up -d
+  # With no token set the edge refuses to start, so it can never run open.
+  edge-a:
+    profiles: ["edge"]
+    image: mirror-local:latest
+    container_name: mirror-edge-a
+    entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
+    command: []
+    depends_on:
+      persona-a:
+        condition: service_healthy
+    environment: &edge-env
+      MIRROR_BACKEND: http://persona-a:8080
+      MIRROR_TOKEN: ${MIRROR_TOKEN_A:-}
+      MIRROR_UPSTREAM_BASE: ${MIRROR_UPSTREAM_BASE:-https://api.openai.com/v1}
+      MIRROR_UPSTREAM_KEY: ${MIRROR_UPSTREAM_KEY:-}
+    ports:
+      - "${MIRROR_BIND:-127.0.0.1}:8111:8100"
+
+  edge-b:
+    profiles: ["edge"]
+    image: mirror-local:latest
+    container_name: mirror-edge-b
+    entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
+    command: []
+    depends_on:
+      persona-b:
+        condition: service_healthy
+    environment:
+      <<: *edge-env
+      MIRROR_BACKEND: http://persona-b:8080
+      MIRROR_TOKEN: ${MIRROR_TOKEN_B:-}
+    ports:
+      - "${MIRROR_BIND:-127.0.0.1}:8112:8100"

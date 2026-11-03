@@ -35,6 +35,11 @@ def _jwks() -> jwt.PyJWKClient:
 
 def verify_token(token: str) -> str:
     """Return the user id (uuid string) the token was issued to."""
+    return verify_claims(token)["sub"]
+
+
+def verify_claims(token: str) -> dict:
+    """Check the token and return its claims, with `sub` normalised to a user id string."""
     if not token:
         raise AuthError("missing token")
     secret = os.environ.get("SUPABASE_JWT_SECRET")
@@ -56,9 +61,10 @@ def verify_token(token: str) -> str:
     except jwt.PyJWTError as e:
         raise AuthError(f"invalid token: {e}") from e
     try:
-        return str(uuid.UUID(str(claims["sub"])))
+        claims["sub"] = str(uuid.UUID(str(claims["sub"])))
     except (ValueError, KeyError) as e:
         raise AuthError("token subject is not a user id") from e
+    return claims
 
 
 def bearer(header: str | None) -> str:

@@ -44,7 +44,7 @@ td, th {{ text-align:left; padding:8px 10px; border-top:1px solid var(--line); v
 
 <h2>What Mirror stores about you</h2>
 <ul>
-<li><b>Your account:</b> the identifier and email address given to us by the sign-in you choose (Google, Meta or an email link).</li>
+<li><b>Your account:</b> the identifier and email address given to us by the sign-in you choose (Google, Meta or an email link). If you continue without an account, Mirror creates an anonymous account tied to your browser and stores no email address; clearing your browser's site data makes it unreachable.</li>
 <li><b>What you add:</b> the text of every memory you save, or that a tool you connected saves for you, with its date.</li>
 <li><b>What Mirror works out from it:</b> things, places and situations that appear in your memories, preferences, decision criteria, writing style, and hypotheses (patterns that repeat), each linked to the memories that support it. Hypotheses about relationships and about self-understanding are marked internal-only.</li>
 <li><b>Your feedback:</b> corrections you make, and understandings you delete so they do not come back.</li>

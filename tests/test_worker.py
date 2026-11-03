@@ -187,3 +187,30 @@ def test_lock_key_is_stable_and_fits_a_bigint():
     k = worker._lock_key("11111111-1111-1111-1111-111111111111")
     assert k == worker._lock_key("11111111-1111-1111-1111-111111111111")
     assert 0 <= k < 2**63
+
+
+def test_sample_memories_load_once_into_an_empty_account(env):
+    c, (a, b, _), h = env
+    r = c.post("/api/sample", headers=h[a])
+    assert r.status_code == 202 and len(r.json()["job_ids"]) == 8
+    assert drain(ex.MockExtractor()) == 8
+    assert c.get("/api/status", headers=h[a]).json()["counts"]["Observation"] == 8
+    assert c.post("/api/sample", headers=h[a]).status_code == 409        # no longer empty
+    assert c.get("/api/status", headers=h[b]).json()["counts"]["Observation"] == 0   # not B's
+
+
+def test_sample_loading_uses_the_shared_anonymous_budget(env, monkeypatch):
+    from tests.test_hosted import anon_token
+    c, (a, b, _), h = env
+    monkeypatch.setenv("MIRROR_ANON_COSTLY_PER_HOUR", "10")
+    first = c.post("/api/sample", headers={"Authorization": "Bearer " + anon_token(a)})
+    second = c.post("/api/sample", headers={"Authorization": "Bearer " + anon_token(b)})
+    assert first.status_code == 202                  # 8 of the 10
+    assert second.status_code == 429                 # 8 more would exceed it
+    assert c.get("/api/status", headers=h[b]).json()["counts"]["Observation"] == 0
+
+
+def test_samples_are_labelled_as_not_the_users_own():
+    from mirror import app as app_mod
+    html = (app_mod.STATIC_DIR / "app.html").read_text(encoding="utf-8")
+    assert "They are not yours" in html and "Load example memories" in html

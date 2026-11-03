@@ -1,5 +1,5 @@
-# Fly.io app config. Set the app name with `fly launch --no-deploy --copy-config`.
-app = "mirror-app"
+# Fly.io app config.
+app = "mirror-jinwoo1126"
 primary_region = "nrt"          # Tokyo, closest Fly region to Korea
 
 [build]

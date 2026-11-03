@@ -359,3 +359,92 @@ def test_privacy_notice_names_every_outside_host_the_page_loads_from():
     named = {"cdn.jsdelivr.net": "jsdelivr", "unpkg.com": "unpkg"}
     assert hosts <= set(named), f"new outside host in the page: {hosts - set(named)}"
     assert all(word in notice for word in named.values())
+
+
+# -- readiness ------------------------------------------------------------------------
+
+def test_readyz_locally_is_ok(monkeypatch):
+    monkeypatch.delenv("MIRROR_HOSTED", raising=False)
+    assert TestClient(app_mod.app).get("/readyz").json() == {"ok": True, "hosted": False}
+
+
+@needs_pg
+def test_readyz_checks_the_database_and_never_leaks_the_connection_string(hosted_env, monkeypatch):
+    c = TestClient(app_mod.app)
+    assert c.get("/readyz").json() == {"ok": True, "db": True}
+    monkeypatch.setenv("MIRROR_PG_DSN", "postgresql://postgres:s3cr3t-pw@127.0.0.1:1/mirror")
+    r = c.get("/readyz")
+    assert r.status_code == 503 and r.json()["db"] is False
+    assert "s3cr3t" not in r.text and "127.0.0.1" not in r.text
+    monkeypatch.delenv("MIRROR_PG_DSN")
+    assert c.get("/readyz").status_code == 503
+
+
+def test_login_screen_hides_providers_that_are_switched_off():
+    html = (app_mod.STATIC_DIR / "app.html").read_text(encoding="utf-8")
+    assert "/auth/v1/settings" in html                       # asks Supabase what is enabled
+    for el in ('id="g-google"', 'id="g-meta"', 'id="g-or"', 'id="g-email"', 'id="g-mail"'):
+        assert el in html
+    assert "[hidden] { display: none !important; }" in html   # so hidden beats .btn's display
+
+
+def test_login_screen_explains_a_failed_sign_in_link():
+    html = (app_mod.STATIC_DIR / "app.html").read_text(encoding="utf-8")
+    assert "error_description" in html and "otp_expired" in html
+
+
+def test_the_address_is_left_alone_while_returning_from_a_sign_in_link():
+    """A magic link returns with the session in the address (#access_token=...). If the tab
+    router rewrote it to #chat first, the session was lost and the login screen came back."""
+    html = (app_mod.STATIC_DIR / "app.html").read_text(encoding="utf-8")
+    assert "a.returning =" in html and "access_token|refresh_token|error" in html
+    assert "if (!AUTH.returning)" in html            # the router respects it
+    assert html.index("a.returning =") < html.index("function showTab")
+
+
+def test_the_page_is_revalidated_on_every_visit_so_deploys_take_effect():
+    r = TestClient(app_mod.app).get("/")
+    assert r.status_code == 200 and r.headers["cache-control"] == "no-cache"
+
+
+# -- anonymous (trial) accounts ---------------------------------------------------------
+
+def test_verify_claims_exposes_the_anonymous_flag(hosted_env):
+    claims = auth_mod.verify_claims(jwt.encode(
+        {"sub": UID, "aud": "authenticated", "exp": int(time.time()) + 60, "is_anonymous": True},
+        SECRET, algorithm="HS256"))
+    assert claims["sub"] == UID and claims["is_anonymous"] is True
+    assert auth_mod.verify_token(make_token(UID)) == UID          # old contract unchanged
+
+
+def anon_token(uid):
+    return jwt.encode({"sub": uid, "aud": "authenticated", "exp": int(time.time()) + 600,
+                       "is_anonymous": True}, SECRET, algorithm="HS256")
+
+
+@needs_pg
+def test_anonymous_accounts_share_a_global_cap_on_costly_calls(hosted_env, monkeypatch):
+    monkeypatch.setenv("MIRROR_ANON_COSTLY_PER_HOUR", "3")
+    monkeypatch.setenv("MIRROR_RATE_COSTLY", "1000")
+    app_mod._limiter.hits.clear()
+    users = [new_pg_user(PG_DSN) for _ in range(5)]
+    try:
+        c = TestClient(app_mod.app)
+        codes = [c.post("/api/memories", json={"text": "I plan the night before."},
+                        headers={"Authorization": "Bearer " + anon_token(u)}).status_code
+                 for u in users]
+        assert codes == [202, 202, 202, 429, 429]        # five different anonymous users, one budget
+        signed_in = c.post("/api/memories", json={"text": "I plan the night before."},
+                           headers={"Authorization": "Bearer " + make_token(users[0])})
+        assert signed_in.status_code == 202              # a real account is not affected
+        assert c.get("/api/status", headers={"Authorization": "Bearer " + anon_token(users[3])}).status_code == 200
+    finally:
+        app_mod._limiter.hits.clear()
+        for u in users:
+            drop_pg_user(PG_DSN, u)
+
+
+def test_guest_button_appears_only_when_supabase_allows_anonymous_sign_in():
+    html = (app_mod.STATIC_DIR / "app.html").read_text(encoding="utf-8")
+    assert 'id="g-guest"' in html and "signInAnonymously" in html
+    assert "ext.anonymous_users !== true" in html

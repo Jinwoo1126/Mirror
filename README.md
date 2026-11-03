@@ -1,150 +1,195 @@
-# Mirror — 개인 이해 에이전트 (P1–P4 전체 구현)
+# Mirror
 
-평소 쓰는 AI 에이전트 옆에 붙는 이해 모듈. 대화·선택·정정을 받아
-"나"에 대한 시간축 지식 그래프를 갱신하고, 요청이 오면 관련 이해와
-사용 제한을 돌려준다. 전체 설계는 구축 계획 문서
-(`Mirror 구축 계획 — 동적 그래프·온톨로지 기반 개인 이해 에이전트.md`) 참조.
+**A personal-understanding agent that sits next to the AI tools you already use.**
+It keeps what it learns about you as a time-aware knowledge graph, shows it back to you as a map
+of your own body, and hands the relevant parts to other AI services when you ask it to.
 
-구현 범위: P1 그래프 MVP(수집·추출·이중 시간 저장·MCP·채점),
-P2 가설 엔진(승격·주간점검·야간통합·라우터), P3 비교 실험(리플레이·A/M1/M2),
-P4 제안·UI(시뮬레이터·개입 정책·주간 리포트·이해 보기 화면),
-실사용 지능(BM25+임베딩 하이브리드 검색, MiroFish식 동적 관계·엔티티 요약,
-personal.ai식 채팅 우선 로컬 웹앱).
+<p align="center">
+  <img src="docs/media/body-map.gif" alt="Tapping Brain, Hands and Heart flies into each region of the body map" width="860">
+</p>
 
-## 구성
+Mirror is not a diary. You tell it what happened, in your own words. It works out the things
+that repeat (what you reach for when you are tired, how you like documents written, what you
+do under a deadline), keeps the evidence next to each one, and lets you say "that is wrong".
+Nothing it shows you is a verdict about your personality: every claim comes with the memories
+behind it, and you can correct, suppress or delete it.
+
+## What you see
+
+| | |
+|---|---|
+| <img src="docs/media/body-map-persona-a.jpg" alt="Persona A body map"> | <img src="docs/media/body-map-persona-b.jpg" alt="Persona B body map"> |
+| **Persona A**, who likes routine. Everything Mirror knows is sorted by the part of the body it belongs to: the brain thinks and chooses, the ears listen, the mouth eats, the hands write and make. Tap a part to fly in. | **Persona B**, the opposite: spontaneous, social, drawn to novelty. Same app, a different person, a different character, built from that person's own profile. |
+
+| | |
+|---|---|
+| <img src="docs/media/hypotheses.jpg" alt="Hypotheses with evidence and counter-examples"> | <img src="docs/media/scenarios.jpg" alt="Fourteen everyday scenarios"> |
+| **Hypotheses.** Each pattern lists the memories that support it and the ones that contradict it. Mark it Correct, Wrong or Don't use. | **Scenarios.** Fourteen everyday tasks (write a document, pick music, plan a trip, review code, work with someone) helped by what Mirror knows. A hook can fire one automatically. |
+
+<p align="center"><img src="docs/media/graph.jpg" alt="Knowledge graph of memories, things, situations and hypotheses" width="720"></p>
+
+The two characters are fictional demo people, drawn from their own profiles. Their memories are in
+`data/demo/` and `data/demo2/`.
+
+## Quick start
+
+One container per person. Each mounts only its own data folder, so people never see each other's
+memories.
+
+```sh
+echo 'META_API_KEY=...' > .env        # to learn from new memories and write answers. Git ignores .env
+docker compose up -d --build
+
+# Persona A   http://127.0.0.1:8011     data/demo
+# Persona B   http://127.0.0.1:8012     data/demo2
+docker compose ps                       # open it once the status is healthy
+docker compose down                     # stop. Your data stays in data/
+```
+
+- You can **read everything that is already there without a key**: memories, profile, body map,
+  hypotheses. Only learning from a new memory and writing chat answers need `META_API_KEY`.
+- **There is no sign-in.** The ports are published on this machine only (`127.0.0.1`). To reach them
+  from your other devices, for example over tailscale, set `MIRROR_BIND` and `MIRROR_HOST` in `.env`
+  to this machine's private address, and assume everyone on that network can read the data.
+- **Only one process may open a database file** (Kuzu allows one). Do not run
+  `python -m mirror.app` on the same `data/demo` while its container is up.
+- **Ports 8011 and 8012** avoid 8001 and 8002, which other containers on a developer machine often hold.
+- **Starting from a fresh clone** is fine: the demo databases are rebuilt from the observations
+  (needs `META_API_KEY`, takes a few minutes):
+  ```sh
+  docker compose run --rm --entrypoint python persona-a -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
+  docker compose run --rm --entrypoint python persona-b -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
+  ```
+- **To add a person**, copy one service in `docker-compose.yml`, change the port and the `data/<folder>`,
+  and add a line to `MIRROR_PERSONAS` (the chips that switch between people).
+- Kuzu's file format is tied to its version. It must match the version that wrote the databases
+  (`KUZU_VERSION` in `Dockerfile.local`, currently 0.11.3).
+- The embedding model is shared from `data/models` as `/models`. If it is missing it is downloaded on
+  first run (about 470 MB).
+
+## Connect it to other AI services
+
+| How | What you need | Notes |
+|---|---|---|
+| **Hooks** for Claude Code and Muse Code | Nothing | The simplest, and the one checked end to end. Every prompt gets the relevant memories added, and unrelated prompts get nothing. |
+| **MCP** (`/mcp`), **plain HTTP** (`/v1/context`, `/v1/remember`), an **OpenAI-compatible gateway** | An edge container and a token | `echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env`, then `docker compose --profile edge up -d`. Edges listen on 8111 (A) and 8112 (B). |
+| **The Muse agent** (muse.ai) | A public HTTPS address and an edge token | It is a cloud service, so it cannot reach a local address. Needs a tunnel. Not verified. See `docs/CONNECT.md`. |
+
+The app ports (8011, 8012) have no sign-in. Only the edge should ever be exposed.
+
+### Hooks
+
+No token is needed. From the project you want to use it in:
+
+```sh
+python integrations/claude_code/mirror_hook.py --install --target muse --url http://127.0.0.1:8011
+# Claude Code: --target claude (the default). For the other person, use port 8012.
+```
+
+Full details, the MCP and gateway setup and the cloud-agent notes are in [`docs/CONNECT.md`](docs/CONNECT.md).
+
+## Principles
+
+- **No flat statements about you.** An interpretation is only ever a hypothesis node that carries
+  conditions, counter-examples and alternatives.
+- **No edge without evidence.** Every edge except `USED_IN` names the observation that supports it.
+- **Two kinds of time.** `valid_*` is when something was true in the world; `recorded_at` is when Mirror
+  learned it. Queries can be made `as_of` a moment, which blocks information from the future.
+- **A failure changes nothing.** `observe`, `control` and `retrieve` leave the graph as it was and say why.
+- **Delete and suppress take effect at once**, and a block list stops a deleted understanding from coming back.
+- **Some hypotheses never leave Mirror.** Relationship and self-understanding patterns are marked
+  `internal_only` and are left out of anything shown to other tools or used to draw the character.
+- **Extraction is done by a language model only.** The rule-based `MockExtractor` exists for tests.
+  If no model is available Mirror says so instead of guessing with rules.
+
+## How it works
+
+```
+ what you say ──► observe ──► extract (LLM) ──► validate ──► graph (Kuzu, two kinds of time)
+                                                               │
+ other AI tools ◄── hook / MCP / HTTP / gateway ◄── retrieve ◄─┘   hybrid search: BM25 + embeddings (RRF)
+                         ▲                              ▲
+                         └──── edge (token) ────────────┘          hypotheses are promoted after
+                                                                    2 distinct days with no contradiction
+```
 
 ```
 mirror/
-  schema.py store.py          온톨로지 스키마 + Kuzu 이중 시간 저장소
-  llm.py extract.py           LLM 호출 헬퍼 + 추출기(spark/Muse/ollama)
-  observe.py control.py       관찰 수집 + 조회·정정·중지·삭제·재허용
-  retrieve.py                 관련 이해 조회 (+options decision 모드)
-  hypotheses.py               승격·주간 점검·야간 통합
-  router.py assistant.py      의도·스타일 라우터 + 어시스턴트 배선
-  simulate.py                 관점 시뮬레이터 (경쟁 가설 3~5개)
-  agents.py replay.py         A/M1/M2 에이전트 + 리플레이 하네스
-  policy.py report.py         개입 정책 0~3단계 + 주간 변경 리포트
-  ingest.py eval_precision.py 일괄 수집 + 추출 정밀도 채점
-  ui_export.py server.py      UI 내보내기 + MCP 서버
-  vstore.py bm25.py search.py 로컬 임베딩 + BM25 + 하이브리드 검색(RRF)
-  app.py static/app.html      웹앱 (채팅·기억·그래프·가설·관계·리포트·Connect)
-  pg_store.py auth.py         호스팅: Postgres 저장소(사용자별 RLS) + Supabase 토큰 검증
-  tokens.py worker.py         호스팅: 개인 API 토큰 + 백그라운드 학습 워커
-  privacy.py edge.py          호스팅: 개인정보 처리방침 페이지 + MCP/게이트웨이(다중 사용자 모드)
-supabase/                        마이그레이션(스키마·RLS·토큰·작업 큐) + 로컬 테스트용 auth 스텁
-Dockerfile fly.toml              호스팅 배포 파일 (Fly.io)
-data/sample_observations.jsonl   샘플 관찰 8건
-eval/gold_observations.jsonl     손작성 정답 트리플 4장면
-eval/dj_episodes.jsonl           DJ 선택 에피소드 10건 (리플레이용)
-ui/index.html                    이해 보기 화면 (정적 페이지)
-tests/                           pytest 커밋 테스트 (단위+통합)
+  schema.py store.py          ontology and the Kuzu two-time store
+  llm.py extract.py           model calls and the extractors (spark, Claude, ollama)
+  observe.py control.py       taking in observations; query, correct, suppress, delete, re-allow
+  retrieve.py                 relevant understanding for a request
+  hypotheses.py               promotion, weekly review, nightly consolidation
+  router.py assistant.py      intent and style routing
+  simulate.py                 competing hypotheses for a decision
+  agents.py replay.py         A / M1 / M2 agents and the replay harness
+  policy.py report.py         intervention levels 0-3 and the weekly change report
+  ingest.py eval_precision.py bulk intake and extraction scoring
+  vstore.py bm25.py search.py local embeddings, BM25 and hybrid search
+  constellation.py            the body map
+  scenarios.py                the fourteen scenarios
+  avatar_gen.py               the character, generated from a profile
+  edge.py                     MCP, plain HTTP and the OpenAI-compatible gateway
+  app.py static/app.html      the web app
+  pg_store.py auth.py tokens.py worker.py privacy.py    the hosted version (see below)
+integrations/claude_code/     the hook for Claude Code and Muse Code, and a Muse Code skill
+supabase/                     migrations for the hosted version
+Dockerfile.local docker-compose.yml     the containers above
+data/demo/ data/demo2/        two fictional people: observations, a ready database, their characters
+docs/                         CONNECT.md, AVATAR.md, DEPLOY.md, media/
+eval/                         scoring guide and recorded results
+tests/                        unit and integration tests
 ```
 
-> 개인 일기 성격의 샘플(`data/sample_observations.jsonl`, `eval/gold_observations.jsonl`,
-> `eval/dj_episodes.jsonl`)과 생성된 `mirror-results.html`은 레포에 포함하지 않는다.
-> 같은 형식의 JSONL을 직접 만들어 쓰면 된다. 채점 형식은 `eval/GUIDELINE.md`,
-> 측정 기록은 `eval/RESULTS.md` 참조.
+Personal sample data and generated reports are not in the repository. Bring your own JSONL in the
+same format as `data/demo/persona_observations.jsonl`. The scoring format is in `eval/GUIDELINE.md` and
+the recorded measurements are in `eval/RESULTS.md`.
 
-> 추출은 LLM 추출기만 쓴다. 규칙 기반 `MockExtractor`는 테스트 전용이고, LLM을 못 쓰면
-> 규칙으로 대신하지 않고 실패를 알린다. spark는 `muse` 로그인 또는 `META_API_KEY`가 필요하다.
-
-> Connecting other AI services (gateway, remote MCP, hooks): see `docs/CONNECT.md`.
-> Using your own character image for the body map: see `docs/AVATAR.md`.
-> Running it as a hosted multi-user service (Supabase + Fly.io): see `docs/DEPLOY.md`.
-
-## 설치
+## Run it without containers
 
 ```sh
 uv venv --python 3.11
 uv pip install -e '.[test]'
+source .venv/bin/activate
 ```
 
-Claude/Ollama 추출기를 쓰려면 `.[Muse]` / `.[ollama]`, Postgres 호스팅 모드를 쓰려면 `.[hosted]` 추가 설치.
-Spark 추출기는 로그인된 `muse` CLI를 사용 (`muse-spark-1.3` 기본).
-
-## 사용
+Add `.[Muse]` or `.[ollama]` for those extractors and `.[hosted]` for the Postgres version. The `spark`
+extractor uses a signed-in `muse` CLI (`muse-spark-1.3` by default) or `META_API_KEY`.
 
 ```sh
-source .venv/bin/activate
+# take in observations (add --dry-run to see what would be extracted without saving)
+python -m mirror.ingest data/demo/persona_observations.jsonl --db data/local/mirror.kuzu
 
-# 1. 일괄 수집 (샘플 8건)
-python -m mirror.ingest data/sample_observations.jsonl --db data/local/mirror.kuzu
+# score extraction against a gold set; counts are reported as they are
+python -m mirror.eval_precision eval/gold_heldout3.jsonl --extractor spark
 
-# 추출만 확인 (기록 없음)
-python -m mirror.ingest data/sample_observations.jsonl --dry-run
+# the web app, at http://127.0.0.1:8000
+python -m mirror.app --db data/local/mirror.kuzu --port 8000
 
-# 2. 추출 정밀도 채점 (정답셋 기준, 건수 그대로 보고)
-python -m mirror.eval_precision eval/gold_observations.jsonl --extractor spark
-
-# 3. MCP 서버 (Claude 등 호스트에 연결)
+# an MCP server that runs next to a client such as Claude Code or Muse Code
 MIRROR_DB=data/local/mirror.kuzu python -m mirror.server
 
-# 4. 비교 실험 (A vs M1 vs M2, 시간순 리플레이)
-python -m mirror.replay eval/dj_episodes.jsonl
-
-# 5. 주기 작업 (야간 통합·주간 점검은 아래 함수로 스케줄러에 연결)
+# the scheduled jobs
 python -c "from mirror.store import MirrorStore; from mirror import hypotheses as H
 st = MirrorStore('data/local/mirror.kuzu'); print(H.nightly_maintenance(st)); print(H.weekly_review(st))"
 
-# 6. 이해 보기 화면 내보내기 → ui/index.html을 브라우저로 열기
-python -m mirror.ui_export --db data/local/mirror.kuzu --out ui/mirror-graph.json
-
-# 7. 테스트 (단위+통합). Postgres 테스트는 DSN이 있을 때만 돌고 없으면 건너뛴다
+# tests. The Postgres ones run only when a database is given, and are skipped otherwise
 python -m pytest
-# Postgres 포함 (로컬 컨테이너 띄우는 법은 supabase/README.md)
-MIRROR_TEST_PG_DSN=postgresql://postgres:mirror-test-only@127.0.0.1:54329/mirror python -m pytest
-
-# 8. 로컬 웹앱 실행 → 브라우저에서 http://127.0.0.1:8000 열기
-python -m mirror.app
-# 다른 DB/포트: python -m mirror.app --db data/local/mirror.kuzu --port 8000
+MIRROR_TEST_PG_DSN=postgresql://postgres:mirror-test-only@127.0.0.1:54329/mirror python -m pytest   # see supabase/README.md
 ```
 
-## 호스팅 서비스 (여러 사용자)
+Search is a hybrid of BM25 and a multilingual MiniLM embedding (384 dimensions, local ONNX) fused
+with reciprocal rank fusion. The model is downloaded on first use to `data/models/` (about 470 MB;
+change it with `MIRROR_MODEL_DIR`). Without it Mirror falls back to BM25 only.
 
-같은 앱을 여러 사람이 쓰는 웹 서비스로도 돌릴 수 있다. `MIRROR_HOSTED=1`이면 Kuzu 대신
-Postgres(Supabase)에 사용자별로 저장하고, 모든 `/api/*`는 Supabase 로그인 토큰이 있어야 열린다.
+Chat answers use the first model it finds: `spark`, then Claude, then ollama. With none of them, it
+answers by quoting the matching memories.
 
-- 데이터 격리: 모든 테이블에 `user_id`와 행 수준 보안(RLS). 앱의 쿼리도 사용자 권한 세션에서 돌아서
-  쿼리에 필터가 빠져도 남의 행은 보이지 않는다. 계정을 지우면 데이터도 함께 지워진다.
-- 개인 API 토큰: 웹의 Connect 탭에서 발급·폐기. Claude Code·Muse Code 훅이나 다른 서비스가 로그인
-  없이 쓴다. 해시만 저장하고, 조회·기억 추가 같은 일부 API만 허용한다.
-- 백그라운드 학습: 메모 저장은 바로 응답하고 추출은 워커가 처리한다(재시도, 사용자별 직렬화).
-- 사용자 권리: "Download my data"(JSON 내보내기), "Delete my data", `/privacy` 처리방침.
-- LLM: 서버에서는 `muse` CLI 없이 `META_API_KEY`로 Meta Model API를 HTTP로 호출한다.
+Useful variables: `MIRROR_DB`, `MIRROR_EXTRACTOR` (`spark`, `Muse`, `ollama`; default `spark`),
+`MIRROR_ROUTER` (`mock`, `llm`), `MIRROR_NO_INDEX=1` (plain search), `MIRROR_MODEL_DIR`,
+`META_API_KEY`, `ANTHROPIC_API_KEY`.
 
-상태: 위 코드와 테스트는 끝났고, 로컬 Docker 이미지로 로그인 전후 화면과 토큰·훅 연결까지 확인했다.
-**아직 인터넷에 배포하지 않았다.** Google·Meta 실제 로그인과 Meta API 실호출은 계정과 키가 없어
-검증하지 못했다. 배포 절차와 남은 과제는 `docs/DEPLOY.md`, 로컬 Postgres 테스트는 `supabase/README.md`.
-
-| 환경 변수 | 용도 |
-|---|---|
-| `MIRROR_HOSTED=1` | 호스팅 모드 켜기 |
-| `MIRROR_PG_DSN` | Postgres 연결 문자열 |
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | 브라우저 로그인 설정 (공개해도 되는 값) |
-| `SUPABASE_JWT_SECRET` | 구형 공유 비밀 방식 프로젝트일 때만 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 서버 비밀. 계정 삭제 시 계정까지 제거 (선택) |
-| `META_API_KEY` | LLM 호출 |
-| `MIRROR_OPERATOR_NAME`, `MIRROR_CONTACT_EMAIL` | 처리방침에 표시할 운영자 정보 |
-| `MIRROR_RATE_ALL`, `MIRROR_RATE_COSTLY` | 사용자별 분당 호출 한도 (기본 120, 10) |
-| `MIRROR_WORKER=0` | 웹 프로세스에서 워커 스레드 끄기 (`python -m mirror.worker`로 분리할 때) |
-
-## 실사용 지능
-
-- 하이브리드 검색: BM25 + 다국어 MiniLM 임베딩(384차원, 로컬 ONNX) +
-  RRF 융합. 모델은 첫 실행 시 `data/models/`에 내려받는다(약 470MB,
-  `MIRROR_MODEL_DIR`로 변경 가능). 모델이 없으면 BM25 전용으로 동작한다.
-- 동적 온톨로지(MiroFish식): 고정 구조 뼈대 위에 `RELATED_TO` 관계
-  서술이 어휘로 축적되고(`/api/relations`), 엔티티 요약이 언급과 함께
-  자란다. 관계 추출은 규칙(Mock 최소) + LLM 프롬프트가 담당한다.
-- 웹앱(personal.ai식): 채팅 우선. 저장은 기본 수동(각 메시지 '기억에
-  저장', 자동 토글 지원). 생성 답변은 spark → Claude → ollama 순으로
-  자동 감지하고, 없으면 검색 기반 로컬 답변 + 근거 인용으로 답한다.
-
-주요 환경 변수: `MIRROR_DB`, `MIRROR_EXTRACTOR`(spark/Muse/ollama, 기본 spark),
-`MIRROR_ROUTER`(mock/llm), `MIRROR_NO_INDEX=1`(레거시 검색),
-`MIRROR_MODEL_DIR`, `ANTHROPIC_API_KEY`.
-
-MCP 클라이언트 설정 예 (Claude Code):
+An MCP client entry that runs the server directly:
 
 ```json
 {
@@ -159,12 +204,52 @@ MCP 클라이언트 설정 예 (Claude Code):
 }
 ```
 
-## 원칙 (구축 계획에서 발췌)
+## A hosted, multi-user version (shelved)
 
-- 단정 노드 금지: 해석은 조건·반례·대안을 가진 가설 노드로만 둔다.
-- 근거 없는 엣지 거부: `USED_IN` 제외 모든 엣지에 근거 관찰 ID 필수.
-- 이중 시간: `valid_*`(현실 유효 구간)와 `recorded_at`(안 시점) 분리,
-  `as_of` 조회로 미래 정보 차단.
-- 실패 시 상태 불변: observe/control/retrieve 모두 실패하면 그래프를
-  바꾸지 않고 사유를 반환한다.
-- 삭제·사용 중지 즉시 적용 + 차단 목록으로 재출현 방지.
+The same app can run as a web service for many people. The code is finished and tested, but **it is not
+deployed.** The server was taken down (zero machines; `fly deploy` brings it back) and the Supabase
+project is empty. Two things must be solved before turning it on again: a payment card on the Fly
+account (without one the machine is stopped every five minutes), and putting the database and the
+server in the same region (with the server in Tokyo and the database in Ireland, a single request
+spent over ten seconds waiting on the database).
+
+With `MIRROR_HOSTED=1`, Mirror stores each person's data in Postgres (Supabase) instead of Kuzu and
+every `/api/*` call needs a Supabase sign-in token.
+
+- **Isolation.** Every table has a `user_id` and row level security. The app's own queries run in a
+  session that has the user's rights, so a query that forgot its filter still cannot see another
+  person's rows. Deleting an account deletes its data.
+- **Personal API tokens.** Issued and revoked on the Connect tab so hooks and other services can
+  work without signing in. Only a hash is stored, and a token can read and add memories but nothing else.
+- **Background learning.** Saving a memory answers at once; a worker learns from it, with retries and
+  one job per person at a time.
+- **Your rights.** "Download my data", "Delete my data", and a `/privacy` notice generated from what the code does.
+- **Models.** The server calls the Meta Model API over HTTP with `META_API_KEY`, so it needs no `muse` CLI.
+
+Status: the code and its 362 tests are done. It was deployed once; the server, the database
+connection, the sign-in screen, sending the email link and the Meta API call were all checked, and then it
+was taken down. Not verified: finishing a sign-in through the email link (the email limit was hit),
+Google and Meta sign-in, and a hook against a deployed address. Steps and what is left are in
+[`docs/DEPLOY.md`](docs/DEPLOY.md); running the Postgres tests locally is in `supabase/README.md`.
+
+| Variable | Use |
+|---|---|
+| `MIRROR_HOSTED=1` | Turn the hosted mode on |
+| `MIRROR_PG_DSN` | Postgres connection string |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Browser sign-in settings (safe to be public) |
+| `SUPABASE_JWT_SECRET` | Only for a project that still uses a shared secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | A server secret. Lets "Delete my data" remove the account too (optional) |
+| `META_API_KEY` | Model calls |
+| `MIRROR_OPERATOR_NAME`, `MIRROR_CONTACT_EMAIL` | Who the privacy notice names |
+| `MIRROR_RATE_ALL`, `MIRROR_RATE_COSTLY` | Per-person limits per minute (default 120 and 10) |
+| `MIRROR_WORKER=0` | Turn off the worker thread in web processes (when running `python -m mirror.worker` separately) |
+
+## Built with
+
+- **Muse Spark** through the Meta Model API reads memories and extracts what repeats.
+- **Muse Image** draws the characters. Each one is designed from the person's own profile, with
+  sensitive areas left out.
+- **Muse Code** is a supported client: a hook, an MCP entry and a skill are included.
+- Claude Code is a supported client too, through the same hook.
+- Kuzu for the graph, Starlette for the app, fastembed for local embeddings, Supabase for the hosted version.
+- The ideas of a dynamic ontology and a chat-first memory app come from MiroFish and personal.ai.

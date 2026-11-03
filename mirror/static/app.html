@@ -320,7 +320,9 @@ body.signed-in .acct { display: flex; }
   <p>Your map is private to your account. Only you can see it, and you can delete it at any time.</p>
   <button class="btn primary" id="g-google" type="button">Continue with Google</button>
   <button class="btn" id="g-meta" type="button">Continue with Meta</button>
-  <div class="or">or use email</div>
+  <button class="btn" id="g-guest" type="button" hidden>Continue without an account</button>
+  <p class="fine" id="g-guest-note" hidden>A private trial account is kept in this browser. If you clear this site's data, or open Mirror on another device, you will not see it again.</p>
+  <div class="or" id="g-or">or use email</div>
   <input id="g-email" type="email" autocomplete="email" placeholder="you@example.com" aria-label="Email">
   <button class="btn" id="g-mail" type="button">Email me a sign-in link</button>
   <p class="fine">Mirror stores the text you add and the patterns it works out from it. To do that, the text is sent to an AI provider (Meta) for processing. You can download or delete everything at any time from the menu. <a href="/privacy" target="_blank" rel="noopener">Read the privacy notice</a>.</p>
@@ -435,6 +437,9 @@ body.signed-in .acct { display: flex; }
 <script>
 const AUTH = (() => {
   const a = { hosted: false, token: "", client: null };
+  // Coming back from a sign-in link, the session sits in the address (#access_token=... or ?code=...,
+  // or #error=... when the link failed). Leave the address alone until sign-in has read it.
+  a.returning = /[#&](access_token|refresh_token|error|error_code)=/.test(location.hash) || /[?&]code=/.test(location.search);
   let release; a.ready = new Promise(r => { release = r; });
   a.headers = () => (a.token ? { Authorization: "Bearer " + a.token } : {});
   a.expired = () => { a.token = ""; document.getElementById("gate").hidden = false; document.body.classList.remove("signed-in"); };
@@ -445,19 +450,51 @@ const AUTH = (() => {
     a.token = session.access_token; g("gate").hidden = true; document.body.classList.add("signed-in"); fail(""); release();
   };
   a.init = async () => {
+    try { await a.start(); } finally { a.returning = false; if (a.hosted) { const h = location.hash.slice(1); history.replaceState(null, "", "#" + (h && !/=/.test(h) ? h : "chat")); } }
+  };
+  a.start = async () => {
     let cfg = { hosted: false };
     try { cfg = await (await fetch("/api/config")).json(); } catch (e) {}
     if (!cfg.hosted) { release(); return; }
     a.hosted = true; document.body.classList.add("hosted");
+    // A failed sign-in link comes back as #error=...&error_description=... Show the reason, then tidy the address.
+    try {
+      const q = new URLSearchParams(location.hash.slice(1));
+      if (q.get("error_description") || q.get("error")) {
+        const why = (q.get("error_description") || q.get("error")).replace(/\+/g, " ");
+        g("gate").hidden = false;
+        fail(q.get("error_code") === "otp_expired"
+          ? "That sign-in link has expired or was already used. Request a new one."
+          : "Sign-in failed: " + why);
+        history.replaceState(null, "", location.pathname);
+      }
+    } catch (e) {}
     if (!(cfg.supabase_url && cfg.supabase_anon_key && window.supabase)) {
       g("gate").hidden = false; fail("Sign-in is not available right now."); return;
     }
     a.client = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+    // Show only the sign-in methods this project has switched on. A button for a provider that is
+    // off would only lead to an error. If the settings cannot be read, keep every button.
+    try {
+      const r = await fetch(cfg.supabase_url.replace(/\/$/, "") + "/auth/v1/settings", { headers: { apikey: cfg.supabase_anon_key } });
+      const ext = (await r.json()).external || {};
+      const show = (id, on) => { g(id).hidden = on === false; };
+      show("g-google", ext.google); show("g-meta", ext.facebook);
+      g("g-guest").hidden = ext.anonymous_users !== true; g("g-guest-note").hidden = g("g-guest").hidden;
+      const email = ext.email !== false;
+      ["g-email", "g-mail"].forEach(id => show(id, email));
+      g("g-or").hidden = !email || (ext.google === false && ext.facebook === false && ext.anonymous_users !== true);
+      if (!email && ext.google === false && ext.facebook === false) fail("Sign-in is not available right now.");
+    } catch (e) {}
     a.client.auth.onAuthStateChange((ev, s) => { if (s) signedIn(s); else if (ev === "SIGNED_OUT") a.expired(); });
     const { data } = await a.client.auth.getSession();
     if (data.session) signedIn(data.session); else g("gate").hidden = false;
     const oauth = provider => async () => {
       const { error } = await a.client.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin } });
+      if (error) fail(error.message);
+    };
+    g("g-guest").onclick = async () => {
+      const { error } = await a.client.auth.signInAnonymously();
       if (error) fail(error.message);
     };
     g("g-google").onclick = oauth("google");
@@ -553,13 +590,34 @@ function showTab(name) {
   ({ profile: loadProfile, scen: loadScen, graph: loadGraph,
      hyps: loadHyps, rel: loadRels, report: loadReport, connect: loadConnect }[name] || (() => {}))();
   document.querySelector(".main").scrollTo({ top: 0 });
-  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+  if (!AUTH.returning) { try { history.replaceState(null, "", "#" + name); } catch (e) {} }
 }
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
+let sampling = false;
+async function loadSamples() {
+  if (sampling) return;
+  sampling = true; $("sample-go").disabled = true;
+  const msg = t => { const m = $("sample-msg"); if (m) m.textContent = t; };
+  try {
+    const r = await api("/api/sample", { method: "POST" });
+    const ids = r.job_ids || [];
+    for (let i = 0; i < 120 && ids.length; i++) {
+      const jobs = await Promise.all(ids.map(id => api("/api/jobs/" + id)));
+      const done = jobs.filter(j => j.status === "done").length, failed = jobs.filter(j => j.status === "failed");
+      msg(`Learning from the examples... ${done} of ${ids.length}`);
+      if (failed.length) throw new Error(failed[0].error || "Could not learn from an example");
+      if (done === ids.length) break;
+      await sleep(3000);
+    }
+    toast("Example memories added"); await loadStatus(); showTab("profile");
+  } catch (e) { toast(e.message, "bad"); msg(e.message); $("sample-go").disabled = false; }
+  finally { sampling = false; }
+}
 async function loadStatus() {
   try {
     const s = await api("/api/status");
+    const box = $("sample-box"); if (box) box.hidden = !(AUTH.hosted && s.counts.Observation === 0);
     $("status").innerHTML = `<div class="row"><span><span class="dot"></span>Connected</span><span class="id">rev ${s.revision}</span></div>
       <div class="row"><span>Memories</span><b>${s.counts.Observation}</b></div>
       <div class="row"><span>Hypotheses</span><b>${s.counts.Hypothesis}</b></div>
@@ -574,7 +632,13 @@ const SUGGEST = ["What do I usually pick for dinner when I'm tired?", "Where hav
 function hello() {
   $("chat-log").innerHTML = `<div class="hello"><div class="logo">M</div><h2>How can I help?</h2>
     <p>Tell me what happened and I will remember it. Ask a question and I will answer from your memories, with evidence.</p>
-    <div class="chips">${SUGGEST.map(q => `<span class="chip" data-q="${esc(q)}">${esc(q)}</span>`).join("")}</div></div>`;
+    <div class="chips">${SUGGEST.map(q => `<span class="chip" data-q="${esc(q)}">${esc(q)}</span>`).join("")}</div>
+    <div id="sample-box" class="card" hidden style="margin-top:18px;text-align:left;display:grid;gap:8px">
+      <b>Nothing here yet</b>
+      <span class="muted">Add a memory in your own words, or look around first with eight example memories from a made-up person. They are not yours, and "Delete my data" in the menu removes them.</span>
+      <div><button class="btn" id="sample-go" type="button">Load example memories</button> <span class="muted" id="sample-msg"></span></div>
+    </div></div>`;
+  $("sample-go").addEventListener("click", loadSamples);
   $("chat-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("chat-in").value = c.dataset.q; sendChat(); }));
 }
 function addMsg(cls, text, saveText) {

@@ -1,0 +1,56 @@
+{
+  "brief": {
+    "brain": [
+      "When receiving information, double-checks facts",
+      "pull request",
+      "I decide quickly and revisit later.",
+      "When buying, compares options carefully before deciding"
+    ],
+    "ears": [
+      "When building a mix, prefers heavily repetitive tracks",
+      "When it rains, picks calmer tracks",
+      "DJ mix",
+      "DJ practice"
+    ],
+    "eyes": [
+      "I watch a movie to reset after a hard week.",
+      "When learning, prefers a working example first"
+    ],
+    "mouth": [
+      "When choosing food, picks the familiar option",
+      "I eat the same lunch near the office most days.",
+      "I never skip the quiet corner seat in a cafe.",
+      "When budget is tight, cooks at home"
+    ],
+    "hands": [
+      "When writing, keeps sentences short",
+      "AI",
+      "AI assistant",
+      "I write blog posts as numbered lists."
+    ],
+    "heart": [
+      "Jay",
+      "When tired, keeps to-do list short",
+      "manager",
+      "When feeling fresh, tries new things"
+    ],
+    "feet": [
+      "I like to walk in the park when I am stuck.",
+      "Lisbon",
+      "Vietnamese noodle shop",
+      "When feeling fresh, goes for a run"
+    ]
+  },
+  "design": {
+    "expression": "soft settled smile, cozy and content",
+    "mood": "cozy calm everyday adventure feeling",
+    "palette": "warm cream, navy, orange, soft brown",
+    "head": "cream beanie with check-stitch band",
+    "eyes": "round cinema-style glasses with warm lenses",
+    "ears": "chunky DJ headphones with looping rings",
+    "chest": "layered work jacket with bird pin",
+    "feet": "dusty trail runners for park and city",
+    "left_hand": "tiny friendly robot companion toy",
+    "right_hand": "short pencil with striped stack cards"
+  }
+}

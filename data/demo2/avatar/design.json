@@ -1,0 +1,54 @@
+{
+  "brief": {
+    "brain": [
+      "Seeks challenging tasks over easy ones",
+      "Seeks out new experiences rather than familiar ones",
+      "Keeps options open rather than committing",
+      "Works best in a last-minute sprint"
+    ],
+    "ears": [
+      "DJ set",
+      "brand new playlist of artists I had never heard",
+      "not repeating a track twice in the same night (likes)"
+    ],
+    "eyes": [
+      "I watch live shows more than recorded ones."
+    ],
+    "mouth": [
+      "Seeks out new places rather than revisiting familiar ones",
+      "Enjoys lively crowded events",
+      "Georgian restaurant",
+      "I never skip a street food stall."
+    ],
+    "hands": [
+      "Prefers free-flowing expression over planning",
+      "AI assistant",
+      "I write long, flowing posts and never outline first.",
+      "bike"
+    ],
+    "heart": [
+      "manager",
+      "friends",
+      "I usually choose the unfamiliar option, especially when I am tired.",
+      "When I am stressed, I go out with friends instead of resting."
+    ],
+    "feet": [
+      "Korean street stall",
+      "Lisbon",
+      "Peruvian place",
+      "downtown"
+    ]
+  },
+  "design": {
+    "expression": "wide joyful open grin, cheeks lifted high",
+    "mood": "bouncy joyful late-night festival feeling",
+    "palette": "warm orange, deep purple, cream, dusty blue",
+    "head": "wind-tossed beanie with loose fluttering straps",
+    "eyes": "round opera-style concert watching glasses",
+    "ears": "chunky DJ headphones around neck",
+    "chest": "cozy layered going-out jacket with open collar",
+    "feet": "dusty well-worn city night sneakers",
+    "left_hand": "long flowing ribbon-like paper scroll",
+    "right_hand": "tiny small bicycle model"
+  }
+}

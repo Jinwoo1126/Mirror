@@ -72,6 +72,7 @@ class _Lock:
 _lock = _Lock()
 _store: MirrorStore | None = None
 _request_store: contextvars.ContextVar = contextvars.ContextVar("mirror_store", default=None)
+_request_anonymous: contextvars.ContextVar = contextvars.ContextVar("mirror_anonymous", default=False)
 _extractor = None
 _index = None
 _router = None
@@ -222,7 +223,9 @@ async def privacy_page(request) -> HTMLResponse:
 
 async def homepage(request) -> HTMLResponse:
     html = (STATIC_DIR / "app.html").read_text(encoding="utf-8")
-    return HTMLResponse(html)
+    # The page is one file that changes with every deploy. Make browsers re-check it each
+    # time, or people keep running an old version after an update.
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
 async def api_status(request):
@@ -536,6 +539,34 @@ async def healthz(request):
     return _json({"ok": True})
 
 
+async def readyz(request):
+    """Can this server reach its database and does the schema exist? Public and
+    harmless: it says only yes or no, never the connection string or the error text."""
+    if not hosted():
+        return _json({"ok": True, "hosted": False})
+    dsn = os.environ.get("MIRROR_PG_DSN", "")
+    if not dsn:
+        return _json({"ok": False, "db": False, "reason": "no database configured"}, 503)
+
+    def check() -> str:
+        import psycopg
+
+        try:
+            with psycopg.connect(dsn, connect_timeout=5) as c:
+                c.execute("select 1").fetchone()
+                c.execute("select count(*) from public.jobs").fetchone()
+                c.execute("select count(*) from public.api_tokens").fetchone()
+                c.execute("select count(*) from public.observations").fetchone()
+        except Exception as e:
+            return type(e).__name__
+        return ""
+
+    failure = await run_in_threadpool(check)
+    if failure:
+        return _json({"ok": False, "db": False, "reason": failure}, 503)
+    return _json({"ok": True, "db": True})
+
+
 async def api_config(request):
     """What the browser needs to sign in. Public by design: the anon key is meant to
     be shipped to browsers, and row level security is what protects the data."""
@@ -580,6 +611,33 @@ async def api_account_delete(request):
     return _json({"ok": True, "data_deleted": True, "account_deleted": removed_account})
 
 
+async def api_sample(request):
+    """Queue a few example memories from a made-up person, once per account, so a new
+    account has something to look at. Each one is a real LLM job, so for anonymous
+    accounts every one is counted against their shared hourly budget."""
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    from .samples import SAMPLES
+
+    store = get_store()
+    if store.count_nodes(schema.OBSERVATION) > 0:
+        return _json({"error": "Samples are only for an empty account."}, 409)
+    todo = [x for x in SAMPLES if store.get_observation_by_source(x[0]) is None]
+    if not todo:
+        return _json({"ok": True, "job_ids": [], "status": "done"})
+    if _request_anonymous.get():
+        cap = int(os.environ.get("MIRROR_ANON_COSTLY_PER_HOUR", "100"))
+        for _ in todo:
+            if not _limiter.allow("*anonymous*", "costly", cap, window=3600):
+                return _json({"error": "The trial is busy right now. Try again later."}, 429)
+    try:
+        ids = [store.enqueue_job("learn", {"text": text, "source_id": sid, "occurred_at": at})
+               for sid, at, text in todo]
+    except ValueError as e:
+        return _json({"error": str(e)}, 429)
+    return _json({"ok": True, "queued": True, "job_ids": ids, "status": "queued"}, 202)
+
+
 async def api_tokens_list(request):
     if not hosted():
         return _json({"error": "only available in hosted mode"}, 404)
@@ -606,10 +664,12 @@ async def api_tokens_revoke(request):
 routes = [
     Route("/", homepage),
     Route("/api/jobs/{job_id}", api_job),
+    Route("/api/sample", api_sample, methods=["POST"]),
     Route("/api/tokens", api_tokens_list),
     Route("/api/tokens", api_tokens_create, methods=["POST"]),
     Route("/api/tokens/{token_id}", api_tokens_revoke, methods=["DELETE"]),
     Route("/healthz", healthz),
+    Route("/readyz", readyz),
     Route("/api/config", api_config),
     Route("/api/account", api_account_delete, methods=["DELETE"]),
     Route("/api/export", api_export),
@@ -660,7 +720,7 @@ def token_allowed(method: str, path: str) -> bool:
             and path.endswith("/feedback"))
 
 # Calls that spend LLM budget get a tighter limit than ordinary reads.
-COSTLY = (("GET", "/api/export"), ("POST", "/api/chat"), ("POST", "/api/memories"), ("POST", "/api/maintain"),
+COSTLY = (("POST", "/api/sample"), ("GET", "/api/export"), ("POST", "/api/chat"), ("POST", "/api/memories"), ("POST", "/api/maintain"),
           ("POST", "/api/decide"))
 
 
@@ -719,6 +779,7 @@ class HostedAuth:
         token = auth_mod.bearer(headers.get(b"authorization", b"").decode("latin-1"))
         dsn = os.environ.get("MIRROR_PG_DSN", "")
         method = scope.get("method", "GET")
+        anonymous = False
         if tokens_mod.looks_like_token(token):
             if not dsn:
                 return await self._reject(send, 500, "server has no database configured")
@@ -730,10 +791,19 @@ class HostedAuth:
                     send, 403, "API tokens cannot use this endpoint; sign in instead")
         else:
             try:
-                uid = await run_in_threadpool(auth_mod.verify_token, token)
+                claims = await run_in_threadpool(auth_mod.verify_claims, token)
             except auth_mod.AuthError as e:
                 return await self._reject(send, 401, str(e))
+            uid = claims["sub"]
+            anonymous = claims.get("is_anonymous") is True
         costly = _is_costly(method, path)
+        # Anyone can mint anonymous accounts, so per-user limits alone do not protect the LLM
+        # budget. Cap what all anonymous accounts together may spend per hour.
+        if anonymous and costly and not _limiter.allow(
+                "*anonymous*", "costly", int(os.environ.get("MIRROR_ANON_COSTLY_PER_HOUR", "100")),
+                window=3600):
+            return await self._reject(
+                send, 429, "The trial is busy right now. Try again later, or sign in.")
         limit = int(os.environ.get("MIRROR_RATE_COSTLY" if costly else "MIRROR_RATE_ALL",
                                    "10" if costly else "120"))
         if not _limiter.allow(uid, "costly" if costly else "all", limit):
@@ -744,9 +814,11 @@ class HostedAuth:
 
         store = await run_in_threadpool(PostgresStore, dsn, uid)
         marker = _request_store.set(store)
+        anon_marker = _request_anonymous.set(anonymous)
         try:
             await self.inner(scope, receive, send)
         finally:
+            _request_anonymous.reset(anon_marker)
             _request_store.reset(marker)
             await run_in_threadpool(store.close)
 

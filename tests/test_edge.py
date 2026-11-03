@@ -234,3 +234,41 @@ def test_multiuser_checks_a_token_once_then_caches(multi):
 
 def test_multiuser_starts_without_a_shared_token():
     assert edge.create_app(edge.Config(token="", multiuser=True)) is not None
+
+
+# -- plain HTTP endpoints for agents that cannot speak MCP ---------------------------
+
+def test_context_endpoint_needs_the_token_and_returns_what_mirror_knows(make):
+    client, rec, _ = make()
+    assert client.post("/v1/context", json={"request": "dinner"}).status_code == 401
+    r = client.post("/v1/context", headers=AUTH, json={"request": "What should I order?"})
+    assert r.status_code == 200 and r.json()["items"] == ITEMS
+    assert rec.backend[-1][0] == "/api/retrieve"
+
+
+def test_context_endpoint_validates_input_and_caps_the_budget(make):
+    client, rec, _ = make()
+    assert client.post("/v1/context", headers=AUTH, json={}).status_code == 400
+    assert client.post("/v1/context", headers=AUTH, json={"request": "  "}).status_code == 400
+    assert client.post("/v1/context", headers=AUTH, content=b"not json").status_code == 400
+    ok = client.post("/v1/context", headers=AUTH, json={"request": "dinner", "budget": 9999})
+    assert ok.status_code == 200
+    assert client.post("/v1/context", headers=AUTH, json={"request": "x", "budget": "many"}).status_code == 200
+
+
+def test_remember_endpoint_stores_text_through_the_backend(make):
+    client, rec, _ = make()
+    assert client.post("/v1/remember", json={"text": "I prefer short meetings."}).status_code == 401
+    r = client.post("/v1/remember", headers=AUTH, json={"text": "I prefer short meetings."})
+    assert r.status_code == 200
+    assert rec.backend[-1] == ("/api/memories", {"text": "I prefer short meetings."})
+    assert client.post("/v1/remember", headers=AUTH, json={"text": "no"}).status_code == 400
+    assert client.post("/v1/remember", headers=AUTH, json={"text": "x" * 3000}).status_code == 400
+
+
+def test_multiuser_context_endpoint_forwards_the_callers_own_token(multi):
+    client, seen, _ = multi
+    r = client.post("/v1/context", headers={"Authorization": f"Bearer {GOOD}"},
+                    json={"request": "What should I order?"})
+    assert r.status_code == 200 and r.json()["items"] == ITEMS
+    assert [tok for path, tok in seen if path == "/api/retrieve"] == [GOOD]
