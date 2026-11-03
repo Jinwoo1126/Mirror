@@ -120,7 +120,7 @@ def build_map(store: MirrorStore) -> dict:
         n = len(h["supports"])
         star = {"id": h["id"], "kind": "pattern", "label": h["statement"],
                 "weight": max(n, 1), "evidence": n, "status": h["status"],
-                "counter": len(h["contradicts"]),
+                "use_policy": h["use_policy"], "counter": len(h["contradicts"]),
                 "declared": _is_declared(store, h["supports"]),
                 "evidence_texts": [{"date": (s["occurred_at"] or "")[:10], "text": s["text"]}
                                    for s in h["supports"][:4]]}

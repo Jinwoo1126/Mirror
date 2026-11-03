@@ -3,6 +3,31 @@
 The "You" page draws a holographic avatar in SVG by default. If you have a character
 image, Mirror uses it as the body instead, and the stars stay on top of it.
 
+## A character designed from the person's profile
+
+Each person gets their own character, and it is built from their profile, not from a fixed
+prompt. A running Mirror app is read through `/api/map`; for every body part the top
+non-private things are collected (statements marked `internal_only` are never used), a
+language model turns them into a short design (what the avatar wears or holds, the mood and
+the palette), and Muse Image draws it.
+
+```sh
+META_API_KEY=... python -m mirror.avatar_gen --design --map-url http://HOST:8001 --out data/demo/avatar
+# look at data/demo/avatar/candidates/, then install the one you like
+python -m mirror.avatar_gen --input data/demo/avatar/candidates/avatar2.png --out data/demo/avatar \
+    --parts '{"brain":[0.5,0.1],"eyes":[0.43,0.245],"ears":[0.77,0.26],"mouth":[0.54,0.29],"heart":[0.64,0.435],"hands":[0.88,0.475],"feet":[0.5,0.9]}'
+python -m mirror.app --db data/demo/mirror.kuzu --avatar-dir data/demo/avatar --name "Persona A"
+```
+
+`design.json` in the output folder records the profile items that were sent and the design
+that came back. `--parts` is needed because every picture is a little different; set it by
+looking at where the headgear, glasses, headphones, smile, chest item, held item and shoes
+are. `avatar.json` can also hold `"labels": {"heart": [1, -8, 1.0]}` (side, vertical offset,
+distance) to move a label that collides with something in the picture.
+
+Set `MIRROR_PERSONAS='[{"name": "A", "url": "http://HOST:8001"}, ...]'` to get a person
+switcher in the sidebar.
+
 ## Fastest: Muse Image
 
 Muse Image (Meta's image model, about $0.01 per image) is reachable at

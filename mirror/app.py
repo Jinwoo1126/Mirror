@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -160,6 +161,16 @@ def chat_generate(prompt: str, timeout: int | None = None) -> tuple[str, str]:
     return "local", ""
 
 
+def _personas() -> list:
+    """Other people on this machine, from MIRROR_PERSONAS=[{"name": ..., "url": ...}]."""
+    try:
+        data = json.loads(os.environ.get("MIRROR_PERSONAS") or "[]")
+    except ValueError:
+        return []
+    return [{"name": str(p["name"]), "url": str(p["url"])} for p in data
+            if isinstance(p, dict) and p.get("name") and p.get("url")]
+
+
 def _json(data, status: int = 200) -> JSONResponse:
     return JSONResponse(schema.to_jsonable(data), status_code=status)
 
@@ -184,6 +195,8 @@ async def api_status(request):
             "revision": store.get_revision(), "counts": counts,
             "index_mode": index.mode if index is not None else "off",
             "extractor": get_extractor().name,
+            "persona": os.environ.get("MIRROR_PERSONA_NAME", ""),
+            "personas": _personas(),
             "llm_backend": _llm_backend,
             "llm_candidates": [n for n, _ in _BACKENDS
                                if n not in _llm_unavailable],
@@ -324,10 +337,15 @@ async def api_scenario_run(request):
 _STATIC_OK = re.compile(r"^avatar\.(png|webp|jpg|jpeg|json)$")
 
 
+def avatar_dir() -> Path:
+    """Each Mirror instance can have its own character (MIRROR_AVATAR_DIR)."""
+    return Path(os.environ.get("MIRROR_AVATAR_DIR") or STATIC_DIR)
+
+
 async def static_file(request):
     """Only the optional avatar image and its anchor file are served."""
     name = request.path_params["name"]
-    path = STATIC_DIR / name
+    path = avatar_dir() / name
     if not _STATIC_OK.match(name) or not path.is_file():
         return _json({"error": "not found"}, 404)
     return FileResponse(path)
@@ -491,9 +509,15 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--db", default="")
+    parser.add_argument("--avatar-dir", default="")
+    parser.add_argument("--name", default="", help="shown in the person switcher")
     args = parser.parse_args(argv)
     if args.db:
         os.environ["MIRROR_DB"] = args.db
+    if args.avatar_dir:
+        os.environ["MIRROR_AVATAR_DIR"] = args.avatar_dir
+    if args.name:
+        os.environ["MIRROR_PERSONA_NAME"] = args.name
     uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 
 

@@ -32,3 +32,6 @@ avatar-candidates/
 
 # Claude Code project-local settings and the Mirror hook config
 .claude/
+
+# per-person generated characters (terms for publishing generated images not checked)
+data/*/avatar/

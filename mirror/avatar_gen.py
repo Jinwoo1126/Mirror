@@ -1,6 +1,8 @@
 """Make the body-map character with Muse Image, or prepare an image you already have.
 
-  # generate candidates (about $0.01 each) into ./avatar-candidates/
+  # design a character from a person's profile, then generate candidates (about $0.01 each)
+  META_API_KEY=... python -m mirror.avatar_gen --design --map-url http://HOST:8001 --out DIR
+  # or generate the generic character into ./avatar-candidates/
   MODEL_API_KEY=... python -m mirror.avatar_gen --generate --n 2
   # cut out the green background and install one as the map's body
   python -m mirror.avatar_gen --input avatar-candidates/avatar2.png
@@ -16,6 +18,7 @@ import argparse
 import base64
 import json
 import os
+import re
 from pathlib import Path
 
 import httpx
@@ -45,6 +48,90 @@ RECT = {"x": 275, "y": 40, "w": 450, "h": 900}
 PARTS = {"brain": (0.50, 0.075), "eyes": (0.42, 0.235), "ears": (0.725, 0.24),
          "mouth": (0.51, 0.286), "heart": (0.59, 0.3975), "hands": (0.23, 0.495),
          "feet": (0.50, 0.895)}
+
+
+# -- a character designed from the profile ------------------------------------
+
+TEMPLATE = (
+    "Full-body front view of a friendly stylized 3D avatar of a young person, gender-neutral, "
+    "in the polished style of a modern social metaverse app, standing in a relaxed pose, rounded "
+    "friendly proportions, smooth skin, {expression}, soft cyan and violet neon rim light. "
+    "Overall mood: {mood}. Colour palette: {palette}. On the head: {head}. Eyes: {eyes}. "
+    "Around the ears: {ears}. On the chest or clothing: {chest}. On the feet: {feet}. "
+    "The left hand holds {left_hand}, the right hand holds {right_hand}. Both hands clearly "
+    "visible and slightly away from the body. Centered, the entire body visible from head to "
+    "feet with a small margin, on a perfectly flat solid pure green (#00FF00) background, no "
+    "green clothing, no floor, no shadow, no text, no logos")
+
+DEFAULT_DESIGN = {
+    "expression": "an expressive happy face with a small smile", "mood": "friendly and curious",
+    "palette": "deep indigo and violet with cyan accents",
+    "head": "a beanie with a tiny glowing lightbulb", "eyes": "round glasses",
+    "ears": "big over-ear headphones", "chest": "a cozy hoodie with a small glowing heart badge",
+    "feet": "white sneakers with a cyan glow", "left_hand": "an open notebook and a pen",
+    "right_hand": "a steaming coffee cup"}
+
+REGIONS = ("brain", "eyes", "ears", "mouth", "heart", "hands", "feet")
+
+
+def profile_brief(map_data: dict, per_region: int = 4) -> dict:
+    """What the person does, by body part. Statements marked internal_only never leave."""
+    out = {}
+    for r in map_data["regions"]:
+        labels = []
+        for st in r["stars"]:
+            if st.get("use_policy") == "internal_only":
+                continue
+            if st["kind"] in ("pattern", "thing", "style", "preference"):
+                labels.append(st["label"])
+            if len(labels) >= per_region:
+                break
+        out[r["id"]] = labels
+    return out
+
+
+def design_prompt(brief: dict) -> str:
+    lines = "\n".join(f"- {k}: {'; '.join(v) or '(nothing yet)'}" for k, v in brief.items())
+    return (
+        "You design a friendly stylized 3D avatar for a person, from what is known about them. "
+        "Each body part is tied to one thing the avatar wears or holds, so the picture shows what "
+        "they do: brain (how they think and choose) -> something on the head, eyes (what they "
+        "watch and read) -> eyewear, ears (what they listen to) -> something at the ears, mouth "
+        "(what they eat and drink) -> the facial expression, heart (how they feel and relate) -> "
+        "chest or clothing, hands (what they write and make) -> two held objects, feet (where "
+        "they go) -> footwear.\nWhat is known, by body part:\n" + lines + "\n\n"
+        "Reply with JSON only and these keys, each a short visual description of at most 10 words: "
+        "expression, mood, palette, head, eyes, ears, chest, feet, left_hand, right_hand. "
+        "Make the character look like their way of living, not a copy of the list. Use objects "
+        "and clothing that are easy to draw. No text, logos, brand names or health conditions. "
+        "Do not use green anywhere. Do not label the person's personality.")
+
+
+def sanitize(design: dict) -> dict:
+    out = {}
+    for k in DEFAULT_DESIGN:
+        v = str(design.get(k) or DEFAULT_DESIGN[k]).strip()[:120]
+        out[k] = re.sub(r"(?i)green", "blue", v)       # green is the background key colour
+    return out
+
+
+def design_from_profile(map_data: dict, run=None) -> dict:
+    """The character design for this person. Falls back to the default props on any failure."""
+    brief = profile_brief(map_data)
+    try:
+        if run is None:
+            from . import llm as llm_mod
+            run = lambda p: llm_mod.run_muse_exec(p, model="muse-spark-1.3", effort="low",
+                                                  timeout=120)
+        from . import llm as llm_mod
+        data = llm_mod.parse_json_output(run(design_prompt(brief)))
+    except Exception:
+        data = {}
+    return {"brief": brief, "design": sanitize(data if isinstance(data, dict) else {})}
+
+
+def build_prompt(design: dict) -> str:
+    return TEMPLATE.format(**sanitize(design))
 
 
 def generate(n: int = 1, prompt: str = PROMPT, size: str = "1024x2048") -> list[bytes]:
@@ -87,12 +174,29 @@ def install(src: Path, out_dir: Path, width: int = 840) -> Path:
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="Muse Image avatar for the body map")
     ap.add_argument("--generate", action="store_true")
+    ap.add_argument("--design", action="store_true",
+                    help="design the character from a person's profile (needs --map-url)")
+    ap.add_argument("--map-url", help="a running Mirror app, e.g. http://HOST:8001")
     ap.add_argument("--n", type=int, default=2)
     ap.add_argument("--input", help="a green-background image to cut out and install")
     ap.add_argument("--candidates", default="avatar-candidates")
     ap.add_argument("--parts", help='JSON like {"brain": [0.5, 0.07], ...} (fractions of the image)')
     ap.add_argument("--out", default=str(Path(__file__).parent / "static"))
     args = ap.parse_args(argv)
+    if args.design:
+        if not args.map_url:
+            ap.error("--design needs --map-url")
+        data = httpx.get(args.map_url.rstrip("/") + "/api/map", timeout=60).json()
+        made = design_from_profile(data)
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "design.json").write_text(json.dumps(made, indent=2, ensure_ascii=False))
+        print(json.dumps(made["design"], indent=2))
+        d = out / "candidates"
+        d.mkdir(exist_ok=True)
+        for i, png in enumerate(generate(args.n, build_prompt(made["design"])), 1):
+            (d / f"avatar{i}.png").write_bytes(png)
+            print("saved", d / f"avatar{i}.png")
     if args.generate:
         d = Path(args.candidates)
         d.mkdir(exist_ok=True)
@@ -103,8 +207,8 @@ def main(argv: list[str] | None = None) -> None:
         PARTS.update({k: tuple(v) for k, v in json.loads(args.parts).items()})
     if args.input:
         print("installed", install(Path(args.input), Path(args.out)))
-    if not args.generate and not args.input:
-        ap.error("use --generate and/or --input")
+    if not (args.generate or args.input or args.design):
+        ap.error("use --design, --generate and/or --input")
 
 
 if __name__ == "__main__":
