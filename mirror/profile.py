@@ -22,12 +22,12 @@ def _sentences(text: str) -> list[str]:
 def _ending(sentence: str) -> str:
     s = sentence.rstrip(".!?。 ")
     if s.endswith(("니다", "습니다", "입니다")):
-        return "격식체(-ㅂ니다)"
+        return "Formal (-ㅂ니다)"
     if s.endswith("요"):
-        return "해요체(-요)"
+        return "Polite (-요)"
     if s.endswith("다"):
-        return "평어(-다)"
-    return "명사형·기타"
+        return "Plain (-다)"
+    return "Other"
 
 
 def writing_stats(texts: list[str]) -> dict:
@@ -53,7 +53,7 @@ def writing_stats(texts: list[str]) -> dict:
 
 
 def _evidence_label(n: int) -> str:
-    return "후보 (근거 1건)" if n <= 1 else f"반복 관찰 (근거 {n}건)"
+    return "Candidate (1 evidence)" if n <= 1 else f"Repeated ({n} evidence)"
 
 
 def build_profile(store: MirrorStore) -> dict:

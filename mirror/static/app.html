@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -10,7 +10,7 @@
 <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
 <style>
-/* 디자인: shadcn/ui와 Linear 계열의 정돈된 앱 UI. 청록 포인트 하나에 초록기 도는 회색 바탕. */
+/* Design: a clean app UI in the shadcn/ui and Linear tradition. One teal accent on green-tinted grays. */
 :root {
   --bg: #f1f5f4; --surface: #ffffff; --surface-2: #f7faf9; --ink: #0e1e1d;
   --ink-2: #455756; --ink-3: #7b8d8b; --line: #dbe4e2; --line-2: #e9f0ee;
@@ -44,7 +44,7 @@ button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 i[data-lucide], svg.lucide { width: 18px; height: 18px; stroke-width: 1.9; flex: none; }
 
-/* 레이아웃 */
+/* Layout */
 .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); height: 100%; }
 .side { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 14px 14px;
   display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
@@ -74,7 +74,7 @@ section.active { display: block; animation: rise .22s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { section.active { animation: none; } * { scroll-behavior: auto !important; } }
 
-/* 공통 컴포넌트 */
+/* Shared components */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
 .card + .card { margin-top: 12px; }
 .card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -.005em; }
@@ -123,7 +123,7 @@ textarea { resize: vertical; min-height: 44px; }
 .switch input:checked { background: var(--accent); }
 .switch input:checked::after { transform: translateX(14px); }
 
-/* 채팅 */
+/* Chat */
 #chat .page { display: flex; flex-direction: column; min-height: calc(100vh - 150px); }
 #chat-log { display: flex; flex-direction: column; gap: 16px; flex: 1; padding-bottom: 20px; }
 .msg { display: flex; gap: 11px; max-width: 100%; }
@@ -160,7 +160,7 @@ textarea { resize: vertical; min-height: 44px; }
 .composer .bar .btn.link { border: 0; background: none; height: 26px; padding: 0 6px; color: var(--ink-2); font-size: 12.5px; font-weight: 500; }
 .composer .bar .btn.link.on { color: var(--accent); }
 
-/* 기억·가설 목록 */
+/* Memory and hypothesis lists */
 .item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 9px; }
 .item + .item { margin-top: 10px; }
 .item .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -176,7 +176,7 @@ textarea { resize: vertical; min-height: 44px; }
 .seg button:hover { background: var(--surface-2); }
 .seg button.ok:hover { color: var(--good); } .seg button.no:hover, .seg button.stop:hover { color: var(--bad); }
 
-/* 프로필 */
+/* Profile */
 .tend { padding: 11px 0; border-top: 1px solid var(--line-2); }
 .tend:first-of-type { border-top: 0; padding-top: 2px; }
 .tend .st { font-size: 15px; font-weight: 500; }
@@ -191,7 +191,7 @@ textarea { resize: vertical; min-height: 44px; }
 .pbanner .lucide { color: var(--accent); margin-top: 2px; }
 .pbanner b { display: block; }
 
-/* 시나리오 */
+/* Scenarios */
 .scs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; margin-bottom: 16px; }
 .sc { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); transition: border-color .15s, transform .1s; }
 .sc:hover { border-color: var(--accent-line); transform: translateY(-1px); }
@@ -201,7 +201,7 @@ textarea { resize: vertical; min-height: 44px; }
 .result { white-space: pre-wrap; font-size: 15px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
 .result-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
 
-/* 그래프 */
+/* Graph */
 .graphwrap { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 #cy { width: 100%; height: clamp(420px, calc(100vh - 290px), 760px); }
 .legend { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 5px 12px; max-width: calc(100% - 24px);
@@ -210,7 +210,7 @@ textarea { resize: vertical; min-height: 44px; }
 .legend b { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .detail { margin-top: 12px; min-height: 64px; }
 
-/* 표 / 리포트 */
+/* Tables and report */
 .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tbl th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 8px 12px; border-bottom: 1px solid var(--line); }
 .tbl td { padding: 11px 12px; border-bottom: 1px solid var(--line-2); } .tbl tr:last-child td { border-bottom: 0; }
@@ -222,12 +222,12 @@ textarea { resize: vertical; min-height: 44px; }
 .rep .range { color: var(--ink-3); font: 500 12.5px var(--f-mono); }
 .out { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); font-family: var(--f-mono); white-space: pre-wrap; word-break: break-all; }
 
-/* 토스트 */
+/* Toasts */
 #toast { position: fixed; left: 50%; bottom: calc(24px + var(--nav-h) + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 28px rgba(0,0,0,.25); animation: rise .2s ease both; }
 .toast.bad { background: var(--bad); color: #fff; }
 
-/* 모바일: 하단 탭 */
+/* Mobile: bottom tab bar */
 @media (max-width: 860px) {
   :root { --nav-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
   .app { display: block; height: 100%; }
@@ -246,36 +246,36 @@ textarea { resize: vertical; min-height: 44px; }
 </head>
 <body>
 <div class="app">
-<nav class="side" aria-label="메뉴">
-  <div class="brand"><div class="logo">M</div><div><b>Mirror</b><span>나를 이해하는 기억</span></div></div>
-  <div class="grp">대화</div>
-  <button class="tab active" data-tab="chat"><i data-lucide="message-circle"></i>채팅</button>
-  <button class="tab" data-tab="scen"><i data-lucide="sparkles"></i>시나리오</button>
-  <div class="grp">나</div>
-  <button class="tab" data-tab="profile"><i data-lucide="user-round"></i>프로필</button>
-  <button class="tab" data-tab="mem"><i data-lucide="library"></i>기억</button>
-  <button class="tab" data-tab="hyps"><i data-lucide="lightbulb"></i>가설</button>
-  <div class="grp">구조</div>
-  <button class="tab" data-tab="graph"><i data-lucide="share-2"></i>그래프</button>
-  <button class="tab" data-tab="rel"><i data-lucide="link-2"></i>관계</button>
-  <button class="tab" data-tab="report"><i data-lucide="clipboard-check"></i>주간 리포트</button>
-  <div class="status" id="status">연결 중...</div>
+<nav class="side" aria-label="Menu">
+  <div class="brand"><div class="logo">M</div><div><b>Mirror</b><span>Memory that understands you</span></div></div>
+  <div class="grp">Talk</div>
+  <button class="tab active" data-tab="chat"><i data-lucide="message-circle"></i>Chat</button>
+  <button class="tab" data-tab="scen"><i data-lucide="sparkles"></i>Scenarios</button>
+  <div class="grp">You</div>
+  <button class="tab" data-tab="profile"><i data-lucide="user-round"></i>Profile</button>
+  <button class="tab" data-tab="mem"><i data-lucide="library"></i>Memory</button>
+  <button class="tab" data-tab="hyps"><i data-lucide="lightbulb"></i>Hypotheses</button>
+  <div class="grp">Structure</div>
+  <button class="tab" data-tab="graph"><i data-lucide="share-2"></i>Graph</button>
+  <button class="tab" data-tab="rel"><i data-lucide="link-2"></i>Relations</button>
+  <button class="tab" data-tab="report"><i data-lucide="clipboard-check"></i>Weekly report</button>
+  <div class="status" id="status">Connecting...</div>
 </nav>
 
 <main class="main"><div class="page">
-<div class="head"><h1 id="ptitle">채팅</h1><p id="psub"></p></div>
+<div class="head"><h1 id="ptitle">Chat</h1><p id="psub"></p></div>
 
 <section id="chat" class="active">
   <div id="chat-log"></div>
   <div class="composer">
     <div class="line">
-      <textarea id="chat-in" rows="1" placeholder="물어보거나, 있었던 일을 적어보세요"></textarea>
-      <button class="btn primary icon" id="chat-send" aria-label="보내기"><i data-lucide="arrow-up"></i></button>
+      <textarea id="chat-in" rows="1" placeholder="Ask something, or tell me what happened"></textarea>
+      <button class="btn primary icon" id="chat-send" aria-label="Send"><i data-lucide="arrow-up"></i></button>
     </div>
-    <div class="opts" id="opts-box"><input id="chat-opts" type="text" placeholder="선택지를 쉼표로 구분해 적으면 비교해 줍니다 (예: 치킨, 쌀국수)"></div>
+    <div class="opts" id="opts-box"><input id="chat-opts" type="text" placeholder="Separate options with commas to compare them (e.g. fried chicken, pho)"></div>
     <div class="bar">
-      <label class="switch"><input type="checkbox" id="auto-mem"> 내 메시지 자동 저장</label>
-      <button class="btn link" id="opts-toggle" type="button"><i data-lucide="git-compare"></i>선택지 비교</button>
+      <label class="switch"><input type="checkbox" id="auto-mem"> Auto-save my messages</label>
+      <button class="btn link" id="opts-toggle" type="button"><i data-lucide="git-compare"></i>Compare options</button>
     </div>
   </div>
 </section>
@@ -290,18 +290,18 @@ textarea { resize: vertical; min-height: 44px; }
 
 <section id="mem">
   <div class="card" style="margin-bottom:14px">
-    <div class="field" style="margin-bottom:10px"><label for="mem-add">새 기억</label>
-      <textarea id="mem-add" rows="2" placeholder="있었던 일을 한두 문장으로 적어보세요"></textarea></div>
-    <button class="btn primary" id="mem-add-btn"><i data-lucide="plus"></i>기억 추가</button>
+    <div class="field" style="margin-bottom:10px"><label for="mem-add">New memory</label>
+      <textarea id="mem-add" rows="2" placeholder="Write what happened in a sentence or two"></textarea></div>
+    <button class="btn primary" id="mem-add-btn"><i data-lucide="plus"></i>Add memory</button>
   </div>
-  <div class="toolbar"><div class="search"><i data-lucide="search"></i><input class="input" id="mem-q" type="text" placeholder="기억 검색"></div>
-    <button class="btn ghost" id="mem-search">검색</button></div>
+  <div class="toolbar"><div class="search"><i data-lucide="search"></i><input class="input" id="mem-q" type="text" placeholder="Search memories"></div>
+    <button class="btn ghost" id="mem-search">Search</button></div>
   <div id="mem-list"></div>
 </section>
 
 <section id="graph">
   <div class="graphwrap"><div id="cy"></div><div class="legend" id="legend"></div></div>
-  <div class="card detail" id="cy-note"><span class="muted">노드를 누르면 연결된 관계와 내용이 보입니다.</span></div>
+  <div class="card detail" id="cy-note"><span class="muted">Tap a node to see what it connects to.</span></div>
 </section>
 
 <section id="hyps"><div id="hyp-list"></div></section>
@@ -309,9 +309,9 @@ textarea { resize: vertical; min-height: 44px; }
 
 <section id="report">
   <div class="toolbar">
-    <button class="btn ghost sm" id="m-nightly"><i data-lucide="moon"></i>야간 통합</button>
-    <button class="btn ghost sm" id="m-weekly"><i data-lucide="calendar-check"></i>주간 점검</button>
-    <button class="btn ghost sm" id="m-promote"><i data-lucide="arrow-up-circle"></i>승격</button>
+    <button class="btn ghost sm" id="m-nightly"><i data-lucide="moon"></i>Nightly consolidation</button>
+    <button class="btn ghost sm" id="m-weekly"><i data-lucide="calendar-check"></i>Weekly review</button>
+    <button class="btn ghost sm" id="m-promote"><i data-lucide="arrow-up-circle"></i>Promote</button>
   </div>
   <div class="card rep" id="report-body"></div>
   <div class="out" id="m-out"></div>
@@ -341,20 +341,27 @@ function toast(msg, kind) {
 const empty = (icon, title, body) => `<div class="empty"><i data-lucide="${icon}"></i><b>${esc(title)}</b>${esc(body)}</div>`;
 const skel = n => Array.from({ length: n }, () => '<div class="skel" style="margin-bottom:10px"></div>').join("");
 const cites = (ids, n = 3) => !ids.length ? "" :
-  `<span class="pill accent">근거 ${ids.length}건</span>` + ids.slice(0, n).map(c => `<span class="id">${esc(c)}</span>`).join("") +
+  `<span class="pill accent">${ids.length} evidence</span>` + ids.slice(0, n).map(c => `<span class="id">${esc(c)}</span>`).join("") +
   (ids.length > n ? `<span class="id" title="${esc(ids.slice(n).join(", "))}">+${ids.length - n}</span>` : "");
+const T = {
+  domain: { "취향·경험": "Taste & experience", "가치·판단": "Values & judgment", "동기·실행": "Motivation & action", "관계·지원": "Relationships & support", "자기이해·반복 주제": "Self-understanding" },
+  kind: { "사람": "People", "장소": "Places", "도구": "Tools", "프로젝트": "Projects", "곡": "Tracks", "음식": "Food", "기타": "Other",
+          "상태": "State", "시간대": "Time of day", "날씨": "Weather", "예산": "Budget", "동행": "Company" },
+  intent: { "정보 정리": "Organize info", "결정 도움": "Decision help", "감정 대화": "Emotional talk", "실행 요청": "Action request" },
+};
+const tr = (m, k) => (T[m] && T[m][k]) || k;
 const day = s => (s || "").slice(0, 10);
 
-/* 탭 */
+/* Tabs */
 const PAGES = {
-  chat: ["채팅", "기억을 바탕으로 답하고, 근거를 함께 보여줍니다."],
-  scen: ["시나리오", "문서, 음악, 하루 계획, 선택처럼 자주 하는 일을 내 기록으로 돕습니다."],
-  profile: ["나의 프로필", "저장된 기록에서 센 값만 보여줍니다. 성격이나 유형을 단정하지 않습니다."],
-  mem: ["기억", "저장된 기록입니다. 지우면 그 기록에서 나온 이해도 함께 정리됩니다."],
-  hyps: ["가설", "기록에서 반복된 것을 근거와 함께 둡니다. 틀렸다면 알려주세요."],
-  graph: ["그래프", "기록, 대상, 상황, 가설이 어떻게 이어져 있는지 봅니다."],
-  rel: ["관계 어휘", "기록에서 쌓인 관계 표현입니다."],
-  report: ["주간 리포트", "이번 주 이해가 어떻게 바뀌었는지 보여줍니다."],
+  chat: ["Chat", "Answers from your memories and shows the evidence it used."],
+  scen: ["Scenarios", "Everyday tasks like writing, music, planning and choosing, helped by what Mirror knows about you."],
+  profile: ["Your profile", "Only what can be counted from saved memories. It never labels your personality or type."],
+  mem: ["Memory", "Everything saved so far. Deleting one also removes what was learned from it."],
+  hyps: ["Hypotheses", "Patterns that repeat across your memories, with evidence. Tell Mirror when one is wrong."],
+  graph: ["Graph", "How memories, things, situations and hypotheses connect."],
+  rel: ["Relation vocabulary", "Relationship phrases collected from your memories."],
+  report: ["Weekly report", "How Mirror's understanding changed this week."],
 };
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === name));
@@ -371,19 +378,19 @@ document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () =>
 async function loadStatus() {
   try {
     const s = await api("/api/status");
-    $("status").innerHTML = `<div class="row"><span><span class="dot"></span>연결됨</span><span class="id">rev ${s.revision}</span></div>
-      <div class="row"><span>기억</span><b>${s.counts.Observation}</b></div>
-      <div class="row"><span>가설</span><b>${s.counts.Hypothesis}</b></div>
-      <div class="row"><span>검색</span><span class="pill accent">${esc(s.index_mode)}</span></div>
-      <div class="row"><span>답변</span><span class="pill ${s.llm_backend ? "good" : "warn"}">${esc(s.llm_backend || s.extractor)}</span></div>`;
-  } catch (e) { $("status").innerHTML = '<span class="dot off"></span>연결 실패'; }
+    $("status").innerHTML = `<div class="row"><span><span class="dot"></span>Connected</span><span class="id">rev ${s.revision}</span></div>
+      <div class="row"><span>Memories</span><b>${s.counts.Observation}</b></div>
+      <div class="row"><span>Hypotheses</span><b>${s.counts.Hypothesis}</b></div>
+      <div class="row"><span>Search</span><span class="pill accent">${esc(s.index_mode)}</span></div>
+      <div class="row"><span>Answers</span><span class="pill ${s.llm_backend ? "good" : "warn"}">${esc(s.llm_backend || s.extractor)}</span></div>`;
+  } catch (e) { $("status").innerHTML = '<span class="dot off"></span>Offline'; }
 }
 
-/* 채팅 */
-const SUGGEST = ["피곤한 날 저녁엔 뭘 주로 선택했지?", "요즘 자주 가는 곳이 어디야?", "내가 새로운 걸 시도하는 건 언제야?"];
+/* Chat */
+const SUGGEST = ["What do I usually pick for dinner when I'm tired?", "Where have I been going lately?", "When do I tend to try new things?"];
 function hello() {
-  $("chat-log").innerHTML = `<div class="hello"><div class="logo">M</div><h2>무엇을 도와드릴까요?</h2>
-    <p>있었던 일을 적으면 기억에 쌓고, 물어보면 기록을 찾아 근거와 함께 답합니다.</p>
+  $("chat-log").innerHTML = `<div class="hello"><div class="logo">M</div><h2>How can I help?</h2>
+    <p>Tell me what happened and I will remember it. Ask a question and I will answer from your memories, with evidence.</p>
     <div class="chips">${SUGGEST.map(q => `<span class="chip" data-q="${esc(q)}">${esc(q)}</span>`).join("")}</div></div>`;
   $("chat-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("chat-in").value = c.dataset.q; sendChat(); }));
 }
@@ -391,15 +398,15 @@ function addMsg(cls, text, saveText) {
   $("chat-log").querySelector(".hello")?.remove();
   const div = document.createElement("div");
   div.className = "msg " + cls;
-  div.innerHTML = `<div class="av">${cls === "user" ? "나" : "M"}</div><div class="bubble"><div class="body">${esc(text)}</div></div>`;
+  div.innerHTML = `<div class="av">${cls === "user" ? "Me" : "M"}</div><div class="bubble"><div class="body">${esc(text)}</div></div>`;
   if (saveText) {
     const act = document.createElement("div"); act.className = "actions";
     const b = document.createElement("button"); b.className = "btn ghost sm";
-    b.innerHTML = '<i data-lucide="bookmark-plus"></i>기억에 저장';
+    b.innerHTML = '<i data-lucide="bookmark-plus"></i>Save to memory';
     b.addEventListener("click", async () => {
       try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: saveText }) });
-        b.innerHTML = "저장됨"; b.disabled = true; toast("기억에 저장했습니다"); loadStatus();
-      } catch (e) { toast("저장하지 못했습니다: " + e.message, "bad"); }
+        b.innerHTML = "Saved"; b.disabled = true; toast("Saved to memory"); loadStatus();
+      } catch (e) { toast("Could not save: " + e.message, "bad"); }
     });
     act.appendChild(b); div.querySelector(".bubble").appendChild(act);
   }
@@ -416,7 +423,7 @@ async function sendChat() {
   addMsg("user", text, text);
   if ($("auto-mem").checked) {
     try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text }) }); loadStatus(); }
-    catch (e) { toast("자동 저장 실패: " + e.message, "bad"); }
+    catch (e) { toast("Auto-save failed: " + e.message, "bad"); }
   }
   const wait = addMsg("bot", "");
   wait.querySelector(".body").innerHTML = '<span class="typing"><b></b><b></b><b></b></span>';
@@ -426,7 +433,7 @@ async function sendChat() {
     wait.querySelector(".body").textContent = r.text;
     const bub = wait.querySelector(".bubble");
     const meta = document.createElement("div"); meta.className = "meta";
-    meta.innerHTML = `<span class="pill ${r.mode === "local" ? "warn" : "good"}">${esc(r.mode)}</span><span class="pill">${esc(r.decision.intent)}</span>` +
+    meta.innerHTML = `<span class="pill ${r.mode === "local" ? "warn" : "good"}">${esc(r.mode)}</span><span class="pill">${esc(tr("intent", r.decision.intent))}</span>` +
       cites(r.citations || []);
     bub.appendChild(meta);
     const prop = r.proposal && r.proposal.intervention;
@@ -434,12 +441,12 @@ async function sendChat() {
       const box = document.createElement("div"); box.className = "actions";
       prop.options_presented.forEach(o => {
         const b = document.createElement("button"); b.className = "btn ghost sm"; b.textContent = o;
-        b.addEventListener("click", () => { $("chat-in").value = `선택: ${o}`; sendChat(); });
+        b.addEventListener("click", () => { $("chat-in").value = `I choose: ${o}`; sendChat(); });
         box.appendChild(b);
       });
       bub.appendChild(box);
     }
-  } catch (e) { wait.querySelector(".body").textContent = "오류: " + e.message; }
+  } catch (e) { wait.querySelector(".body").textContent = "Error: " + e.message; }
   $("chat-send").disabled = false; loadStatus(); icons();
 }
 function autosize() { const t = $("chat-in"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
@@ -448,10 +455,10 @@ $("chat-in").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shif
 $("chat-send").addEventListener("click", sendChat);
 $("opts-toggle").addEventListener("click", () => { const on = $("opts-box").classList.toggle("on"); $("opts-toggle").classList.toggle("on", on); if (on) $("chat-opts").focus(); });
 
-/* 프로필 */
+/* Profile */
 const chipsOf = (items, key) => `<div class="chips">${items.map(e => `<span class="chip">${esc(e[key])}<i>${e.count}</i></span>`).join("")}</div>`;
 const groupsOf = (obj, key) => Object.keys(obj).length
-  ? Object.keys(obj).map(k => `<div class="kind">${esc(k)}</div>${chipsOf(obj[k], key)}`).join("") : '<span class="muted">아직 없습니다.</span>';
+  ? Object.keys(obj).map(k => `<div class="kind">${esc(k)}</div>${chipsOf(obj[k], key)}`).join("") : '<span class="muted">Nothing yet.</span>';
 async function loadProfile() {
   const box = $("profile-body"); box.innerHTML = skel(3);
   try {
@@ -460,30 +467,30 @@ async function loadProfile() {
     const meter = n => `<span class="meter">${[1, 2, 3, 4].map(i => `<b class="${i <= n ? "on" : ""}"></b>`).join("")}</span>`;
     const tend = p.tendencies.length ? p.tendencies.map(t => `<div class="tend"><div class="st">${esc(t.statement)}</div>
       <div class="mt">${meter(Math.min(t.supports, 4))}<span class="pill ${t.supports > 1 ? "good" : "warn"}">${esc(t.evidence_label)}</span>
-      <span class="muted">반례 ${t.contradicts}건 · ${esc(t.domain)}</span></div></div>`).join("") : '<span class="muted">아직 없습니다.</span>';
-    const endings = (w.endings || []).map(e => `<div class="bar"><span>${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio * 100)}%"></div></span><span>${e.count}문장</span></div>`).join("");
+      <span class="muted">${t.contradicts} counter-examples · ${esc(tr("domain", t.domain))}</span></div></div>`).join("") : '<span class="muted">Nothing yet.</span>';
+    const endings = (w.endings || []).map(e => `<div class="bar"><span>${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio * 100)}%"></div></span><span>${e.count} sentences</span></div>`).join("");
     const styles = wr.styles.length ? `<div class="chips" style="margin-bottom:12px">${wr.styles.map(s => `<span class="chip">${esc(s.pattern)}<i>${esc(s.intent)}</i></span>`).join("")}</div>` : "";
-    const prefs = p.preferences.length ? `<div class="chips">${p.preferences.map(x => `<span class="chip">${esc(x.target)}<i>${x.direction === "+" ? "좋아함" : "싫어함"}</i></span>`).join("")}</div>` : '<span class="muted">아직 없습니다.</span>';
-    const crit = p.criteria.length ? p.criteria.map(x => `<div class="tend"><div class="st">${esc(x.statement)}</div><div class="muted">${esc(x.applies_to)}</div></div>`).join("") : '<span class="muted">아직 없습니다.</span>';
-    box.innerHTML = `<div class="pbanner"><i data-lucide="info"></i><div><b>기록 ${p.observations}건 · ${esc(day(p.period.from))} ~ ${esc(day(p.period.to))}</b>
-      기록이 적을수록 아래 내용은 후보에 가깝습니다. 근거가 한 건이면 후보로 표시합니다.</div></div>
+    const prefs = p.preferences.length ? `<div class="chips">${p.preferences.map(x => `<span class="chip">${esc(x.target)}<i>${x.direction === "+" ? "likes" : "dislikes"}</i></span>`).join("")}</div>` : '<span class="muted">Nothing yet.</span>';
+    const crit = p.criteria.length ? p.criteria.map(x => `<div class="tend"><div class="st">${esc(x.statement)}</div><div class="muted">${esc(x.applies_to)}</div></div>`).join("") : '<span class="muted">Nothing yet.</span>';
+    box.innerHTML = `<div class="pbanner"><i data-lucide="info"></i><div><b>${p.observations} memories · ${esc(day(p.period.from))} ~ ${esc(day(p.period.to))}</b>
+      The fewer memories there are, the closer these are to guesses. One piece of evidence is shown as a candidate.</div></div>
       <div class="stack">
-      <div class="card"><h3>기록에서 반복된 것</h3>${tend}</div>
-      <div class="grid2"><div class="card"><h3>자주 등장하는 대상</h3>${groupsOf(p.entities, "name")}</div>
-      <div class="card"><h3>그럴 때의 상황</h3>${groupsOf(p.situations, "value")}</div></div>
-      <div class="grid2"><div class="card"><h3>선호</h3>${prefs}</div><div class="card"><h3>판단 기준</h3>${crit}</div></div>
-      <div class="card"><h3>글 스타일</h3>${styles}
-      ${w.sentences ? `<div class="muted" style="margin-bottom:8px">문장 ${w.sentences}개 · 평균 ${w.avg_sentence_chars}자 · 가장 긴 문장 ${w.longest_sentence_chars}자</div>${endings}` : ""}
-      <div class="muted" style="margin-top:10px">기록 ${w.observations}건에서 센 값입니다. 글쓰기 도움에 쓰려면 내가 쓴 글을 더 넣어야 합니다.</div></div></div>`;
-  } catch (e) { box.innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+      <div class="card"><h3>What repeats in your memories</h3>${tend}</div>
+      <div class="grid2"><div class="card"><h3>Things that come up often</h3>${groupsOf(p.entities, "name")}</div>
+      <div class="card"><h3>Situations they appear in</h3>${groupsOf(p.situations, "value")}</div></div>
+      <div class="grid2"><div class="card"><h3>Preferences</h3>${prefs}</div><div class="card"><h3>Decision criteria</h3>${crit}</div></div>
+      <div class="card"><h3>Writing style</h3>${styles}
+      ${w.sentences ? `<div class="muted" style="margin-bottom:8px">${w.sentences} sentences · avg ${w.avg_sentence_chars} chars · longest ${w.longest_sentence_chars} chars</div>${endings}` : ""}
+      <div class="muted" style="margin-top:10px">Counted from ${w.observations} memories. To help with writing, add more of your own writing.</div></div></div>`;
+  } catch (e) { box.innerHTML = empty("wifi-off", "Could not load", e.message); }
   icons();
 }
 
-/* 시나리오 */
+/* Scenarios */
 let SCEN = [], scenCur = null;
 const SC_ICON = { doc_draft: "file-pen-line", music_recommend: "music", day_plan: "calendar-days", choice_help: "git-compare" };
 async function loadScen() {
-  if (!SCEN.length) { try { SCEN = (await api("/api/scenarios")).scenarios; } catch (e) { $("scen-pick").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); return; } }
+  if (!SCEN.length) { try { SCEN = (await api("/api/scenarios")).scenarios; } catch (e) { $("scen-pick").innerHTML = empty("wifi-off", "Could not load", e.message); return; } }
   $("scen-pick").innerHTML = SCEN.map(s => `<button class="sc${scenCur === s.id ? " on" : ""}" data-sc="${s.id}"><span class="ic"><i data-lucide="${SC_ICON[s.id] || "sparkles"}"></i></span><b>${esc(s.name)}</b><span>${esc(s.summary)}</span></button>`).join("");
   $("scen-pick").querySelectorAll(".sc").forEach(b => b.addEventListener("click", () => { scenCur = b.dataset.sc; $("scen-out").innerHTML = ""; loadScen(); }));
   const s = SCEN.find(x => x.id === scenCur);
@@ -493,68 +500,68 @@ async function loadScen() {
       : f.kind === "textarea" ? `<textarea id="${id}" rows="3" placeholder="${esc(f.placeholder)}"></textarea>`
       : `<input id="${id}" type="text" placeholder="${esc(f.placeholder)}">`;
     return `<div class="field"><label for="${id}">${esc(f.label)}${f.required ? ' <span style="color:var(--bad)">*</span>' : ""}</label>${ctl}</div>`;
-  }).join("")}<button class="btn primary" id="sc-run"><i data-lucide="wand-sparkles"></i>실행</button></div>`
-    : empty("sparkles", "시나리오를 골라주세요", "위에서 하고 싶은 일을 누르면 입력 칸이 나옵니다.");
+  }).join("")}<button class="btn primary" id="sc-run"><i data-lucide="wand-sparkles"></i>Run</button></div>`
+    : empty("sparkles", "Pick a scenario", "Choose what you want to do above and its fields will appear.");
   if (s) $("sc-run").addEventListener("click", () => runScen(s));
   icons();
 }
 async function runScen(s) {
   const inputs = {}; s.fields.forEach(f => { inputs[f.key] = $("sc-" + f.key).value; });
-  $("sc-run").disabled = true; $("scen-out").innerHTML = '<div class="card" style="margin-top:12px"><span class="typing"><b></b><b></b><b></b></span> <span class="muted">내 기록을 읽고 만드는 중입니다</span></div>';
+  $("sc-run").disabled = true; $("scen-out").innerHTML = '<div class="card" style="margin-top:12px"><span class="typing"><b></b><b></b><b></b></span> <span class="muted">Reading your memories and working on it</span></div>';
   try {
     const r = await api(`/api/scenarios/${s.id}/run`, { method: "POST", headers: JSONH, body: JSON.stringify({ inputs }) });
     $("scen-out").innerHTML = `<div class="card" style="margin-top:12px"><div class="result">${esc(r.text)}</div>
       <div class="result-meta"><span class="pill ${r.mode === "local" ? "warn" : "good"}">${esc(r.mode)}</span>
       ${cites(r.citations)}</div>
       ${r.note ? `<div class="muted" style="margin-top:8px">${esc(r.note)}</div>` : ""}</div>`;
-  } catch (e) { $("scen-out").innerHTML = `<div class="card" style="margin-top:12px">${empty("circle-alert", "실행하지 못했습니다", e.message)}</div>`; }
+  } catch (e) { $("scen-out").innerHTML = `<div class="card" style="margin-top:12px">${empty("circle-alert", "Could not run", e.message)}</div>`; }
   $("sc-run").disabled = false; icons();
 }
 
-/* 기억 */
+/* Memory */
 async function loadMems(q) {
   const list = $("mem-list"); list.innerHTML = skel(3);
   try {
     const data = await api("/api/memories?q=" + encodeURIComponent(q || ""));
-    if (!data.items.length) { list.innerHTML = `<div class="card">${empty("library", q ? "검색 결과가 없습니다" : "아직 기억이 없습니다", q ? "다른 말로 검색해보세요." : "위에서 첫 기억을 추가해보세요.")}</div>`; icons(); return; }
+    if (!data.items.length) { list.innerHTML = `<div class="card">${empty("library", q ? "No results" : "No memories yet", q ? "Try different words." : "Add your first memory above.")}</div>`; icons(); return; }
     list.innerHTML = "";
     data.items.forEach(o => {
       const div = document.createElement("div"); div.className = "item";
       div.innerHTML = `<div class="top"><div class="txt">${esc(o.text)}</div></div>
         <div class="foot"><span class="pill"><i data-lucide="calendar" style="width:12px;height:12px"></i>${esc(day(o.occurred_at) || "-")}</span><span class="id">${esc(o.id)}</span>
-        ${o.score !== undefined ? `<span class="pill accent">관련도 ${o.score}</span>` : ""}</div>`;
-      const del = document.createElement("button"); del.className = "btn ghost icon danger sm"; del.setAttribute("aria-label", "삭제");
+        ${o.score !== undefined ? `<span class="pill accent">relevance ${o.score}</span>` : ""}</div>`;
+      const del = document.createElement("button"); del.className = "btn ghost icon danger sm"; del.setAttribute("aria-label", "Delete");
       del.innerHTML = '<i data-lucide="trash-2"></i>';
       del.addEventListener("click", async () => {
-        if (!confirm("이 기억을 삭제할까요? 여기서 나온 이해도 함께 정리됩니다.")) return;
-        try { await api("/api/memories/" + o.id, { method: "DELETE" }); toast("삭제했습니다"); loadMems($("mem-q").value); loadStatus(); }
-        catch (e) { toast("삭제하지 못했습니다: " + e.message, "bad"); }
+        if (!confirm("Delete this memory? What was learned from it will be removed too.")) return;
+        try { await api("/api/memories/" + o.id, { method: "DELETE" }); toast("Deleted"); loadMems($("mem-q").value); loadStatus(); }
+        catch (e) { toast("Could not delete: " + e.message, "bad"); }
       });
       div.querySelector(".top").appendChild(del); list.appendChild(div);
     });
-  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "불러오지 못했습니다", e.message)}</div>`; }
+  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "Could not load", e.message)}</div>`; }
   icons();
 }
 $("mem-search").addEventListener("click", () => loadMems($("mem-q").value));
 $("mem-q").addEventListener("keydown", e => { if (e.key === "Enter") loadMems($("mem-q").value); });
 $("mem-add-btn").addEventListener("click", async () => {
   const t = $("mem-add").value.trim(); if (!t) return;
-  const b = $("mem-add-btn"); b.disabled = true; b.textContent = "읽는 중...";
+  const b = $("mem-add-btn"); b.disabled = true; b.textContent = "Reading...";
   try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: t }) });
-    $("mem-add").value = ""; toast("기억을 추가했습니다"); loadMems(); loadStatus();
-  } catch (e) { toast("추가하지 못했습니다: " + e.message, "bad"); }
-  b.disabled = false; b.innerHTML = '<i data-lucide="plus"></i>기억 추가'; icons();
+    $("mem-add").value = ""; toast("Memory added"); loadMems(); loadStatus();
+  } catch (e) { toast("Could not add: " + e.message, "bad"); }
+  b.disabled = false; b.innerHTML = '<i data-lucide="plus"></i>Add memory'; icons();
 });
 
-/* 그래프 */
+/* Graph */
 const KCOL = { Observation: "#6bb3e0", Entity: "#e3b341", Context: "#a78bdb", Preference: "#4cc38a", Criterion: "#ee8a8a", Hypothesis: "#f09a55", Style: "#9aa8a6", Correction: "#e06666" };
-const KKO = { Observation: "기억", Entity: "대상", Context: "상황", Preference: "선호", Criterion: "기준", Hypothesis: "가설", Style: "문체", Correction: "정정" };
+const KKO = { Observation: "Memory", Entity: "Thing", Context: "Situation", Preference: "Preference", Criterion: "Criterion", Hypothesis: "Hypothesis", Style: "Style", Correction: "Correction" };
 let cy = null;
 async function loadGraph() {
   if (cy) { cy.resize(); return; }
   $("legend").innerHTML = Object.keys(KCOL).filter(k => k !== "Correction").map(k => `<span><b style="background:${KCOL[k]}"></b>${KKO[k]}</span>`).join("");
-  if (typeof cytoscape === "undefined") { $("cy-note").innerHTML = empty("wifi-off", "그래프 라이브러리를 불러오지 못했습니다", "인터넷 연결을 확인해주세요."); icons(); return; }
-  let data; try { data = await api("/api/graph"); } catch (e) { $("cy-note").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); icons(); return; }
+  if (typeof cytoscape === "undefined") { $("cy-note").innerHTML = empty("wifi-off", "Could not load the graph library", "Check your internet connection."); icons(); return; }
+  let data; try { data = await api("/api/graph"); } catch (e) { $("cy-note").innerHTML = empty("wifi-off", "Could not load", e.message); icons(); return; }
   const dark = matchMedia("(prefers-color-scheme: dark)").matches;
   const txt = dark ? "#dbe9e7" : "#1b2c2b", edge = dark ? "#3a5250" : "#c3d0ce";
   const short = s => (s.length > 14 ? s.slice(0, 14) + "…" : s);
@@ -578,55 +585,55 @@ async function loadGraph() {
     cy.elements().addClass("dim").removeClass("hi sel"); nb.removeClass("dim").addClass("hi"); n.addClass("sel");
     const rel = n.connectedEdges().map(e => { const o = e.source().id() === n.id() ? e.target() : e.source(); return `<span class="chip">${esc(e.data("label"))} · ${esc(KKO[o.data("kind")] || "")} ${esc(short(o.data("full")))}</span>`; });
     $("cy-note").innerHTML = `<span class="pill accent">${esc(KKO[n.data("kind")] || n.data("kind"))}</span> <span class="id">${esc(n.id())}</span>
-      <div style="margin:8px 0 10px">${esc(n.data("full"))}</div><div class="chips">${rel.join("") || '<span class="muted">연결 없음</span>'}</div>`;
+      <div style="margin:8px 0 10px">${esc(n.data("full"))}</div><div class="chips">${rel.join("") || '<span class="muted">No connections</span>'}</div>`;
   });
-  cy.on("tap", ev => { if (ev.target === cy) { cy.elements().removeClass("dim hi sel"); $("cy-note").innerHTML = '<span class="muted">노드를 누르면 연결된 관계와 내용이 보입니다.</span>'; } });
+  cy.on("tap", ev => { if (ev.target === cy) { cy.elements().removeClass("dim hi sel"); $("cy-note").innerHTML = '<span class="muted">Tap a node to see what it connects to.</span>'; } });
 }
 
-/* 가설 */
+/* Hypotheses */
 async function loadHyps() {
   const list = $("hyp-list"); list.innerHTML = skel(3);
   try {
     const data = await api("/api/hypotheses");
-    if (!data.hypotheses.length) { list.innerHTML = `<div class="card">${empty("lightbulb", "아직 가설이 없습니다", "기록이 쌓이면 반복된 것이 가설로 올라옵니다.")}</div>`; icons(); return; }
+    if (!data.hypotheses.length) { list.innerHTML = `<div class="card">${empty("lightbulb", "No hypotheses yet", "Patterns show up here once memories pile up.")}</div>`; icons(); return; }
     list.innerHTML = "";
-    const tone = { active: ["good", "승격"], candidate: ["warn", "후보"], suspended: ["", "보류"] };
+    const tone = { active: ["good", "Promoted"], candidate: ["warn", "Candidate"], suspended: ["", "On hold"] };
     data.hypotheses.forEach(h => {
       const t = tone[h.status] || ["", h.status];
       const div = document.createElement("div"); div.className = "item";
       div.innerHTML = `<div class="top"><div class="txt" style="font-weight:600">${esc(h.statement)}</div><span class="pill ${t[0]}">${esc(t[1])}</span></div>
-        <div class="foot"><span class="pill accent">근거 ${h.supports.length}</span><span class="pill ${h.contradicts.length ? "bad" : ""}">반례 ${h.contradicts.length}</span>
-        <span class="pill">${esc(h.domain || "-")}</span><span class="id">${esc(h.id)}</span></div>
+        <div class="foot"><span class="pill accent">${h.supports.length} evidence</span><span class="pill ${h.contradicts.length ? "bad" : ""}">${h.contradicts.length} counter-examples</span>
+        <span class="pill">${esc(tr("domain", h.domain) || "-")}</span><span class="id">${esc(h.id)}</span></div>
         <div>${h.supports.map(s => `<div class="ev sup"><i data-lucide="plus-circle"></i><div><small>${esc(day(s.occurred_at))}</small>${esc(s.text)}</div></div>`).join("")}
         ${h.contradicts.map(s => `<div class="ev con"><i data-lucide="minus-circle"></i><div><small>${esc(day(s.occurred_at))}</small>${esc(s.text)}</div></div>`).join("")}</div>`;
       const seg = document.createElement("div"); seg.className = "seg"; seg.style.alignSelf = "flex-start";
-      [["맞음", "ok"], ["아님", "no"], ["쓰지 마", "stop"]].forEach(([v, c]) => {
+      [["Correct", "ok", "correct"], ["Wrong", "no", "wrong"], ["Don't use", "stop", "dont_use"]].forEach(([v, c, code]) => {
         const b = document.createElement("button"); b.className = c; b.textContent = v;
         b.addEventListener("click", async () => {
-          try { await api(`/api/hypotheses/${h.id}/feedback`, { method: "POST", headers: JSONH, body: JSON.stringify({ verdict: v }) });
-            toast(`"${v}"로 반영했습니다`); loadHyps(); loadStatus(); } catch (e) { toast("반영하지 못했습니다: " + e.message, "bad"); }
+          try { await api(`/api/hypotheses/${h.id}/feedback`, { method: "POST", headers: JSONH, body: JSON.stringify({ verdict: code }) });
+            toast(`Marked as "${v}"`); loadHyps(); loadStatus(); } catch (e) { toast("Could not apply: " + e.message, "bad"); }
         });
         seg.appendChild(b);
       });
       div.appendChild(seg); list.appendChild(div);
     });
-  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "불러오지 못했습니다", e.message)}</div>`; }
+  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "Could not load", e.message)}</div>`; }
   icons();
 }
 
-/* 관계 */
+/* Relations */
 async function loadRels() {
   const box = $("rel-list");
   try {
     const data = await api("/api/relations");
-    if (!data.vocabulary.length) { box.innerHTML = empty("link-2", "아직 관계가 없습니다", "기록에서 대상 사이의 관계가 뽑히면 여기에 쌓입니다."); icons(); return; }
-    box.innerHTML = `<div class="tw"><table class="tbl"><tr><th>서술</th><th>횟수</th><th>예시</th></tr>${data.vocabulary.map(v => { const x = v.examples[0] || {};
+    if (!data.vocabulary.length) { box.innerHTML = empty("link-2", "No relations yet", "Relationships between things appear here once they are extracted."); icons(); return; }
+    box.innerHTML = `<div class="tw"><table class="tbl"><tr><th>Phrase</th><th>Count</th><th>Example</th></tr>${data.vocabulary.map(v => { const x = v.examples[0] || {};
       return `<tr><td>${esc(v.phrase)}</td><td class="n">${v.count}</td><td class="muted">${esc(x.from || "")} → ${esc(x.to || "")}</td></tr>`; }).join("")}</table></div>`;
-  } catch (e) { box.innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+  } catch (e) { box.innerHTML = empty("wifi-off", "Could not load", e.message); }
   icons();
 }
 
-/* 리포트 */
+/* Report */
 function renderMd(md) {
   const lines = (md || "").split("\n"); let html = "";
   lines.forEach(l => {
@@ -634,23 +641,23 @@ function renderMd(md) {
     if (l.startsWith("# ")) return;
     if (l.startsWith("## ")) html += `<h3>${esc(l.slice(3))}</h3>`;
     else if (l.startsWith("- ")) {
-      const m = l.slice(2).match(/^\[(\w+)\]\s*(.*?)(?:\s*\((근거[^)]*)\))?$/);
+      const m = l.slice(2).match(/^\[(\w+)\]\s*(.*?)(?:\s*\((evidence[^)]*)\))?$/);
       html += m ? `<div class="li"><span class="pill ${m[1] === "active" ? "good" : "warn"}">${esc(m[1])}</span><span>${esc(m[2])}</span><small>${esc(m[3] || "")}</small></div>` : `<div class="li">${esc(l.slice(2))}</div>`;
     } else if (/^\d{4}-\d\d-\d\d/.test(l)) html += `<div class="range">${esc(l)}</div>`;
     else html += `<div class="muted" style="margin-top:12px">${esc(l)}</div>`;
   });
-  return html || empty("clipboard-check", "이번 주 변화가 없습니다", "");
+  return html || empty("clipboard-check", "Nothing changed this week", "");
 }
 async function loadReport() {
   $("report-body").innerHTML = skel(1);
-  try { $("report-body").innerHTML = renderMd((await api("/api/report")).markdown); } catch (e) { $("report-body").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+  try { $("report-body").innerHTML = renderMd((await api("/api/report")).markdown); } catch (e) { $("report-body").innerHTML = empty("wifi-off", "Could not load", e.message); }
   icons();
 }
-[["m-nightly", "nightly", "야간 통합"], ["m-weekly", "weekly", "주간 점검"], ["m-promote", "promote", "승격"]].forEach(([id, job, name]) =>
+[["m-nightly", "nightly", "Nightly consolidation"], ["m-weekly", "weekly", "Weekly review"], ["m-promote", "promote", "Promote"]].forEach(([id, job, name]) =>
   $(id).addEventListener("click", async () => {
     try { const r = await api("/api/maintain", { method: "POST", headers: JSONH, body: JSON.stringify({ job }) });
-      $("m-out").textContent = JSON.stringify(r, null, 1); toast(name + "을 실행했습니다"); loadStatus(); loadReport();
-    } catch (e) { toast(name + " 실패: " + e.message, "bad"); }
+      $("m-out").textContent = JSON.stringify(r, null, 1); toast(name + " finished"); loadStatus(); loadReport();
+    } catch (e) { toast(name + " failed: " + e.message, "bad"); }
   }));
 
 hello(); loadStatus(); icons();

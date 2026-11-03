@@ -30,9 +30,9 @@ def test_list_has_four_scenarios():
 
 
 def test_doc_draft_local_gives_outline_not_prose(seeded):
-    out = _run(seeded, "doc_draft", {"topic": "저녁 식사", "kind": "일기"})
+    out = _run(seeded, "doc_draft", {"topic": "Dinner", "kind": "Journal entry"})
     assert out["mode"] == "local"
-    assert "구성안" in out["text"] and "오늘 한 일" in out["text"]
+    assert "Outline" in out["text"] and "What I did today" in out["text"]
     assert "LLM" in out["note"]
 
 
@@ -45,18 +45,18 @@ def test_music_ranks_only_given_candidates(seeded):
 
 def test_music_without_candidates_does_not_invent_tracks(seeded):
     out = _run(seeded, "music_recommend", {"situation": "출근길"})
-    assert "후보 곡이 없어서" in out["text"]
+    assert "No candidate tracks" in out["text"]
 
 
 def test_day_plan_tired_caps_at_three(seeded):
     out = _run(seeded, "day_plan",
-               {"state": "피곤함", "tasks": "a\nb\nc\nd\ne"})
-    assert "최대 3개" in out["text"] and "내일로 미루기" in out["text"]
+               {"state": "Tired", "tasks": "a\nb\nc\nd\ne"})
+    assert "at most 3" in out["text"] and "Push to tomorrow" in out["text"]
     assert "- d" in out["text"]
 
 
 def test_day_plan_normal_keeps_all(seeded):
-    out = _run(seeded, "day_plan", {"state": "보통", "tasks": "a\nb\nc\nd"})
+    out = _run(seeded, "day_plan", {"state": "Normal", "tasks": "a\nb\nc\nd"})
     assert "4. d" in out["text"]
 
 

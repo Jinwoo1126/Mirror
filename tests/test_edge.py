@@ -1,0 +1,156 @@
+import json
+import time
+
+import httpx
+import pytest
+from starlette.testclient import TestClient
+
+from mirror import edge
+
+TOKEN = "t0k3n"
+AUTH = {"Authorization": f"Bearer {TOKEN}"}
+ITEMS = [{"kind": "Hypothesis", "id": "hyp-1", "statement": "Prefers short answers",
+          "status": "active", "use_policy": "apply_silently", "evidence": 3}]
+
+
+class Rec:
+    def __init__(self):
+        self.backend, self.upstream = [], []
+
+
+@pytest.fixture
+def make():
+    def _make(inject=True, capture=False, key="sk-up", stream=False):
+        rec = Rec()
+
+        def backend(req: httpx.Request):
+            body = json.loads(req.content or b"{}")
+            rec.backend.append((req.url.path, body))
+            if req.url.path == "/api/retrieve":
+                return httpx.Response(200, json={"items": ITEMS})
+            return httpx.Response(200, json={"ok": True})
+
+        def upstream(req: httpx.Request):
+            body = json.loads(req.content or b"{}")
+            rec.upstream.append((req.url.path, dict(req.headers), body))
+            if body.get("stream"):
+                return httpx.Response(200, content=b"data: {\"x\":1}\n\ndata: [DONE]\n\n",
+                                      headers={"content-type": "text/event-stream"})
+            return httpx.Response(200, json={"choices": [{"message": {"content": "hi"}}]})
+
+        cfg = edge.Config(token=TOKEN, upstream_key=key, inject=inject, capture=capture)
+        app = edge.create_app(
+            cfg, backend=httpx.AsyncClient(transport=httpx.MockTransport(backend),
+                                           base_url="http://backend"),
+            upstream=httpx.AsyncClient(transport=httpx.MockTransport(upstream)))
+        return TestClient(app), rec, cfg
+    return _make
+
+
+def chat(client, text="What should I order tonight?", headers=None, **extra):
+    return client.post("/v1/chat/completions", headers={**AUTH, **(headers or {})},
+                       json={"model": "m", "messages": [{"role": "user", "content": text}],
+                             **extra})
+
+
+def test_everything_requires_the_token(make):
+    client, _, _ = make()
+    assert client.post("/v1/chat/completions", json={}).status_code == 401
+    assert client.post("/v1/chat/completions", json={},
+                       headers={"Authorization": "Bearer nope"}).status_code == 401
+    assert client.post("/mcp", json={}).status_code == 401
+
+
+def test_no_configured_token_refuses_everything():
+    app = edge.create_app(edge.Config(token=""))
+    assert TestClient(app).post("/v1/chat/completions", json={},
+                                headers={"Authorization": "Bearer "}).status_code == 401
+
+
+def test_context_is_injected_as_first_system_message(make):
+    client, rec, _ = make()
+    r = chat(client)
+    assert r.status_code == 200 and r.headers["x-mirror-injected"] == "1"
+    _, headers, body = rec.upstream[0]
+    assert body["messages"][0]["role"] == "system"
+    assert "Prefers short answers" in body["messages"][0]["content"]
+    assert body["messages"][-1]["content"] == "What should I order tonight?"
+    assert headers["authorization"] == "Bearer sk-up"   # the upstream key, not the token
+
+
+def test_skip_header_and_inject_off_pass_through_untouched(make):
+    client, rec, _ = make()
+    chat(client, headers={"x-mirror-skip": "1"})
+    assert len(rec.upstream[0][2]["messages"]) == 1
+    client2, rec2, _ = make(inject=False)
+    chat(client2)
+    assert len(rec2.upstream[0][2]["messages"]) == 1
+    assert not [p for p, _ in rec2.backend if p == "/api/retrieve"]
+
+
+def test_backend_down_does_not_break_the_request():
+    def boom(req):
+        raise httpx.ConnectError("down")
+
+    cfg = edge.Config(token=TOKEN, upstream_key="k")
+    app = edge.create_app(
+        cfg, backend=httpx.AsyncClient(transport=httpx.MockTransport(boom),
+                                       base_url="http://backend"),
+        upstream=httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda r: httpx.Response(200, json={"choices": []}))))
+    r = TestClient(app).post("/v1/chat/completions", headers=AUTH, json={
+        "messages": [{"role": "user", "content": "hello there"}]})
+    assert r.status_code == 200 and r.headers["x-mirror-injected"] == "0"
+
+
+def test_capture_is_off_by_default_and_remembers_only_the_user_message(make):
+    client, rec, _ = make()
+    chat(client)
+    time.sleep(0.2)
+    assert not [p for p, _ in rec.backend if p == "/api/memories"]
+    client2, rec2, _ = make(capture=True)
+    chat(client2, text="I always pick the quiet table")
+    time.sleep(0.3)
+    saved = [b for p, b in rec2.backend if p == "/api/memories"]
+    assert saved == [{"text": "I always pick the quiet table"}]
+
+
+def test_capture_skips_tiny_and_skipped_requests(make):
+    client, rec, _ = make(capture=True)
+    chat(client, text="hi")
+    chat(client, text="a long enough message", headers={"x-mirror-skip": "1"})
+    time.sleep(0.3)
+    assert not [p for p, _ in rec.backend if p == "/api/memories"]
+
+
+def test_streaming_is_passed_through(make):
+    client, rec, _ = make()
+    r = chat(client, stream=True)
+    assert r.status_code == 200 and b"[DONE]" in r.content
+    assert rec.upstream[0][2]["stream"] is True
+    assert rec.upstream[0][2]["messages"][0]["role"] == "system"
+
+
+def test_gateway_without_upstream_key_is_503(make):
+    client, _, _ = make(key="")
+    assert chat(client).status_code == 503
+
+
+def test_content_parts_user_message_is_read():
+    msgs = [{"role": "system", "content": "s"},
+            {"role": "user", "content": [{"type": "text", "text": "part one"},
+                                         {"type": "image_url", "image_url": {}},
+                                         {"type": "text", "text": "part two"}]}]
+    assert edge.last_user_text(msgs) == "part one\npart two"
+    assert edge.last_user_text([]) == ""
+
+
+def test_mcp_endpoint_answers_initialize_with_the_token(make):
+    client, _, _ = make()
+    with client:
+        r = client.post("/mcp", headers={**AUTH, "Accept": "application/json, text/event-stream"},
+                        json={"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                              "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                                         "clientInfo": {"name": "t", "version": "0"}}})
+    assert r.status_code == 200
+    assert r.json()["result"]["serverInfo"]["name"] == "mirror"

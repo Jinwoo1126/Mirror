@@ -29,6 +29,7 @@ from . import observe as observe_mod
 from . import policy as policy_mod
 from . import profile as profile_mod
 from . import report as report_mod
+from . import retrieve as retrieve_mod
 from . import router as router_mod
 from . import scenarios as scen_mod
 from . import schema
@@ -318,6 +319,36 @@ async def api_scenario_run(request):
         return _json(out)
 
 
+async def api_retrieve(request):
+    """Related understanding for outside callers (the edge server).
+
+    Only hypotheses come back by default, and internal_only ones are withheld.
+    Raw memories are included only when include_memories is true.
+    """
+    body = await request.json()
+    q = (body.get("request") or "").strip()
+    if not q:
+        return _json({"error": "empty request"}, 400)
+    budget = max(1, min(int(body.get("budget", 6)), 20))
+    with _lock:
+        out = retrieve_mod.retrieve(get_store(), q, [], None, budget,
+                                    index=get_index())
+    items = []
+    for it in out.get("items", []):
+        if it["kind"] == schema.HYPOTHESIS:
+            if it.get("use_policy") == "internal_only":
+                continue
+            items.append({"kind": it["kind"], "id": it["id"],
+                          "statement": it["statement"], "status": it["status"],
+                          "use_policy": it["use_policy"],
+                          "evidence": len(it.get("supports", [])),
+                          "counter_examples": len(it.get("contradicts", [])),
+                          "evidence_ids": it.get("supports", [])})
+        elif body.get("include_memories"):
+            items.append(it)
+    return _json({"items": items, "revision": out.get("revision")})
+
+
 async def api_relations(request):
     with _lock:
         return _json({"vocabulary": get_store().relation_vocabulary()})
@@ -363,6 +394,7 @@ routes = [
     Route("/api/report", api_report),
     Route("/api/relations", api_relations),
     Route("/api/profile", api_profile),
+    Route("/api/retrieve", api_retrieve, methods=["POST"]),
     Route("/api/scenarios", api_scenarios),
     Route("/api/scenarios/{scenario_id}/run", api_scenario_run, methods=["POST"]),
     Route("/api/decide", api_decide, methods=["POST"]),

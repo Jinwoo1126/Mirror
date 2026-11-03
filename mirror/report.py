@@ -14,6 +14,9 @@ VERDICT_KEEP = "맞음"
 VERDICT_WRONG = "아님"
 VERDICT_SUPPRESS = "쓰지 마"
 VERDICTS = (VERDICT_KEEP, VERDICT_WRONG, VERDICT_SUPPRESS)
+# English aliases the UI sends; the Korean constants stay as the stored protocol values
+VERDICT_ALIASES = {"correct": VERDICT_KEEP, "wrong": VERDICT_WRONG,
+                   "dont_use": VERDICT_SUPPRESS, "don't use": VERDICT_SUPPRESS}
 
 
 def weekly_report(store: MirrorStore, since: str,
@@ -59,29 +62,30 @@ def weekly_report(store: MirrorStore, since: str,
 
 
 def render_markdown(report: dict) -> str:
-    lines = [f"# 이번 주 Mirror가 바꾼 이해",
+    lines = ["# What Mirror changed this week",
              f"{report['since'][:10]} ~ {report['as_of'][:10]}", ""]
-    lines.append(f"## 새로 생긴 가설 ({len(report['new_hypotheses'])})")
+    lines.append(f"## New hypotheses ({len(report['new_hypotheses'])})")
     for h in report["new_hypotheses"]:
-        lines.append(f"- [{h['status']}] {h['statement']} (근거 "
-                     f"{', '.join(h['supports']) or '없음'})")
+        lines.append(f"- [{h['status']}] {h['statement']} (evidence "
+                     f"{', '.join(h['supports']) or 'none'})")
     lines.append("")
-    lines.append(f"## 내려간·폐기된 가설 "
+    lines.append(f"## Demoted or retired hypotheses "
                  f"({len(report['demoted']) + len(report['retired'])})")
     for h in report["demoted"] + report["retired"]:
         lines.append(f"- [{h['status']}] {h['statement']}")
     lines.append("")
-    lines.append(f"## 정정 ({len(report['corrections'])})")
+    lines.append(f"## Corrections ({len(report['corrections'])})")
     for c in report["corrections"]:
         lines.append(f"- [{c['kind']}] {c['target']}: {c['text']}")
     lines.append("")
-    lines.append("각 항목에 맞음·아님·쓰지 마를 누르면 control로 반영됩니다.")
+    lines.append("Mark a hypothesis Correct, Wrong or Don't use to apply it.")
     return "\n".join(lines)
 
 
 def apply_feedback(store: MirrorStore, hyp_id: str, verdict: str,
                    text: str = "") -> dict:
-    """리포트 verdict를 control로 반영."""
+    """Apply a report verdict through control."""
+    verdict = VERDICT_ALIASES.get(verdict.strip().lower(), verdict)
     if verdict not in VERDICTS:
         return {"ok": False, "error": f"unknown_verdict: {verdict}"}
     if verdict == VERDICT_KEEP:
@@ -92,7 +96,7 @@ def apply_feedback(store: MirrorStore, hyp_id: str, verdict: str,
         res = control_mod.control(
             store, "correct", {"kind": schema.HYPOTHESIS, "id": hyp_id},
             {"kind": schema.CORRECTION_INTERPRETATION,
-             "text": text or "리포트에서 아님 선택"})
+             "text": text or "Marked wrong from the report"})
         return {"ok": res.ok, "action": "correct", "error": res.error,
                 "detail": res.detail, "revision": res.revision}
     res = control_mod.control(store, "suppress",

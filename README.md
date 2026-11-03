@@ -43,6 +43,8 @@ tests/                           pytest 커밋 테스트 (단위+통합)
 > 추출은 LLM 추출기만 쓴다. 규칙 기반 `MockExtractor`는 테스트 전용이고, LLM을 못 쓰면
 > 규칙으로 대신하지 않고 실패를 알린다. spark는 `muse` 로그인 또는 `META_API_KEY`가 필요하다.
 
+> Connecting other AI services (gateway, remote MCP, hooks): see `docs/CONNECT.md`.
+
 ## 설치
 
 ```sh

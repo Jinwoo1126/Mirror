@@ -60,18 +60,19 @@ def answer(store: MirrorStore, router, llm_call: Callable[[str], str] | None,
     lines = []
     for item in retrieval["items"]:
         if item["kind"] == schema.OBSERVATION:
-            lines.append(f"- 관찰 {item['id']}: {item['text']}")
+            lines.append(f"- memory {item['id']}: {item['text']}")
         else:
             lines.append(
-                f"- 가설 {item['id']} [{item['status']}/{item['use_policy']}]: "
-                f"{item['statement']} (근거 {','.join(item['supports']) or '없음'})")
-    context = "\n".join(lines) if lines else "(관련 이해 없음)"
+                f"- hypothesis {item['id']} [{item['status']}/{item['use_policy']}]: "
+                f"{item['statement']} (evidence {','.join(item['supports']) or 'none'})")
+    context = "\n".join(lines) if lines else "(no related understanding)"
     style_block = ""
     if examples:
-        style_block = "문체 예시:\n" + "\n---\n".join(examples) + "\n"
-    prompt = (f"관련 이해:\n{context}\n{style_block}\n"
-              f"요청: {request}\n"
-              "위 이해를 참고해 답하고, 쓴 근거는 관찰 ID로 인용하라.")
+        style_block = "Style examples:\n" + "\n---\n".join(examples) + "\n"
+    prompt = (f"Related understanding:\n{context}\n{style_block}\n"
+              f"Request: {request}\n"
+              "Answer using the understanding above and cite the memory ids you "
+              "used. Reply in the same language as the request.")
     citations = []
     for item in retrieval["items"]:
         if item["kind"] == schema.OBSERVATION:
@@ -101,31 +102,31 @@ def extractive_answer(retrieval_items: list[dict],
     if proposal is not None:
         intervention = proposal.get("intervention", {})
         if intervention.get("level") == 1:
-            lines = ["관점에 따라 예측이 갈려서 후보를 나란히 둡니다.\n"]
+            lines = ["Predictions differ by viewpoint, so the options are placed side by side.\n"]
             for opt in intervention.get("options_presented", []):
                 lines.append(f"- {opt}")
             ev = intervention.get("evidence_ids", [])
             if ev:
-                lines.append(f"\n근거 관찰: {', '.join(ev)}")
+                lines.append(f"\nEvidence memories: {', '.join(ev)}")
             return "\n".join(lines)
         if (intervention.get("level") == 0
                 and proposal.get("simulation", {}).get("majority")):
-            return (f"관련 이해가 일치합니다: "
+            return (f"The related understanding agrees: "
                     f"{proposal['simulation']['majority']}\n"
-                    f"(근거 관찰: "
-                    f"{', '.join(intervention.get('evidence_ids', [])) or '없음'})")
+                    f"(evidence memories: "
+                    f"{', '.join(intervention.get('evidence_ids', [])) or 'none'})")
     if not obs_items and not hyp_items:
-        return ("관련 기억이 없습니다. "
-                "채팅 내용을 '기억에 저장'으로 쌓으면 다음부터 참고합니다.")
+        return ("No related memories yet. "
+                "Use 'Save to memory' on chat messages and Mirror will draw on them next time.")
     lines = []
     if hyp_items:
-        lines.append("관련 이해:")
+        lines.append("Related understanding:")
         for h in hyp_items[:3]:
             n = len(h.get("supports", []))
             lines.append(f"- {h.get('statement')} "
-                         f"(근거 {n}건, {h.get('use_policy')})")
+                         f"({n} evidence, {h.get('use_policy')})")
     if obs_items:
-        lines.append("관련 장면:")
+        lines.append("Related memories:")
         for o in obs_items[:3]:
             lines.append(f"- [{(o.get('occurred_at') or '')[:10]}] "
                          f"{o.get('text')}")

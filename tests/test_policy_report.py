@@ -85,7 +85,7 @@ def test_weekly_report_and_feedback(store, mock):
     hyp_id = _two_day_hyp(store, mock)
     report = report_mod.weekly_report(store, "2000-01-01T00:00:00+00:00")
     assert any(h["id"] == hyp_id for h in report["new_hypotheses"])
-    assert "새로 생긴 가설" in report["markdown"]
+    assert "New hypotheses" in report["markdown"]
     keep = report_mod.apply_feedback(store, hyp_id, "맞음")
     assert keep["ok"] and keep["action"] == "keep"
     wrong = report_mod.apply_feedback(store, hyp_id, "아님")
@@ -96,3 +96,13 @@ def test_weekly_report_and_feedback(store, mock):
     assert store.get_hypothesis(hyp_id).status == "suppressed"
     bad = report_mod.apply_feedback(store, hyp_id, "모름")
     assert not bad["ok"]
+
+
+def test_feedback_accepts_english_verdict_codes(store, mock):
+    hyp_id = _two_day_hyp(store, mock)
+    keep = report_mod.apply_feedback(store, hyp_id, "correct")
+    assert keep["ok"] and keep["action"] == "keep"
+    assert report_mod.apply_feedback(store, hyp_id, "wrong")["ok"]
+    assert store.get_hypothesis(hyp_id).status == "suspended"
+    assert report_mod.apply_feedback(store, hyp_id, "dont_use")["ok"]
+    assert not report_mod.apply_feedback(store, hyp_id, "bogus")["ok"]

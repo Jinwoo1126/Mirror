@@ -75,7 +75,7 @@ def test_graph_report_relations_decide_maintain(client):
     graph = client.get("/api/graph").json()
     assert graph["nodes"] and graph["edges"]
     report = client.get("/api/report").json()
-    assert "새로 생긴 가설" in report["markdown"]
+    assert "New hypotheses" in report["markdown"]
     relations = client.get("/api/relations").json()
     assert isinstance(relations["vocabulary"], list)
     decided = client.post("/api/decide", json={
