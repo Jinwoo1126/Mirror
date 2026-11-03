@@ -145,3 +145,46 @@ python3 integrations/claude_code/mirror_hook.py --uninstall
 - `MIRROR_HOOK=off` turns it off for a session. `MIRROR_HOOK_DEBUG=1` prints errors to stderr.
 - Point it at a Mirror instance that holds your own data. A demo database would put someone
   else's habits into your prompts.
+
+## Muse Code
+
+Muse Code (the `muse` CLI) has three places Mirror can plug in. All three were run against a
+real `muse` (1.4.14) in a scratch workspace.
+
+| Connection point | What it does | Where it lives |
+|---|---|---|
+| **Hook** (`UserPromptSubmit`) | Adds related understanding before the model sees the prompt | `<project>/.muse/hooks.json` |
+| **MCP server** | Lets Muse call `mirror_context`, `mirror_remember`, `mirror_feedback`, `mirror_scenario` | `~/.config/muse/settings.json` |
+| **Skill** | Tells Muse when to call those tools, so it does so without being asked | `<project>/.agents/skills/mirror/SKILL.md` |
+
+The hook is the same script as the Claude Code one. Muse Code sends the typed prompt in a
+`prompt` field (Claude Code documents `prompt_text`); the script reads either. Muse Code runs
+hooks with a cleared environment, so the hook finds Mirror through `.muse/mirror-hook.json`,
+and the installed command uses an absolute Python path.
+
+```sh
+# hook + skill, into one project
+python3 integrations/claude_code/mirror_hook.py --install --target muse --url http://HOST:8000 --project DIR
+python3 integrations/claude_code/mirror_hook.py --uninstall --target muse --project DIR
+
+# MCP: print the entry, then add it to ~/.config/muse/settings.json yourself
+python3 integrations/claude_code/mirror_hook.py --print-mcp http://HOST:8100/mcp --token-file data/local/edge.token
+```
+
+`mcp_servers` in the settings file takes `"transport": "streamable_http"`, a `url` and `headers`.
+Project-level MCP is not available in Muse Code, so this one entry goes in the user settings;
+the installer does not edit that file.
+
+What was observed, same model and same question ("I am tired tonight, what should I order for
+dinner?"): with no Mirror the answer was generic; with the hook pointed at the first demo person
+it recommended the usual familiar order and rest; pointed at the second person (the opposite
+profile) it recommended trying a new place. With the MCP server and the skill but no instruction
+to use any tool, Muse called `mirror_context` on its own and used what came back; without the
+skill it did not call it.
+
+Muse Code hook events are `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`,
+`PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `PreLLMCall`, `PostLLMCall`, `PreCompact`,
+`PostCompact`, `SubagentStart`, `SubagentStop`, `Notification`, `Stop`, `StopFailure` and
+`SessionEnd`. Only `UserPromptSubmit` is used here. The exact hook input and output are not in
+Meta's public docs; they were confirmed by running the hook and by the strings in the binary
+(`hookSpecificOutput.hookEventName`, `additionalContext`, `decision: block`).

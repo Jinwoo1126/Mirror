@@ -35,3 +35,6 @@ avatar-candidates/
 
 # per-person generated characters (terms for publishing generated images not checked)
 data/*/avatar/
+
+# Muse Code project-local hook config
+.muse/

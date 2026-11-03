@@ -133,3 +133,59 @@ def test_install_is_idempotent_keeps_other_hooks_and_uninstall_removes_only_ours
     s2 = json.loads((proj / ".claude" / "settings.local.json").read_text())
     assert [h["command"] for e in s2["hooks"]["UserPromptSubmit"] for h in e["hooks"]] == ["echo mine"]
     assert hook.uninstall(str(proj)) is False
+
+
+def test_muse_payload_uses_the_prompt_field(server, tmp_path):
+    url, seen = server
+    r = call({"hook_event_name": "UserPromptSubmit", "prompt": "Please review this pull request",
+              "session_id": "s", "turn_id": "t", "cwd": str(tmp_path), "transcript_path": None,
+              "model": "muse-spark-1.3-contributor", "permission_mode": "default"}, url, tmp=tmp_path)
+    assert "additionalContext" in r.stdout and seen[0][1]["request"].startswith("Please review")
+
+
+def test_other_hook_events_are_ignored(server, tmp_path):
+    url, seen = server
+    r = call({"hook_event_name": "Stop", "prompt": "Please review this pull request"}, url, tmp=tmp_path)
+    assert r.stdout == "" and not seen
+
+
+def test_install_for_muse_writes_muse_hooks_json_with_an_absolute_interpreter(tmp_path):
+    proj = tmp_path / "p"
+    proj.mkdir()
+    path = hook.install(str(proj), "http://x:8000", False, target="muse")
+    assert path == proj / ".muse" / "hooks.json"
+    cmd = json.loads(path.read_text())["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+    assert cmd.startswith('"/') and "mirror_hook.py" in cmd           # absolute python path
+    assert json.loads((proj / ".muse" / "mirror-hook.json").read_text())["url"] == "http://x:8000"
+    assert not (proj / ".claude").exists()
+    assert hook.uninstall(str(proj), target="muse") is True
+    assert hook.uninstall(str(proj), target="muse") is False
+
+
+def test_config_is_found_in_the_muse_folder(tmp_path):
+    (tmp_path / ".muse").mkdir()
+    (tmp_path / ".muse" / "mirror-hook.json").write_text('{"url": "http://muse-test:1"}')
+    assert hook.load_config(str(tmp_path))["url"] == "http://muse-test:1"
+
+
+def test_muse_skill_is_installed_and_removed_without_touching_other_skills(tmp_path):
+    proj = tmp_path / "p"
+    other = proj / ".agents" / "skills" / "other"
+    other.mkdir(parents=True)
+    (other / "SKILL.md").write_text("---\nname: other\ndescription: x\n---\n")
+    dest = hook.install_skill(str(proj))
+    assert (dest / "SKILL.md").read_text().startswith("---\nname: mirror")
+    assert hook.remove_skill(str(proj)) is True and not dest.exists()
+    assert (other / "SKILL.md").exists() and hook.remove_skill(str(proj)) is False
+
+
+def test_the_mcp_snippet_has_the_shape_muse_code_accepted():
+    s = hook.mcp_snippet("http://h:8100/mcp")["mcp_servers"]["mirror"]
+    assert s == {"transport": "streamable_http", "url": "http://h:8100/mcp",
+                 "headers": {"Authorization": "Bearer <MIRROR_TOKEN>"}}
+    assert "<MIRROR_TOKEN>" not in json.dumps(hook.mcp_snippet("u", "real"))
+
+
+def test_skill_file_has_the_frontmatter_muse_validates():
+    text = (hook.SKILL_SRC / "SKILL.md").read_text()
+    assert text.startswith("---\nname: mirror\ndescription: ")
