@@ -1,0 +1,122 @@
+{
+ "세션 시작": [
+  {
+   "set": "heldout4",
+   "mode": "strict",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 42,
+   "exact": 18,
+   "partial": 9,
+   "missing": 27,
+   "spurious": 15,
+   "unscored_pred": 0,
+   "exact_precision": 0.4286,
+   "exact_recall": 0.3333
+  },
+  {
+   "set": "heldout4",
+   "mode": "scoped",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 37,
+   "exact": 25,
+   "partial": 8,
+   "missing": 21,
+   "spurious": 4,
+   "unscored_pred": 5,
+   "exact_precision": 0.6757,
+   "exact_recall": 0.463
+  }
+ ],
+ "1라운드 전": [
+  {
+   "set": "heldout4",
+   "mode": "strict",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 40,
+   "exact": 18,
+   "partial": 9,
+   "missing": 27,
+   "spurious": 13,
+   "unscored_pred": 0,
+   "exact_precision": 0.45,
+   "exact_recall": 0.3333
+  },
+  {
+   "set": "heldout4",
+   "mode": "scoped",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 35,
+   "exact": 25,
+   "partial": 8,
+   "missing": 21,
+   "spurious": 2,
+   "unscored_pred": 5,
+   "exact_precision": 0.7143,
+   "exact_recall": 0.463
+  }
+ ],
+ "지금": [
+  {
+   "set": "heldout4",
+   "mode": "strict",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 49,
+   "exact": 20,
+   "partial": 7,
+   "missing": 27,
+   "spurious": 22,
+   "unscored_pred": 0,
+   "exact_precision": 0.4082,
+   "exact_recall": 0.3704
+  },
+  {
+   "set": "heldout4",
+   "mode": "scoped",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 44,
+   "exact": 31,
+   "partial": 6,
+   "missing": 17,
+   "spurious": 7,
+   "unscored_pred": 5,
+   "exact_precision": 0.7045,
+   "exact_recall": 0.5741
+  }
+ ],
+ "지금(오늘 버그 수정 후, 사후)": [
+  {
+   "set": "heldout4",
+   "mode": "strict",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 46,
+   "exact": 20,
+   "partial": 7,
+   "missing": 27,
+   "spurious": 19,
+   "unscored_pred": 0,
+   "exact_precision": 0.4348,
+   "exact_recall": 0.3704
+  },
+  {
+   "set": "heldout4",
+   "mode": "scoped",
+   "scenes": 20,
+   "gold": 54,
+   "predicted": 41,
+   "exact": 31,
+   "partial": 6,
+   "missing": 17,
+   "spurious": 4,
+   "unscored_pred": 5,
+   "exact_precision": 0.7561,
+   "exact_recall": 0.5741
+  }
+ ]
+}

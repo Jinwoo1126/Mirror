@@ -1,0 +1,92 @@
+{
+ "세션 시작": [
+  {
+   "set": "heldout5",
+   "mode": "strict",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 34,
+   "exact": 18,
+   "partial": 5,
+   "missing": 39,
+   "spurious": 11,
+   "unscored_pred": 0,
+   "exact_precision": 0.5294,
+   "exact_recall": 0.2903
+  },
+  {
+   "set": "heldout5",
+   "mode": "scoped",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 32,
+   "exact": 20,
+   "partial": 5,
+   "missing": 37,
+   "spurious": 7,
+   "unscored_pred": 2,
+   "exact_precision": 0.625,
+   "exact_recall": 0.3226
+  }
+ ],
+ "1라운드 전": [
+  {
+   "set": "heldout5",
+   "mode": "strict",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 30,
+   "exact": 18,
+   "partial": 5,
+   "missing": 39,
+   "spurious": 7,
+   "unscored_pred": 0,
+   "exact_precision": 0.6,
+   "exact_recall": 0.2903
+  },
+  {
+   "set": "heldout5",
+   "mode": "scoped",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 28,
+   "exact": 20,
+   "partial": 5,
+   "missing": 37,
+   "spurious": 3,
+   "unscored_pred": 2,
+   "exact_precision": 0.7143,
+   "exact_recall": 0.3226
+  }
+ ],
+ "지금": [
+  {
+   "set": "heldout5",
+   "mode": "strict",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 40,
+   "exact": 25,
+   "partial": 7,
+   "missing": 30,
+   "spurious": 8,
+   "unscored_pred": 0,
+   "exact_precision": 0.625,
+   "exact_recall": 0.4032
+  },
+  {
+   "set": "heldout5",
+   "mode": "scoped",
+   "scenes": 24,
+   "gold": 62,
+   "predicted": 37,
+   "exact": 30,
+   "partial": 5,
+   "missing": 27,
+   "spurious": 2,
+   "unscored_pred": 3,
+   "exact_precision": 0.8108,
+   "exact_recall": 0.4839
+  }
+ ]
+}

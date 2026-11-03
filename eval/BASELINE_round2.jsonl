@@ -1,0 +1,8 @@
+{"set": "dev", "mode": "strict", "scenes": 4, "gold": 18, "predicted": 20, "exact": 8, "partial": 1, "missing": 9, "spurious": 11, "unscored_pred": 0, "exact_precision": 0.4, "exact_recall": 0.4444}
+{"set": "dev", "mode": "scoped", "scenes": 4, "gold": 17, "predicted": 16, "exact": 15, "partial": 0, "missing": 2, "spurious": 1, "unscored_pred": 4, "exact_precision": 0.9375, "exact_recall": 0.8824}
+{"set": "tune", "mode": "strict", "scenes": 8, "gold": 33, "predicted": 39, "exact": 27, "partial": 3, "missing": 3, "spurious": 9, "unscored_pred": 0, "exact_precision": 0.6923, "exact_recall": 0.8182}
+{"set": "tune", "mode": "scoped", "scenes": 8, "gold": 33, "predicted": 33, "exact": 32, "partial": 1, "missing": 0, "spurious": 0, "unscored_pred": 6, "exact_precision": 0.9697, "exact_recall": 0.9697}
+{"set": "tune2", "mode": "strict", "scenes": 8, "gold": 30, "predicted": 30, "exact": 22, "partial": 0, "missing": 8, "spurious": 8, "unscored_pred": 0, "exact_precision": 0.7333, "exact_recall": 0.7333}
+{"set": "tune2", "mode": "scoped", "scenes": 8, "gold": 30, "predicted": 24, "exact": 23, "partial": 0, "missing": 7, "spurious": 1, "unscored_pred": 6, "exact_precision": 0.9583, "exact_recall": 0.7667}
+{"set": "heldout2", "mode": "strict", "scenes": 12, "gold": 43, "predicted": 46, "exact": 32, "partial": 1, "missing": 10, "spurious": 13, "unscored_pred": 0, "exact_precision": 0.6957, "exact_recall": 0.7442}
+{"set": "heldout2", "mode": "scoped", "scenes": 12, "gold": 43, "predicted": 37, "exact": 33, "partial": 1, "missing": 9, "spurious": 3, "unscored_pred": 9, "exact_precision": 0.8919, "exact_recall": 0.7674}

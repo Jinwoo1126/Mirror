@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mirror</title>
+<script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<style>
+:root { --accent: #0f766e; --ink: #1c1917; --muted: #57534e; --line: #e7e5e4; --bg: #ffffff; --panel: #f5f5f4; }
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--ink); background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+#layout { display: flex; height: 100vh; }
+#side { width: 220px; background: var(--panel); border-right: 1px solid var(--line);
+  padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+#side h1 { font-size: 20px; margin: 0 0 2px 8px; }
+#side .sub { font-size: 12px; color: var(--muted); margin: 0 0 12px 8px; }
+#side button.tab { text-align: left; padding: 8px 10px; border: none; background: none;
+  font-size: 14px; cursor: pointer; border-radius: 6px; color: var(--ink); }
+#side button.tab.active { background: #1c1917; color: #fff; }
+#status { margin-top: auto; font-size: 12px; color: var(--muted); padding: 8px; }
+#status .mode { display: inline-block; background: var(--accent); color: #fff;
+  padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+#main { flex: 1; overflow-y: auto; padding: 20px 28px; max-width: 900px; }
+section { display: none; }
+section.active { display: block; }
+h2 { font-size: 17px; margin: 0 0 12px; }
+#chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.msg { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; max-width: 85%; }
+.msg.user { align-self: flex-end; background: var(--panel); }
+.msg.bot { align-self: flex-start; white-space: pre-wrap; }
+.msg .meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.msg .cite { font-size: 11px; color: var(--muted); }
+.row { display: flex; gap: 8px; }
+input[type=text], textarea { flex: 1; padding: 9px 10px; font-size: 14px;
+  border: 1px solid var(--line); border-radius: 6px; font-family: inherit; }
+button.act { padding: 9px 14px; font-size: 14px; border: 1px solid #1c1917;
+  background: #1c1917; color: #fff; border-radius: 6px; cursor: pointer; }
+button.ghost { padding: 6px 10px; font-size: 12px; border: 1px solid var(--line);
+  background: #fff; border-radius: 6px; cursor: pointer; }
+button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.toolbar label { font-size: 13px; color: var(--muted); }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+.card h3 { margin: 0 0 6px; font-size: 14px; }
+.card p { margin: 4px 0; font-size: 13px; }
+.badge { display: inline-block; font-size: 11px; background: var(--panel);
+  border: 1px solid var(--line); padding: 1px 7px; border-radius: 8px; margin-right: 5px; }
+.ev { font-size: 12px; margin: 3px 0 3px 10px; }
+.sup { color: #166534; } .con { color: #991b1b; }
+#cy { width: 100%; height: 500px; border: 1px solid var(--line); border-radius: 8px; }
+pre.report { background: var(--panel); padding: 14px; white-space: pre-wrap;
+  font-size: 13px; border-radius: 8px; }
+table.vocab { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.vocab th, table.vocab td { border-bottom: 1px solid var(--line);
+  padding: 6px 8px; text-align: left; }
+.opt-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.offline { color: #991b1b; font-size: 13px; }
+
+.pf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.pf-head { margin-bottom: 14px; font-size: 13px; color: var(--muted); }
+.pf-head b { color: var(--ink); font-size: 15px; }
+.pf-card h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 8px; }
+.pf-tend { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.pf-tend:first-of-type { border-top: 0; }
+.pf-tend small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pf-chip { font-size: 13px; border: 1px solid var(--line); border-radius: 12px; padding: 2px 10px; background: var(--panel); }
+.pf-chip i { font-style: normal; color: var(--muted); margin-left: 4px; font-size: 12px; }
+.pf-kind { font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+.pf-kind:first-of-type { margin-top: 0; }
+.pf-bar { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0; }
+.pf-bar .t { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.pf-bar .t div { height: 100%; background: var(--accent); }
+.pf-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.sc-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 13px; }
+.sc-field label { color: var(--muted); }
+.sc-field select, .sc-field input, .sc-field textarea { padding: 8px 10px; font-size: 14px; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; }
+.sc-field textarea { min-height: 72px; }
+button.ghost.on { background: #1c1917; color: #fff; border-color: #1c1917; }
+.sc-out { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+.sc-meta { font-size: 12px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="layout">
+<div id="side">
+<h1>Mirror</h1>
+<p class="sub">나를 이해하는 기억</p>
+<button class="tab active" data-tab="chat">채팅</button>
+<button class="tab" data-tab="profile">프로필</button>
+<button class="tab" data-tab="scen">시나리오</button>
+<button class="tab" data-tab="mem">기억 스택</button>
+<button class="tab" data-tab="graph">그래프</button>
+<button class="tab" data-tab="hyps">가설</button>
+<button class="tab" data-tab="rel">관계</button>
+<button class="tab" data-tab="report">주간 리포트</button>
+<div id="status">연결 중...</div>
+</div>
+<div id="main">
+<section id="chat" class="active">
+<h2>채팅</h2>
+<div class="toolbar">
+<label><input type="checkbox" id="auto-mem"> 내 메시지 자동 저장</label>
+<span style="font-size:12px;color:var(--muted)">기본은 수동 저장 (각 메시지별 버튼)</span>
+</div>
+<div id="chat-log"></div>
+<div class="row">
+<input type="text" id="chat-in" placeholder="물어보거나, 있었던 일을 적어보세요">
+<button class="act" id="chat-send">보내기</button>
+</div>
+<div class="row" style="margin-top:8px">
+<input type="text" id="chat-opts" placeholder="선택지 (쉼표 구분, 결정 도움용 — 선택)">
+</div>
+</section>
+<section id="profile"><h2>나의 프로필</h2><div id="profile-body"></div></section>
+<section id="scen"><h2>시나리오</h2>
+<div id="scen-pick" class="toolbar"></div>
+<p id="scen-sum" class="pf-note"></p>
+<div id="scen-form"></div>
+<div id="scen-out"></div></section>
+<section id="mem">
+<h2>기억 스택</h2>
+<div class="toolbar">
+<input type="text" id="mem-q" placeholder="기억 검색">
+<button class="ghost" id="mem-search">검색</button>
+</div>
+<div class="row" style="margin-bottom:12px">
+<textarea id="mem-add" rows="2" placeholder="새 기억 입력"></textarea>
+<button class="act" id="mem-add-btn">추가</button>
+</div>
+<div id="mem-list"></div>
+</section>
+<section id="graph"><h2>그래프</h2><div id="cy"></div><p id="cy-note"></p></section>
+<section id="hyps"><h2>가설</h2><div id="hyp-list"></div></section>
+<section id="rel"><h2>관계 어휘</h2><div id="rel-list"></div></section>
+<section id="report"><h2>주간 리포트</h2>
+<div class="toolbar"><button class="ghost" id="m-nightly">야간 통합</button>
+<button class="ghost" id="m-weekly">주간 점검</button>
+<button class="ghost" id="m-promote">승격</button>
+<span id="m-out" style="font-size:12px"></span></div>
+<pre class="report" id="report-body"></pre></section>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+document.querySelectorAll("#side button.tab").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#side button.tab").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll("#main section").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  $(b.dataset.tab).classList.add("active");
+  if (b.dataset.tab === "profile") loadProfile();
+  if (b.dataset.tab === "scen") loadScen();
+  if (b.dataset.tab === "mem") loadMems();
+  if (b.dataset.tab === "graph") loadGraph();
+  if (b.dataset.tab === "hyps") loadHyps();
+  if (b.dataset.tab === "rel") loadRels();
+  if (b.dataset.tab === "report") loadReport();
+}));
+
+function chips(items, key) {
+  return `<div class="pf-chips">${items.map(e => `<span class="pf-chip">${esc(e[key])}<i>${e.count}</i></span>`).join("")}</div>`;
+}
+function groups(obj, key) {
+  const kinds = Object.keys(obj);
+  if (!kinds.length) return '<p class="pf-note">아직 없습니다.</p>';
+  return kinds.map(k => `<div class="pf-kind">${esc(k)}</div>${chips(obj[k], key)}`).join("");
+}
+async function loadProfile() {
+  const box = $("profile-body");
+  try {
+    const p = await api("/api/profile");
+    const d = x => (x || "").slice(0, 10);
+    const w = p.writing.stats, wr = p.writing;
+    const tend = p.tendencies.length ? p.tendencies.map(t =>
+      `<div class="pf-tend">${esc(t.statement)}<small>${esc(t.evidence_label)} · 반례 ${t.contradicts}건 · ${esc(t.domain)}</small></div>`).join("")
+      : '<p class="pf-note">아직 없습니다.</p>';
+    const endings = (w.endings || []).map(e =>
+      `<div class="pf-bar"><span style="width:110px">${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio*100)}%"></div></span><span>${e.count}문장</span></div>`).join("");
+    const styles = wr.styles.length ? wr.styles.map(s =>
+      `<span class="pf-chip">${esc(s.pattern)}<i>${esc(s.intent)}</i></span>`).join("") : '<span class="pf-note">저장된 스타일 없음</span>';
+    const prefs = p.preferences.length ? p.preferences.map(x =>
+      `<span class="pf-chip">${esc(x.target)}<i>${x.direction === "+" ? "좋아함" : "싫어함"}</i></span>`).join("") : '<span class="pf-note">아직 없습니다.</span>';
+    const crit = p.criteria.length ? p.criteria.map(x =>
+      `<div class="pf-tend">${esc(x.statement)}<small>${esc(x.applies_to)}</small></div>`).join("") : '<p class="pf-note">아직 없습니다.</p>';
+    box.innerHTML = `
+      <div class="pf-head"><b>기록 ${p.observations}건</b> · ${d(p.period.from)} ~ ${d(p.period.to)}<br>
+      저장된 기록에서 센 값만 보여줍니다. 성격이나 유형을 단정하지 않습니다.</div>
+      <div class="card pf-card"><h3>기록에서 반복된 것</h3>${tend}</div>
+      <div class="pf-grid">
+        <div class="card pf-card"><h3>자주 등장하는 대상</h3>${groups(p.entities, "name")}</div>
+        <div class="card pf-card"><h3>그럴 때의 상황</h3>${groups(p.situations, "value")}</div>
+      </div>
+      <div class="pf-grid">
+        <div class="card pf-card"><h3>선호</h3><div class="pf-chips">${prefs}</div></div>
+        <div class="card pf-card"><h3>판단 기준</h3>${crit}</div>
+      </div>
+      <div class="card pf-card"><h3>글 스타일</h3>
+        <div class="pf-chips" style="margin-bottom:10px">${styles}</div>
+        ${w.sentences ? `<p style="font-size:13px;margin:0 0 6px">문장 ${w.sentences}개 · 평균 ${w.avg_sentence_chars}자 · 가장 긴 문장 ${w.longest_sentence_chars}자</p>${endings}` : ""}
+        <p class="pf-note">관찰 ${w.observations}건에서 센 값입니다. 글쓰기 도움에 쓰려면 내가 쓴 글을 더 넣어야 합니다.</p>
+      </div>`;
+  } catch (e) { box.innerHTML = `<p class="offline">${esc(e.message)}</p>`; }
+}
+
+let SCEN = [], scenCur = null;
+async function loadScen() {
+  if (!SCEN.length) SCEN = (await api("/api/scenarios")).scenarios;
+  $("scen-pick").innerHTML = SCEN.map(s =>
+    `<button class="ghost${scenCur === s.id ? " on" : ""}" data-sc="${s.id}">${esc(s.name)}</button>`).join("");
+  $("scen-pick").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { scenCur = b.dataset.sc; $("scen-out").innerHTML = ""; loadScen(); }));
+  const s = SCEN.find(x => x.id === scenCur);
+  $("scen-sum").textContent = s ? s.summary : "위에서 시나리오를 고르세요.";
+  $("scen-form").innerHTML = s ? s.fields.map(f => {
+    const id = `sc-${f.key}`;
+    const ctl = f.kind === "select"
+      ? `<select id="${id}">${f.options.map(o => `<option>${esc(o)}</option>`).join("")}</select>`
+      : f.kind === "textarea" ? `<textarea id="${id}" placeholder="${esc(f.placeholder)}"></textarea>`
+      : `<input id="${id}" type="text" placeholder="${esc(f.placeholder)}">`;
+    return `<div class="sc-field"><label for="${id}">${esc(f.label)}${f.required ? " *" : ""}</label>${ctl}</div>`;
+  }).join("") + '<button class="act" id="sc-run">실행</button>' : "";
+  if (s) $("sc-run").addEventListener("click", () => runScen(s));
+}
+async function runScen(s) {
+  const inputs = {};
+  s.fields.forEach(f => { inputs[f.key] = $("sc-" + f.key).value; });
+  $("scen-out").innerHTML = '<p class="pf-note">만드는 중…</p>';
+  try {
+    const r = await api(`/api/scenarios/${s.id}/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputs }) });
+    $("scen-out").innerHTML = `<div class="card"><div class="sc-out">${esc(r.text)}</div>
+      <div class="sc-meta"><span class="badge">${esc(r.mode)}</span>${r.note ? esc(r.note) : ""}
+      ${r.citations.length ? "<br>근거 " + r.citations.map(esc).join(", ") : ""}</div></div>`;
+  } catch (e) { $("scen-out").innerHTML = `<p class="offline">${esc(e.message)}</p>`; }
+}
+async function loadStatus() {
+  try {
+    const s = await api("/api/status");
+    $("status").innerHTML = `revision ${s.revision} · 관찰 ${s.counts.Observation} · 가설 ${s.counts.Hypothesis}<br>` +
+      `검색 <span class="mode">${esc(s.index_mode)}</span> ` +
+      `답변 <span class="mode">${esc(s.llm_backend || "local")}</span>`;
+  } catch (e) { $("status").textContent = "연결 실패"; }
+}
+// 채팅
+function addMsg(cls, text, meta, saveText) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.innerHTML = `<div>${esc(text)}</div>` + (meta ? `<div class="meta">${meta}</div>` : "");
+  if (saveText) {
+    const b = document.createElement("button");
+    b.className = "ghost"; b.textContent = "기억에 저장"; b.style.marginTop = "6px";
+    b.addEventListener("click", async () => {
+      try {
+        await api("/api/memories", { method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: saveText }) });
+        b.textContent = "저장됨"; b.disabled = true; loadStatus();
+      } catch (e) { b.textContent = "실패: " + e.message; }
+    });
+    div.appendChild(b);
+  }
+  $("chat-log").appendChild(div);
+  div.scrollIntoView();
+  return div;
+}
+async function sendChat() {
+  const text = $("chat-in").value.trim();
+  if (!text) return;
+  $("chat-in").value = "";
+  const optsRaw = $("chat-opts").value.trim();
+  const options = optsRaw ? optsRaw.split(",").map(s => s.trim()).filter(Boolean) : null;
+  addMsg("user", text, null, text);
+  if ($("auto-mem").checked) {
+    try { await api("/api/memories", { method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }) }); loadStatus(); } catch (e) {}
+  }
+  const waiting = addMsg("bot", "생각 중...", null, null);
+  try {
+    const r = await api("/api/chat", { method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, options }) });
+    waiting.firstChild.textContent = r.text;
+    let meta = `모드 ${esc(r.mode)} · 의도 ${esc(r.decision.intent)}`;
+    if (r.citations && r.citations.length) meta += `<br><span class="cite">근거 ${r.citations.map(esc).join(", ")}</span>`;
+    waiting.querySelector(".meta")?.remove();
+    const m = document.createElement("div");
+    m.className = "meta"; m.innerHTML = meta;
+    waiting.appendChild(m);
+    const prop = r.proposal && r.proposal.intervention;
+    if (prop && prop.level === 1 && prop.options_presented.length) {
+      const box = document.createElement("div");
+      box.className = "opt-btns";
+      prop.options_presented.forEach(o => {
+        const b = document.createElement("button");
+        b.className = "ghost"; b.textContent = o;
+        b.addEventListener("click", () => {
+          $("chat-in").value = `선택: ${o}`; sendChat();
+        });
+        box.appendChild(b);
+      });
+      waiting.appendChild(box);
+    }
+  } catch (e) { waiting.firstChild.textContent = "오류: " + e.message; }
+  loadStatus();
+}
+$("chat-send").addEventListener("click", sendChat);
+$("chat-in").addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
+// 기억
+async function loadMems(q) {
+  const data = await api("/api/memories?q=" + encodeURIComponent(q || ""));
+  const list = $("mem-list");
+  list.innerHTML = "";
+  data.items.forEach(o => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<p>${esc(o.text)}</p>
+      <span class="badge">${esc(o.id)}</span><span class="badge">${esc(o.occurred_at || "")}</span>` +
+      (o.score !== undefined ? `<span class="badge">점수 ${o.score}</span>` : "");
+    const del = document.createElement("button");
+    del.className = "ghost"; del.textContent = "삭제"; del.style.marginLeft = "8px";
+    del.addEventListener("click", async () => {
+      if (!confirm("이 기억을 삭제할까요?")) return;
+      await api("/api/memories/" + o.id, { method: "DELETE" });
+      loadMems($("mem-q").value); loadStatus();
+    });
+    div.appendChild(del);
+    list.appendChild(div);
+  });
+}
+$("mem-search").addEventListener("click", () => loadMems($("mem-q").value));
+$("mem-add-btn").addEventListener("click", async () => {
+  const t = $("mem-add").value.trim();
+  if (!t) return;
+  $("mem-add").value = "";
+  await api("/api/memories", { method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: t }) });
+  loadMems(); loadStatus();
+});
+// 그래프
+let cyLoaded = false;
+async function loadGraph() {
+  if (cyLoaded) return;
+  const data = await api("/api/graph");
+  if (typeof cytoscape === "undefined") {
+    $("cy-note").innerHTML = '<span class="offline">그래프 라이브러리(CDN)를 불러오지 못했습니다.</span>';
+    return;
+  }
+  const colors = { Observation: "#bae6fd", Entity: "#fde68a", Context: "#ddd6fe",
+    Preference: "#a7f3d0", Criterion: "#fecaca", Hypothesis: "#fed7aa",
+    Style: "#e7e5e4", Correction: "#fca5a5" };
+  cytoscape({ container: $("cy"),
+    elements: [
+      ...data.nodes.map(n => ({ data: { id: n.id, label: `${n.kind}\n${n.label}`,
+        color: colors[n.kind] || "#e7e5e4" } })),
+      ...data.edges.map((e, i) => ({ data: { id: "e" + i, source: e.source,
+        target: e.target, label: e.rel === "RELATED_TO" ? (e.phrase || e.rel) : e.rel } })),
+    ],
+    style: [
+      { selector: "node", style: { "background-color": "data(color)", "label": "data(label)",
+        "font-size": 9, "text-wrap": "wrap", "text-max-width": 120,
+        "text-valign": "center", "text-halign": "center" } },
+      { selector: "edge", style: { "line-color": "#a8a29e", "target-arrow-color": "#a8a29e",
+        "target-arrow-shape": "triangle", "label": "data(label)", "font-size": 8,
+        "curve-style": "bezier" } },
+    ],
+    layout: { name: "cose", animate: false } });
+  cyLoaded = true;
+}
+// 가설
+async function loadHyps() {
+  const data = await api("/api/hypotheses");
+  const list = $("hyp-list");
+  list.innerHTML = "";
+  data.hypotheses.forEach(h => {
+    const div = document.createElement("div");
+    div.className = "card";
+    let html = `<h3>${esc(h.statement)}</h3>
+      <span class="badge">${esc(h.id)}</span><span class="badge">${esc(h.status)}</span>
+      <span class="badge">${esc(h.use_policy)}</span><span class="badge">${esc(h.domain || "-")}</span>
+      <p class="sup">근거 ${h.supports.length}건</p>`;
+    h.supports.forEach(s => { html += `<p class="ev sup">+ ${esc((s.occurred_at || "").slice(0, 10))} ${esc(s.text)}</p>`; });
+    html += `<p class="con">반례 ${h.contradicts.length}건</p>`;
+    h.contradicts.forEach(s => { html += `<p class="ev con">− ${esc((s.occurred_at || "").slice(0, 10))} ${esc(s.text)}</p>`; });
+    div.innerHTML = html;
+    ["맞음", "아님", "쓰지 마"].forEach(v => {
+      const b = document.createElement("button");
+      b.className = "ghost"; b.textContent = v; b.style.marginRight = "6px";
+      b.addEventListener("click", async () => {
+        await api(`/api/hypotheses/${h.id}/feedback`, { method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ verdict: v }) });
+        loadHyps(); loadStatus();
+      });
+      div.appendChild(b);
+    });
+    list.appendChild(div);
+  });
+}
+// 관계
+async function loadRels() {
+  const data = await api("/api/relations");
+  const box = $("rel-list");
+  if (!data.vocabulary.length) { box.textContent = "아직 관계가 없습니다."; return; }
+  let html = `<table class="vocab"><tr><th>서술</th><th>횟수</th><th>예시</th></tr>`;
+  data.vocabulary.forEach(v => {
+    const ex0 = v.examples[0] || {};
+    html += `<tr><td>${esc(v.phrase)}</td><td>${v.count}</td>` +
+      `<td style="font-size:12px">${esc(ex0.from || "")} → ${esc(ex0.to || "")}</td></tr>`;
+  });
+  box.innerHTML = html + "</table>";
+}
+// 리포트
+async function loadReport() {
+  const data = await api("/api/report");
+  $("report-body").textContent = data.markdown || "(없음)";
+}
+$("m-nightly").addEventListener("click", async () => {
+  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
+    { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job: "nightly" }) }));
+  loadStatus();
+});
+$("m-weekly").addEventListener("click", async () => {
+  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
+    { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job: "weekly" }) }));
+  loadStatus();
+});
+$("m-promote").addEventListener("click", async () => {
+  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
+    { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job: "promote" }) }));
+  loadStatus();
+});
+loadStatus();
+</script>
+</body>
+</html>

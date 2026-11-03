@@ -1,0 +1,535 @@
+"""관찰 → 그래프 추출 파이프라인 (계획서 4장, P1).
+
+Extractor 인터페이스 뒤에 실제 LLM(Claude/Ollama) 또는 결정적 Mock을 둔다.
+어떤 구현이든 출력은 동일한 검증(validate_extraction)을 통과해야 하며,
+근거 관찰 ID가 없는 엣지는 거부된다.
+"""
+
+from __future__ import annotations
+
+import re
+
+from dataclasses import dataclass, field
+from typing import Protocol
+
+from . import llm as llm_mod
+from . import schema
+
+
+class ExtractionError(ValueError):
+    """추출 출력이 스키마·검증 규칙을 위반."""
+
+
+@dataclass
+class ObservationInput:
+    source_id: str
+    text: str
+    occurred_at: str
+    raw_ref: str = ""
+    visibility: str = "private"
+
+
+@dataclass
+class NodeSpec:
+    """추출된 노드 1개. ref는 엣지가 참조하는 추출 내 임시 ID."""
+
+    kind: str
+    ref: str
+    attrs: dict = field(default_factory=dict)
+
+
+@dataclass
+class EdgeSpec:
+    rel: str
+    from_ref: str
+    to_ref: str
+    evidence_ref: str = ""
+    phrase: str = ""
+
+
+@dataclass
+class ExtractionResult:
+    nodes: list[NodeSpec] = field(default_factory=list)
+    edges: list[EdgeSpec] = field(default_factory=list)
+
+
+class Extractor(Protocol):
+    name: str
+
+    def extract(self, obs: ObservationInput) -> ExtractionResult:
+        ...
+
+
+# ---------------------------------------------------------------------------
+# 추출 프롬프트 (Claude/Ollama 공용)
+# ---------------------------------------------------------------------------
+
+EXTRACTION_SYSTEM_PROMPT = """You extract a personal knowledge graph from ONE observed scene.
+Output JSON only, no prose. Shape:
+{"nodes": [{"kind": "...", "ref": "...", "attrs": {...}}],
+ "edges": [{"rel": "...", "from_ref": "...", "to_ref": "...", "evidence_ref": "..."}]}
+
+Node kinds and required attrs:
+- Entity: {"kind": "<사람|장소|곡|프로젝트|도구|음식|기타>", "name": "...", "aliases": []}
+- Context: {"kind": "<상태|시간대|날씨|예산|동행|기타>", "value": "..."}
+- Preference: {"target": "...", "direction": "+|-", "strength_evidence": "..."}
+- Criterion: {"statement": "...", "applies_to": "..."}
+- Hypothesis: {"statement": "...", "conditions": ["<Context value>", ...],
+  "status": "candidate", "use_policy": "internal_only|apply_silently|presentable",
+  "domain": "<취향·경험|가치·판단|동기·실행|관계·지원|자기이해·반복 주제>"}
+- Style: {"pattern": "...", "intent": "..."}
+
+Edge rel values: OBSERVED_IN, SUPPORTS, CONTRADICTS, CONDITIONED_ON,
+ALTERNATIVE_TO, DERIVED_FROM, RELATED_TO.
+
+Dynamic relations (MiroFish-style entity triples) use rel RELATED_TO with a
+short Korean phrase, e.g. {"rel": "RELATED_TO", "from_ref": "ent-1",
+"to_ref": "ent-0", "evidence_ref": "obs", "phrase": "좋아한다"}.
+RELATED_TO connects Entity -> Entity or Entity -> Context only.
+
+Rules:
+1. The observation itself has ref "obs". EVERY edge MUST set evidence_ref to "obs".
+   An edge without evidence_ref is rejected.
+2. OBSERVED_IN connects Entity/Context -> "obs".
+3. SUPPORTS/CONTRADICTS connect "obs" -> Hypothesis/Preference.
+4. CONDITIONED_ON connects Hypothesis -> Context.
+5. Never state "the person likes X" as a bare fact. Interpretations are
+   Hypothesis nodes with status "candidate" only.
+6. Hypotheses about relationships or self-understanding MUST use
+   use_policy "internal_only". Others default to "apply_silently".
+7. Do not invent people, places, or events not present in the scene.
+8. Prefer fewer, well-supported nodes over many speculative ones.
+9. RELATED_TO phrases must be short verb phrases grounded in the scene
+   (e.g. "단골이다", "아침에 이용한다"). No phrase without textual basis.
+"""
+
+
+def build_user_prompt(obs: ObservationInput) -> str:
+    return (
+        f"observation_id: {obs.source_id}\noccurred_at: {obs.occurred_at}\n"
+        f"scene: {obs.text}\n"
+        'Extract nodes and edges as JSON. Remember: every edge needs "evidence_ref".'
+    )
+
+
+# ---------------------------------------------------------------------------
+# 검증: 근거 없는 엣지 거부
+# ---------------------------------------------------------------------------
+
+_REQUIRED_ATTRS: dict[str, tuple[str, ...]] = {
+    schema.ENTITY: ("kind", "name"),
+    schema.CONTEXT: ("kind", "value"),
+    schema.PREFERENCE: ("target",),
+    schema.CRITERION: ("statement",),
+    schema.HYPOTHESIS: ("statement",),
+    schema.STYLE: ("pattern",),
+}
+
+
+def validate_extraction(result: ExtractionResult) -> list[str]:
+    """위반 목록 반환. 빈 리스트면 통과."""
+    errors: list[str] = []
+    kinds: dict[str, str] = {"obs": schema.OBSERVATION}
+    for node in result.nodes:
+        if node.kind not in schema.NODE_TYPES:
+            errors.append(f"node {node.ref}: unknown kind {node.kind}")
+            continue
+        if node.kind not in _REQUIRED_ATTRS:
+            errors.append(
+                f"node {node.ref}: kind {node.kind} is not produced by extraction"
+            )
+            continue
+        for attr in _REQUIRED_ATTRS[node.kind]:
+            if not node.attrs.get(attr):
+                errors.append(f"node {node.ref}: missing attr '{attr}'")
+        if node.kind == schema.PREFERENCE:
+            if node.attrs.get("direction", "+") not in ("+", "-"):
+                errors.append(f"node {node.ref}: bad direction")
+        if node.kind == schema.HYPOTHESIS:
+            hyp = schema.Hypothesis(
+                id=node.ref,
+                conditions=list(node.attrs.get("conditions", [])),
+                statement=node.attrs.get("statement", ""),
+                status=node.attrs.get("status", schema.STATUS_CANDIDATE),
+                use_policy=node.attrs.get(
+                    "use_policy",
+                    schema.default_use_policy(node.attrs.get("domain", "")),
+                ),
+                domain=node.attrs.get("domain", ""),
+            )
+            try:
+                schema.validate_hypothesis(hyp)
+            except schema.SchemaError as e:
+                errors.append(f"node {node.ref}: {e}")
+            if hyp.status != schema.STATUS_CANDIDATE:
+                errors.append(
+                    f"node {node.ref}: extraction may only create "
+                    f"'{schema.STATUS_CANDIDATE}' hypotheses"
+                )
+        if node.ref in kinds:
+            errors.append(f"duplicate ref: {node.ref}")
+        kinds[node.ref] = node.kind
+
+    for i, edge in enumerate(result.edges):
+        tag = f"edge[{i}] {edge.rel} {edge.from_ref}->{edge.to_ref}"
+        if edge.rel not in schema.EDGE_TYPES:
+            errors.append(f"{tag}: unknown rel")
+            continue
+        if edge.from_ref not in kinds:
+            errors.append(f"{tag}: unknown from_ref")
+            continue
+        if edge.to_ref not in kinds:
+            errors.append(f"{tag}: unknown to_ref")
+            continue
+        try:
+            schema.validate_edge(
+                schema.Edge(
+                    rel=edge.rel, from_kind=kinds[edge.from_ref], from_id="x",
+                    to_kind=kinds[edge.to_ref], to_id="y",
+                    evidence=edge.evidence_ref or "",
+                    phrase=edge.phrase or "",
+                )
+            )
+        except schema.SchemaError as e:
+            errors.append(f"{tag}: {e}")
+            continue
+        if edge.rel in schema.EVIDENCE_REQUIRED and edge.evidence_ref != "obs":
+            errors.append(f"{tag}: evidence_ref must be 'obs'")
+    return errors
+
+
+def parse_extraction_json(data: dict) -> ExtractionResult:
+    """LLM JSON 출력을 ExtractionResult로 변환. 형태 오류 시 ExtractionError."""
+    if not isinstance(data, dict):
+        raise ExtractionError("extraction output must be a JSON object")
+    nodes, edges = [], []
+    raw_nodes = data.get("nodes", [])
+    raw_edges = data.get("edges", [])
+    if not isinstance(raw_nodes, list) or not isinstance(raw_edges, list):
+        raise ExtractionError("'nodes' and 'edges' must be lists")
+    for n in raw_nodes:
+        if not isinstance(n, dict) or "kind" not in n or "ref" not in n:
+            raise ExtractionError(f"bad node entry: {n!r}")
+        attrs = n.get("attrs", {})
+        if not isinstance(attrs, dict):
+            raise ExtractionError(f"node {n.get('ref')}: attrs must be an object")
+        nodes.append(NodeSpec(kind=str(n["kind"]), ref=str(n["ref"]), attrs=attrs))
+    for e in raw_edges:
+        if not isinstance(e, dict) or not all(
+            k in e for k in ("rel", "from_ref", "to_ref")
+        ):
+            raise ExtractionError(f"bad edge entry: {e!r}")
+        edges.append(
+            EdgeSpec(
+                rel=str(e["rel"]), from_ref=str(e["from_ref"]),
+                to_ref=str(e["to_ref"]), evidence_ref=str(e.get("evidence_ref", "")),
+                phrase=str(e.get("phrase", "")),
+            )
+        )
+    return ExtractionResult(nodes=nodes, edges=edges)
+
+
+# ---------------------------------------------------------------------------
+# MockExtractor: 결정적 규칙 기반 추출 (테스트·데모용)
+# ---------------------------------------------------------------------------
+
+# (키워드, Entity kind, Entity name)
+_MOCK_ENTITY_VOCAB: tuple[tuple[str, str, str], ...] = (
+    ("A카페", "장소", "A카페"),
+    ("카페", "장소", "카페"),
+    ("방탈출", "장소", "방탈출"),
+    ("식당", "장소", "식당"),
+    ("집", "장소", "집"),
+    ("투두 앱", "도구", "투두 앱"),
+    ("블로그", "도구", "블로그"),
+        ("DJ", "프로젝트", "DJ"),
+    ("선곡", "프로젝트", "선곡"),
+    ("친구 J", "사람", "친구 J"),
+    ("팀장", "사람", "팀장"),
+)
+
+# 새로움 단서가 있어도 같은 절에 회피 표현이 있으면 탐색 근거로 쓰지 않는다
+# ("새로운 식당을 찾아보기 귀찮았다" 는 탐색이 아니라 회피다).
+_NOVEL_CUES = ("새로운", "새 ", "처음", "색다른")
+_AVERSION_CUES = ("귀찮", "싫", "부담", "꺼려", "피하")
+
+# (키워드들, Context kind, Context value)
+_MOCK_CONTEXT_VOCAB: tuple[tuple[tuple[str, ...], str, str], ...] = (
+    (("피곤", "지침", "지쳐", "지친"), "상태", "피곤함"),
+    (("개운",), "상태", "개운함"),
+    (("저녁",), "시간대", "저녁"),
+    (("아침",), "시간대", "아침"),
+    (("점심",), "시간대", "점심"),
+    (("비",), "날씨", "비"),
+    (("예산",), "예산", "제한 있음"),
+)
+
+
+class MockExtractor:
+    """외부 API 없이 동작하는 규칙 기반 추출기. 같은 입력에 항상 같은 출력."""
+
+    name = "mock"
+
+    def __init__(self) -> None:
+        self.entity_vocab = _MOCK_ENTITY_VOCAB
+        self.context_vocab = _MOCK_CONTEXT_VOCAB
+
+    def extract(self, obs: ObservationInput) -> ExtractionResult:
+        text = obs.text
+        nodes: list[NodeSpec] = []
+        edges: list[EdgeSpec] = []
+
+        # 1. 엔티티: 어휘 매칭 (긴 키워드 우선, 중복 span 제거)
+        used_spans: list[tuple[int, int]] = []
+        ent_idx = 0
+
+        def overlaps(start: int, end: int) -> bool:
+            return any(s < end and start < e for s, e in used_spans)
+
+        for keyword, kind, name in sorted(
+            self.entity_vocab, key=lambda v: len(v[0]), reverse=True
+        ):
+            start = text.find(keyword)
+            if start < 0 or overlaps(start, start + len(keyword)):
+                continue
+            used_spans.append((start, start + len(keyword)))
+            ref = f"ent-{ent_idx}"
+            ent_idx += 1
+            nodes.append(
+                NodeSpec(kind=schema.ENTITY, ref=ref,
+                         attrs={"kind": kind, "name": name})
+            )
+            edges.append(EdgeSpec(schema.OBSERVED_IN, ref, "obs", "obs"))
+
+        # 2. 컨텍스트
+        ctx_refs: dict[str, str] = {}
+        ctx_idx = 0
+        for keywords, kind, value in self.context_vocab:
+            if any(k in text for k in keywords):
+                ref = f"ctx-{ctx_idx}"
+                ctx_idx += 1
+                nodes.append(
+                    NodeSpec(kind=schema.CONTEXT, ref=ref,
+                             attrs={"kind": kind, "value": value})
+                )
+                edges.append(EdgeSpec(schema.OBSERVED_IN, ref, "obs", "obs"))
+                ctx_refs[value] = ref
+
+        first_entity = next(
+            (n.attrs["name"] for n in nodes if n.kind == schema.ENTITY), ""
+        )
+
+        # 3. 가설 (후보만 생성)
+        hyp_refs: list[str] = []
+        tired = "피곤함" in ctx_refs
+        familiar = any(k in text for k in ("익숙", "단골", "평소", "또 ", "다시 "))
+        novel = any(k in text for k in ("새로운", "새 ", "처음", "색다른"))
+
+        def add_hypothesis(statement: str, conditions: list[str]) -> str:
+            ref = f"hyp-{len(hyp_refs)}"
+            hyp_refs.append(ref)
+            ctx_values = [
+                next(v for v, r in ctx_refs.items() if r == c) for c in conditions
+            ]
+            nodes.append(
+                NodeSpec(
+                    kind=schema.HYPOTHESIS, ref=ref,
+                    attrs={"statement": statement, "conditions": ctx_values,
+                           "status": "candidate",
+                           "use_policy": "apply_silently", "domain": "취향·경험"},
+                )
+            )
+            edges.append(EdgeSpec(schema.SUPPORTS, "obs", ref, "obs"))
+            for cond in conditions:
+                edges.append(EdgeSpec(schema.CONDITIONED_ON, ref, cond, "obs"))
+            return ref
+
+        first_hyp = ""
+        if tired and familiar:
+            conds = [c for v, c in ctx_refs.items() if v in ("피곤함",)]
+            first_hyp = add_hypothesis("피곤할 때는 고르는 수고를 회피한다", conds)
+        elif familiar:
+            first_hyp = add_hypothesis("익숙한 선택에서 안정감을 느낀다", [])
+        if novel:
+            fresh_conds = [c for v, c in ctx_refs.items() if v == "개운함"]
+            novel_hyp = add_hypothesis("새로운 경험을 탐색하려 한다",
+                                       fresh_conds)
+            if first_hyp:
+                edges.append(
+                    EdgeSpec(schema.ALTERNATIVE_TO, first_hyp, novel_hyp, "obs")
+                )
+                edges.append(
+                    EdgeSpec(schema.ALTERNATIVE_TO, novel_hyp, first_hyp, "obs")
+                )
+
+        # 4. 선호: "좋아" + 엔티티
+        liker_is_other = any(
+            re.search(re.escape(n.attrs["name"]) + r"\s*[이가]\s*좋아", text)
+            for n in nodes if False)
+        if "좋아" in text and first_entity and not liker_is_other:
+            ref = "pref-0"
+            nodes.append(
+                NodeSpec(
+                    kind=schema.PREFERENCE, ref=ref,
+                    attrs={"target": first_entity, "direction": "+",
+                           "strength_evidence": "명시적 언급"},
+                )
+            )
+            edges.append(EdgeSpec(schema.SUPPORTS, "obs", ref, "obs"))
+
+        # 5. 판단 기준: 조용함 언급 + 가설이 있을 때
+        if any(k in text for k in ("조용", "시끄럽지")) and hyp_refs:
+            nodes.append(
+                NodeSpec(
+                    kind=schema.CRITERION, ref="crit-0",
+                    attrs={"statement": "조용한 곳을 고른다", "applies_to": "장소"},
+                )
+            )
+            edges.append(EdgeSpec(schema.DERIVED_FROM, "crit-0", hyp_refs[0], "obs"))
+
+        # 6. 스타일: 블로그 언급
+        if "블로그" in text:
+            nodes.append(
+                NodeSpec(
+                    kind=schema.STYLE, ref="sty-0",
+                    attrs={"pattern": "정보성 블로그형", "intent": "정보 정리"},
+                )
+            )
+
+        # 7. 동적 관계 (MiroFish식; 규칙은 최소, LLM 경로가 주도)
+        ent_nodes = [n for n in nodes if n.kind == schema.ENTITY]
+        if "좋아" in text:
+            persons = [n for n in ent_nodes if n.attrs.get("kind") == "사람"]
+            others = [n for n in ent_nodes if n.attrs.get("kind") != "사람"]
+            if persons and others:
+                edges.append(EdgeSpec(schema.RELATED_TO, persons[0].ref,
+                                      others[0].ref, "obs", "좋아한다"))
+        for value, ref in ctx_refs.items():
+            if value in ("아침", "점심", "저녁"):
+                for ent in ent_nodes:
+                    if ent.attrs.get("kind") in ("장소", "도구"):
+                        edges.append(EdgeSpec(
+                            schema.RELATED_TO, ent.ref, ref, "obs",
+                            f"{value}에 이용한다"))
+                        break
+                break
+        return ExtractionResult(nodes=nodes, edges=edges)
+
+
+# ---------------------------------------------------------------------------
+# 실제 LLM 추출기 (선택 의존성; 키 없이는 NotConfigured)
+# ---------------------------------------------------------------------------
+
+
+class NotConfigured(RuntimeError):
+    """LLM 추출기가 쓸 수 없는 상태 (키·패키지 없음)."""
+
+
+def _strip_code_fences(text: str) -> str:
+    return llm_mod.strip_code_fences(text)
+
+
+class ClaudeExtractor:
+    """Anthropic Claude API 추출기. `pip install mirror[Muse]` 필요."""
+
+    name = "Muse"
+
+    def __init__(self, model: str = "claude-haiku-4-5", api_key: str | None = None):
+        self.model = model
+        self.api_key = api_key
+
+    def extract(self, obs: ObservationInput) -> ExtractionResult:
+        try:
+            data = llm_mod.call_claude_json(
+                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs),
+                model=self.model, api_key=self.api_key)
+        except llm_mod.LlmError as e:
+            msg = str(e)
+            if msg.startswith("invalid JSON") or "JSON object" in msg:
+                raise ExtractionError(msg) from e
+            raise NotConfigured(msg) from e
+        result = parse_extraction_json(data)
+        errors = validate_extraction(result)
+        if errors:
+            raise ExtractionError("; ".join(errors))
+        return result
+
+
+class OllamaExtractor:
+    """로컬 Ollama 추출기. `pip install mirror[ollama]` + ollama serve 필요."""
+
+    name = "ollama"
+
+    def __init__(self, model: str = "llama3.1"):
+        self.model = model
+
+    def extract(self, obs: ObservationInput) -> ExtractionResult:
+        try:
+            data = llm_mod.call_ollama_json(
+                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs),
+                model=self.model)
+        except llm_mod.LlmError as e:
+            msg = str(e)
+            if msg.startswith("invalid JSON") or "JSON object" in msg:
+                raise ExtractionError(msg) from e
+            raise NotConfigured(msg) from e
+        result = parse_extraction_json(data)
+        errors = validate_extraction(result)
+        if errors:
+            raise ExtractionError("; ".join(errors))
+        return result
+
+
+class SparkExtractor:
+    """Muse Spark 추출기 (`muse exec` 헤드리스 호출).
+
+    샌드박스 밖의 실사용 환경에서 동작한다. `muse` CLI가 로그인된 상태여야 하며,
+    모델 ID는 `muse model-profile show <id>`로 확인할 수 있다.
+    """
+
+    name = "spark"
+
+    def __init__(
+        self,
+        model: str = "muse-spark-1.3",
+        muse_bin: str = "muse",
+        effort: str = "minimal",
+        timeout: int = 180,
+    ):
+        self.model = model
+        self.muse_bin = muse_bin
+        self.effort = effort
+        self.timeout = timeout
+
+    def _prompt_text(self, obs: ObservationInput) -> str:
+        return EXTRACTION_SYSTEM_PROMPT + "\n\n" + build_user_prompt(obs)
+
+    def extract(self, obs: ObservationInput) -> ExtractionResult:
+        try:
+            stdout = llm_mod.run_muse_exec(
+                self._prompt_text(obs), model=self.model,
+                effort=self.effort, timeout=self.timeout,
+                muse_bin=self.muse_bin)
+        except llm_mod.LlmError as e:
+            raise NotConfigured(str(e)) from e
+        try:
+            data = llm_mod.parse_json_output(stdout)
+        except llm_mod.LlmError as e:
+            raise ExtractionError(f"{e}\nraw: {stdout[:500]}") from e
+        result = parse_extraction_json(data)
+        errors = validate_extraction(result)
+        if errors:
+            raise ExtractionError("; ".join(errors))
+        return result
+
+
+def get_extractor(name: str, **kwargs) -> Extractor:
+    if name == "mock":
+        return MockExtractor()
+    if name == "Muse":
+        return ClaudeExtractor(**kwargs)
+    if name == "ollama":
+        return OllamaExtractor(**kwargs)
+    if name == "spark":
+        return SparkExtractor(**kwargs)
+    raise ValueError(f"unknown extractor: {name}")

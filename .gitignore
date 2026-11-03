@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+*.kuzu/
+*.db/
+*.vectors.json
+*.bm25.json
+data/local/
+data/models/
+.DS_Store
+
+# 개인 일기 성격의 샘플 데이터는 올리지 않는다 (같은 형식의 JSONL을 직접 만들어 쓴다)
+data/sample_observations.jsonl
+eval/gold_observations.jsonl
+eval/dj_episodes.jsonl
+mirror-results.html
+
+# Kuzu DB는 디렉터리이거나 단일 파일이다
+*.kuzu
+*.kuzu.wal
+*.kuzu.shadow

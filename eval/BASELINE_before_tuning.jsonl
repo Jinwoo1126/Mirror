@@ -1,0 +1,6 @@
+{"set": "dev", "mode": "strict", "scenes": 4, "gold": 18, "predicted": 17, "exact": 8, "partial": 1, "missing": 9, "spurious": 8, "unscored_pred": 0, "exact_precision": 0.4706, "exact_recall": 0.4444}
+{"set": "dev", "mode": "scoped", "scenes": 4, "gold": 17, "predicted": 13, "exact": 12, "partial": 0, "missing": 5, "spurious": 1, "unscored_pred": 4, "exact_precision": 0.9231, "exact_recall": 0.7059}
+{"set": "tune", "mode": "strict", "scenes": 8, "gold": 33, "predicted": 33, "exact": 23, "partial": 2, "missing": 8, "spurious": 8, "unscored_pred": 0, "exact_precision": 0.697, "exact_recall": 0.697}
+{"set": "tune", "mode": "scoped", "scenes": 8, "gold": 33, "predicted": 28, "exact": 25, "partial": 2, "missing": 6, "spurious": 1, "unscored_pred": 5, "exact_precision": 0.8929, "exact_recall": 0.7576}
+{"set": "heldout", "mode": "strict", "scenes": 8, "gold": 30, "predicted": 28, "exact": 21, "partial": 0, "missing": 9, "spurious": 7, "unscored_pred": 0, "exact_precision": 0.75, "exact_recall": 0.7}
+{"set": "heldout", "mode": "scoped", "scenes": 8, "gold": 30, "predicted": 23, "exact": 22, "partial": 0, "missing": 8, "spurious": 1, "unscored_pred": 5, "exact_precision": 0.9565, "exact_recall": 0.7333}

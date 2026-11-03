@@ -1,0 +1,1494 @@
+{
+ "persona": "가상 인물 (data/demo/README.md)",
+ "llm": {
+  "counts": {
+   "Observation": 29,
+   "Entity": 36,
+   "Context": 21,
+   "Hypothesis": 9,
+   "Preference": 1,
+   "Style": 3,
+   "Criterion": 0
+  },
+  "growth": [
+   {
+    "n": 1,
+    "entities": 1,
+    "contexts": 2,
+    "hypotheses": 1
+   },
+   {
+    "n": 2,
+    "entities": 3,
+    "contexts": 3,
+    "hypotheses": 2
+   },
+   {
+    "n": 3,
+    "entities": 5,
+    "contexts": 4,
+    "hypotheses": 2
+   },
+   {
+    "n": 4,
+    "entities": 7,
+    "contexts": 6,
+    "hypotheses": 2
+   },
+   {
+    "n": 5,
+    "entities": 9,
+    "contexts": 9,
+    "hypotheses": 3
+   },
+   {
+    "n": 6,
+    "entities": 11,
+    "contexts": 10,
+    "hypotheses": 4
+   },
+   {
+    "n": 7,
+    "entities": 12,
+    "contexts": 11,
+    "hypotheses": 4
+   },
+   {
+    "n": 8,
+    "entities": 14,
+    "contexts": 13,
+    "hypotheses": 5
+   },
+   {
+    "n": 9,
+    "entities": 16,
+    "contexts": 14,
+    "hypotheses": 5
+   },
+   {
+    "n": 10,
+    "entities": 17,
+    "contexts": 15,
+    "hypotheses": 6
+   },
+   {
+    "n": 11,
+    "entities": 18,
+    "contexts": 15,
+    "hypotheses": 6
+   },
+   {
+    "n": 12,
+    "entities": 19,
+    "contexts": 15,
+    "hypotheses": 6
+   },
+   {
+    "n": 13,
+    "entities": 20,
+    "contexts": 16,
+    "hypotheses": 6
+   },
+   {
+    "n": 14,
+    "entities": 21,
+    "contexts": 16,
+    "hypotheses": 6
+   },
+   {
+    "n": 15,
+    "entities": 22,
+    "contexts": 16,
+    "hypotheses": 6
+   },
+   {
+    "n": 16,
+    "entities": 23,
+    "contexts": 17,
+    "hypotheses": 6
+   },
+   {
+    "n": 17,
+    "entities": 23,
+    "contexts": 18,
+    "hypotheses": 6
+   },
+   {
+    "n": 18,
+    "entities": 25,
+    "contexts": 19,
+    "hypotheses": 6
+   },
+   {
+    "n": 19,
+    "entities": 26,
+    "contexts": 19,
+    "hypotheses": 7
+   },
+   {
+    "n": 20,
+    "entities": 27,
+    "contexts": 19,
+    "hypotheses": 8
+   },
+   {
+    "n": 21,
+    "entities": 29,
+    "contexts": 19,
+    "hypotheses": 8
+   },
+   {
+    "n": 22,
+    "entities": 30,
+    "contexts": 20,
+    "hypotheses": 8
+   },
+   {
+    "n": 23,
+    "entities": 31,
+    "contexts": 20,
+    "hypotheses": 8
+   },
+   {
+    "n": 24,
+    "entities": 32,
+    "contexts": 20,
+    "hypotheses": 8
+   },
+   {
+    "n": 25,
+    "entities": 33,
+    "contexts": 21,
+    "hypotheses": 9
+   },
+   {
+    "n": 26,
+    "entities": 34,
+    "contexts": 21,
+    "hypotheses": 9
+   },
+   {
+    "n": 27,
+    "entities": 35,
+    "contexts": 21,
+    "hypotheses": 9
+   },
+   {
+    "n": 28,
+    "entities": 35,
+    "contexts": 21,
+    "hypotheses": 9
+   },
+   {
+    "n": 29,
+    "entities": 36,
+    "contexts": 21,
+    "hypotheses": 9
+   }
+  ],
+  "observations": [
+   {
+    "id": "obs-57607ac2",
+    "source_id": "demo-01",
+    "occurred_at": "2026-09-07T09:30:00+09:00",
+    "text": "주말 아침 개운하게 일어나서 블로그에 이번 주 DJ 선곡 과정을 정리했다. 항목을 번호로 나눠 쓰는 편이다.",
+    "entities": [
+     "블로그"
+    ],
+    "contexts": [
+     "개운함",
+     "주말 아침"
+    ],
+    "hypotheses": [
+     "컨디션이 좋을 때 정리·기록을 한다"
+    ]
+   },
+   {
+    "id": "obs-cf300a8b",
+    "source_id": "demo-02",
+    "occurred_at": "2026-09-08T12:20:00+09:00",
+    "text": "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
+    "entities": [
+     "제육볶음",
+     "회사 앞 식당"
+    ],
+    "contexts": [
+     "점심"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-151a5da3",
+    "source_id": "demo-03",
+    "occurred_at": "2026-09-08T22:30:00+09:00",
+    "text": "밤에 DJ 믹스를 작업했다. 반복이 강한 곡 위주로 이어 붙이니 흐름이 좋았다.",
+    "entities": [
+     "DJ 믹스",
+     "반복이 강한 곡"
+    ],
+    "contexts": [
+     "밤"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-f91db378",
+    "source_id": "demo-04",
+    "occurred_at": "2026-09-09T19:40:00+09:00",
+    "text": "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
+    "entities": [
+     "김밥",
+     "분식집"
+    ],
+    "contexts": [
+     "야근으로 지침",
+     "저녁"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-66d546e1",
+    "source_id": "demo-05",
+    "occurred_at": "2026-09-10T08:50:00+09:00",
+    "text": "비 오는 아침 카페에서 새로 나온 메뉴를 시켜 봤다. 조용한 자리라 집중이 잘 됐다.",
+    "entities": [
+     "새로 나온 메뉴",
+     "카페"
+    ],
+    "contexts": [
+     "비",
+     "아침",
+     "조용함"
+    ],
+    "hypotheses": [
+     "조용한 환경에서 집중이 잘 된다"
+    ]
+   },
+   {
+    "id": "obs-ae5ff584",
+    "source_id": "demo-06",
+    "occurred_at": "2026-09-10T15:00:00+09:00",
+    "text": "팀장님이 새 프로젝트를 맡아 보라고 했는데 일정이 빠듯해서 부담스러웠다.",
+    "entities": [
+     "새 프로젝트",
+     "팀장님"
+    ],
+    "contexts": [
+     "일정이 빠듯해서 부담스러움"
+    ],
+    "hypotheses": [
+     "일정이 빠듯하면 부담을 느낀다"
+    ]
+   },
+   {
+    "id": "obs-398072d2",
+    "source_id": "demo-07",
+    "occurred_at": "2026-09-11T21:10:00+09:00",
+    "text": "투두 앱에 내일 할 일 세 개만 적었다. 피곤한 날은 많이 적으면 손이 안 간다.",
+    "entities": [
+     "투두 앱"
+    ],
+    "contexts": [
+     "피곤한 날"
+    ],
+    "hypotheses": [
+     "일정이 빠듯하면 부담을 느낀다"
+    ]
+   },
+   {
+    "id": "obs-ee2e4c46",
+    "source_id": "demo-08",
+    "occurred_at": "2026-09-12T20:00:00+09:00",
+    "text": "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
+    "entities": [
+     "이자카야",
+     "친구 J"
+    ],
+    "contexts": [
+     "설렘",
+     "처음 방문"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-d3ae998c",
+    "source_id": "demo-09",
+    "occurred_at": "2026-09-13T14:00:00+09:00",
+    "text": "주말에 도서관에서 업무 메모를 짧게 정리했다. 결론부터 쓰고 근거는 두 줄로 줄였다.",
+    "entities": [
+     "도서관",
+     "업무 메모"
+    ],
+    "contexts": [
+     "주말"
+    ],
+    "hypotheses": [
+     "컨디션이 좋을 때 정리·기록을 한다"
+    ]
+   },
+   {
+    "id": "obs-4c0977a2",
+    "source_id": "demo-10",
+    "occurred_at": "2026-09-13T23:20:00+09:00",
+    "text": "밤에 DJ 세트를 연습했다. 비 오는 날은 차분한 곡을 많이 고른다.",
+    "entities": [
+     "DJ 세트 연습"
+    ],
+    "contexts": [
+     "밤",
+     "비 오는 날"
+    ],
+    "hypotheses": [
+     "날씨에 따라 선택을 조절한다"
+    ]
+   },
+   {
+    "id": "obs-be8d2fc4",
+    "source_id": "demo-11",
+    "occurred_at": "2026-09-14T10:00:00+09:00",
+    "text": "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
+    "entities": [
+     "한강 공원"
+    ],
+    "contexts": [
+     "개운함",
+     "아침"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-7db7c8d7",
+    "source_id": "demo-12",
+    "occurred_at": "2026-09-15T12:30:00+09:00",
+    "text": "점심에 평소 가는 식당에서 또 제육볶음을 먹었다.",
+    "entities": [
+     "제육볶음",
+     "평소 가는 식당"
+    ],
+    "contexts": [
+     "점심"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-22a3b49b",
+    "source_id": "demo-13",
+    "occurred_at": "2026-09-16T21:30:00+09:00",
+    "text": "피곤했지만 새로 생긴 헬스장 체험권으로 한 번 가 봤다.",
+    "entities": [
+     "헬스장"
+    ],
+    "contexts": [
+     "피곤함"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-08363827",
+    "source_id": "demo-14",
+    "occurred_at": "2026-09-18T22:00:00+09:00",
+    "text": "블로그 글 초안을 쓰다가 문장이 길어져서 두 문장으로 나눴다. 정보 정리 형태가 편하다.",
+    "entities": [
+     "블로그 글 초안"
+    ],
+    "contexts": [],
+    "hypotheses": []
+   },
+   {
+    "id": "obs-da8f661a",
+    "source_id": "demo-15",
+    "occurred_at": "2026-09-19T20:30:00+09:00",
+    "text": "친구 J가 DJ 선곡을 듣고 반복이 강한 곡이 좋다고 했다.",
+    "entities": [
+     "J"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-2ad76390",
+    "source_id": "demo-16",
+    "occurred_at": "2026-09-20T09:20:00+09:00",
+    "text": "맑은 아침에 개운해서 새 카페 두 곳을 돌았다.",
+    "entities": [
+     "새 카페"
+    ],
+    "contexts": [
+     "개운함",
+     "맑음",
+     "아침"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-44fad5e8",
+    "source_id": "demo-17",
+    "occurred_at": "2026-09-21T21:00:00+09:00",
+    "text": "일요일 저녁 투두 앱으로 이번 주 계획을 세웠다. 늘 하는 방식이다.",
+    "entities": [
+     "투두 앱"
+    ],
+    "contexts": [
+     "일요일 저녁"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-96a229a2",
+    "source_id": "demo-18",
+    "occurred_at": "2026-09-22T12:15:00+09:00",
+    "text": "지쳐서 점심은 편의점에서 항상 사는 삼각김밥으로 때웠다.",
+    "entities": [
+     "삼각김밥",
+     "편의점"
+    ],
+    "contexts": [
+     "점심",
+     "지침"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-47bf88eb",
+    "source_id": "demo-19",
+    "occurred_at": "2026-09-23T18:40:00+09:00",
+    "text": "팀장님 피드백을 받고 메일 답장을 짧게 썼다. 인사, 요점, 요청 순으로 썼다.",
+    "entities": [
+     "메일",
+     "팀장님"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "피드백을 받으면 간결하게 정리한다"
+    ]
+   },
+   {
+    "id": "obs-59501bf6",
+    "source_id": "demo-20",
+    "occurred_at": "2026-09-24T22:40:00+09:00",
+    "text": "야근 후 피곤해서 밤에 DJ 작업은 쉬고 일찍 잤다.",
+    "entities": [
+     "DJ 작업"
+    ],
+    "contexts": [
+     "밤",
+     "피곤함"
+    ],
+    "hypotheses": [
+     "피곤할 때는 작업을 쉬고 휴식을 우선한다"
+    ]
+   },
+   {
+    "id": "obs-d80debfa",
+    "source_id": "demo-21",
+    "occurred_at": "2026-09-25T12:40:00+09:00",
+    "text": "점심에 처음 가는 베트남 쌀국수집에 갔다. 팀 동료가 추천했다.",
+    "entities": [
+     "베트남 쌀국수집",
+     "팀 동료"
+    ],
+    "contexts": [
+     "점심"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-71f716c1",
+    "source_id": "demo-22",
+    "occurred_at": "2026-09-26T23:10:00+09:00",
+    "text": "비 오는 밤 차분한 곡으로 DJ 믹스를 마무리했다.",
+    "entities": [
+     "DJ 믹스",
+     "차분한 곡"
+    ],
+    "contexts": [
+     "밤",
+     "비 오는 날씨"
+    ],
+    "hypotheses": [
+     "날씨에 따라 선택을 조절한다"
+    ]
+   },
+   {
+    "id": "obs-c6bdba5b",
+    "source_id": "demo-23",
+    "occurred_at": "2026-09-27T10:30:00+09:00",
+    "text": "주말 아침 블로그 글을 번호 목록으로 올렸다. 평소처럼 정보 위주로 썼다.",
+    "entities": [
+     "블로그 글"
+    ],
+    "contexts": [
+     "주말 아침"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-985576ab",
+    "source_id": "demo-24",
+    "occurred_at": "2026-09-28T19:00:00+09:00",
+    "text": "일요일 저녁 피곤해서 단골 치킨집에 배달을 시켰다. 늘 시키는 메뉴다.",
+    "entities": [
+     "단골 치킨집"
+    ],
+    "contexts": [
+     "일요일 저녁",
+     "피곤함"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-a7d72e08",
+    "source_id": "demo-25",
+    "occurred_at": "2026-09-29T19:30:00+09:00",
+    "text": "월말이라 예산이 빠듯해서 저녁은 집에서 해 먹었다.",
+    "entities": [
+     "집"
+    ],
+    "contexts": [
+     "빠듯함"
+    ],
+    "hypotheses": [
+     "예산이 빠듯하면 집에서 해결한다"
+    ]
+   },
+   {
+    "id": "obs-96a0e241",
+    "source_id": "demo-26",
+    "occurred_at": "2026-09-30T08:40:00+09:00",
+    "text": "개운한 아침 출근길에 새로운 플레이리스트를 들었다.",
+    "entities": [
+     "새로운 플레이리스트"
+    ],
+    "contexts": [
+     "개운함",
+     "아침"
+    ],
+    "hypotheses": [
+     "새로운 장소·경험을 즐긴다"
+    ]
+   },
+   {
+    "id": "obs-b21462ea",
+    "source_id": "demo-27",
+    "occurred_at": "2026-10-01T12:20:00+09:00",
+    "text": "점심은 회사 근처 식당에서 평소처럼 먹었다.",
+    "entities": [
+     "회사 근처 식당"
+    ],
+    "contexts": [
+     "점심"
+    ],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   },
+   {
+    "id": "obs-03537ac7",
+    "source_id": "demo-28",
+    "occurred_at": "2026-10-02T21:20:00+09:00",
+    "text": "투두 앱에 할 일을 세 개만 적었다. 피곤한 날 습관이다.",
+    "entities": [
+     "투두 앱"
+    ],
+    "contexts": [
+     "피곤함"
+    ],
+    "hypotheses": [
+     "피곤할 때는 작업을 쉬고 휴식을 우선한다"
+    ]
+   },
+   {
+    "id": "obs-bb18031d",
+    "source_id": "demo-29",
+    "occurred_at": "2026-10-03T20:40:00+09:00",
+    "text": "친구 J와 이번에도 단골 이자카야에 갔다.",
+    "entities": [
+     "단골 이자카야",
+     "친구 J"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "익숙한 선택을 반복한다"
+    ]
+   }
+  ],
+  "hypotheses": [
+   {
+    "statement": "익숙한 선택을 반복한다",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 11,
+    "contradicts": 2,
+    "evidence": [
+     "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
+     "밤에 DJ 믹스를 작업했다. 반복이 강한 곡 위주로 이어 붙이니 흐름이 좋았다.",
+     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다."
+    ]
+   },
+   {
+    "statement": "새로운 장소·경험을 즐긴다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 6,
+    "contradicts": 0,
+    "evidence": [
+     "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
+     "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
+     "피곤했지만 새로 생긴 헬스장 체험권으로 한 번 가 봤다."
+    ]
+   },
+   {
+    "statement": "컨디션이 좋을 때 정리·기록을 한다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence": [
+     "주말 아침 개운하게 일어나서 블로그에 이번 주 DJ 선곡 과정을 정리했다. 항목을 번호로 나눠 쓰는 편이다.",
+     "주말에 도서관에서 업무 메모를 짧게 정리했다. 결론부터 쓰고 근거는 두 줄로 줄였다."
+    ]
+   },
+   {
+    "statement": "일정이 빠듯하면 부담을 느낀다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence": [
+     "팀장님이 새 프로젝트를 맡아 보라고 했는데 일정이 빠듯해서 부담스러웠다.",
+     "투두 앱에 내일 할 일 세 개만 적었다. 피곤한 날은 많이 적으면 손이 안 간다."
+    ]
+   },
+   {
+    "statement": "날씨에 따라 선택을 조절한다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence": [
+     "밤에 DJ 세트를 연습했다. 비 오는 날은 차분한 곡을 많이 고른다.",
+     "비 오는 밤 차분한 곡으로 DJ 믹스를 마무리했다."
+    ]
+   },
+   {
+    "statement": "피곤할 때는 작업을 쉬고 휴식을 우선한다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence": [
+     "야근 후 피곤해서 밤에 DJ 작업은 쉬고 일찍 잤다.",
+     "투두 앱에 할 일을 세 개만 적었다. 피곤한 날 습관이다."
+    ]
+   },
+   {
+    "statement": "조용한 환경에서 집중이 잘 된다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "비 오는 아침 카페에서 새로 나온 메뉴를 시켜 봤다. 조용한 자리라 집중이 잘 됐다."
+    ]
+   },
+   {
+    "statement": "피드백을 받으면 간결하게 정리한다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "팀장님 피드백을 받고 메일 답장을 짧게 썼다. 인사, 요점, 요청 순으로 썼다."
+    ]
+   },
+   {
+    "statement": "예산이 빠듯하면 집에서 해결한다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "월말이라 예산이 빠듯해서 저녁은 집에서 해 먹었다."
+    ]
+   }
+  ],
+  "promoted": {
+   "promoted": [],
+   "evaluated": 4
+  },
+  "nightly": {
+   "merged_entities": [],
+   "stale_candidates": [],
+   "linked_alternatives": 0
+  }
+ },
+ "profile": {
+  "observations": 29,
+  "period": {
+   "from": "2026-09-07T09:30:00+09:00",
+   "to": "2026-10-03T20:40:00+09:00"
+  },
+  "tendencies": [
+   {
+    "id": "hyp-f7a3b57d",
+    "statement": "익숙한 선택을 반복한다",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 11,
+    "contradicts": 2,
+    "evidence_label": "반복 관찰 (근거 11건)",
+    "latest_support": "2026-10-03T20:40:00+09:00"
+   },
+   {
+    "id": "hyp-447aaa24",
+    "statement": "새로운 장소·경험을 즐긴다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 6,
+    "contradicts": 0,
+    "evidence_label": "반복 관찰 (근거 6건)",
+    "latest_support": "2026-09-30T08:40:00+09:00"
+   },
+   {
+    "id": "hyp-255f862a",
+    "statement": "날씨에 따라 선택을 조절한다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "반복 관찰 (근거 2건)",
+    "latest_support": "2026-09-26T23:10:00+09:00"
+   },
+   {
+    "id": "hyp-1e0c2831",
+    "statement": "일정이 빠듯하면 부담을 느낀다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "반복 관찰 (근거 2건)",
+    "latest_support": "2026-09-11T21:10:00+09:00"
+   },
+   {
+    "id": "hyp-b02d898f",
+    "statement": "컨디션이 좋을 때 정리·기록을 한다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "반복 관찰 (근거 2건)",
+    "latest_support": "2026-09-13T14:00:00+09:00"
+   },
+   {
+    "id": "hyp-9c8f3c04",
+    "statement": "피곤할 때는 작업을 쉬고 휴식을 우선한다",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "반복 관찰 (근거 2건)",
+    "latest_support": "2026-10-02T21:20:00+09:00"
+   },
+   {
+    "id": "hyp-a5969705",
+    "statement": "예산이 빠듯하면 집에서 해결한다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "후보 (근거 1건)",
+    "latest_support": "2026-09-29T19:30:00+09:00"
+   },
+   {
+    "id": "hyp-bbeb3283",
+    "statement": "조용한 환경에서 집중이 잘 된다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "후보 (근거 1건)",
+    "latest_support": "2026-09-10T08:50:00+09:00"
+   },
+   {
+    "id": "hyp-1c665633",
+    "statement": "피드백을 받으면 간결하게 정리한다",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "후보 (근거 1건)",
+    "latest_support": "2026-09-23T18:40:00+09:00"
+   }
+  ],
+  "entities": {
+   "프로젝트": [
+    {
+     "name": "DJ 믹스",
+     "count": 2
+    },
+    {
+     "name": "DJ 세트 연습",
+     "count": 1
+    },
+    {
+     "name": "DJ 작업",
+     "count": 1
+    },
+    {
+     "name": "새 프로젝트",
+     "count": 1
+    }
+   ],
+   "장소": [
+    {
+     "name": "단골 이자카야",
+     "count": 1
+    },
+    {
+     "name": "단골 치킨집",
+     "count": 1
+    },
+    {
+     "name": "도서관",
+     "count": 1
+    },
+    {
+     "name": "베트남 쌀국수집",
+     "count": 1
+    },
+    {
+     "name": "분식집",
+     "count": 1
+    },
+    {
+     "name": "새 카페",
+     "count": 1
+    },
+    {
+     "name": "이자카야",
+     "count": 1
+    },
+    {
+     "name": "집",
+     "count": 1
+    },
+    {
+     "name": "카페",
+     "count": 1
+    },
+    {
+     "name": "편의점",
+     "count": 1
+    },
+    {
+     "name": "평소 가는 식당",
+     "count": 1
+    },
+    {
+     "name": "한강 공원",
+     "count": 1
+    },
+    {
+     "name": "헬스장",
+     "count": 1
+    },
+    {
+     "name": "회사 근처 식당",
+     "count": 1
+    },
+    {
+     "name": "회사 앞 식당",
+     "count": 1
+    }
+   ],
+   "곡": [
+    {
+     "name": "반복이 강한 곡",
+     "count": 1
+    },
+    {
+     "name": "새로운 플레이리스트",
+     "count": 1
+    },
+    {
+     "name": "차분한 곡",
+     "count": 1
+    }
+   ],
+   "기타": [
+    {
+     "name": "블로그 글",
+     "count": 1
+    },
+    {
+     "name": "블로그 글 초안",
+     "count": 1
+    },
+    {
+     "name": "업무 메모",
+     "count": 1
+    }
+   ],
+   "도구": [
+    {
+     "name": "투두 앱",
+     "count": 3
+    },
+    {
+     "name": "메일",
+     "count": 1
+    },
+    {
+     "name": "블로그",
+     "count": 1
+    }
+   ],
+   "음식": [
+    {
+     "name": "제육볶음",
+     "count": 2
+    },
+    {
+     "name": "김밥",
+     "count": 1
+    },
+    {
+     "name": "삼각김밥",
+     "count": 1
+    },
+    {
+     "name": "새로 나온 메뉴",
+     "count": 1
+    }
+   ],
+   "사람": [
+    {
+     "name": "친구 J",
+     "count": 2
+    },
+    {
+     "name": "팀장님",
+     "count": 2
+    },
+    {
+     "name": "J",
+     "count": 1
+    },
+    {
+     "name": "팀 동료",
+     "count": 1
+    }
+   ]
+  },
+  "situations": {
+   "예산": [
+    {
+     "value": "빠듯함",
+     "count": 1
+    }
+   ],
+   "상태": [
+    {
+     "value": "개운함",
+     "count": 4
+    },
+    {
+     "value": "피곤함",
+     "count": 4
+    },
+    {
+     "value": "설렘",
+     "count": 1
+    },
+    {
+     "value": "야근으로 지침",
+     "count": 1
+    },
+    {
+     "value": "일정이 빠듯해서 부담스러움",
+     "count": 1
+    },
+    {
+     "value": "조용함",
+     "count": 1
+    },
+    {
+     "value": "지침",
+     "count": 1
+    },
+    {
+     "value": "피곤한 날",
+     "count": 1
+    }
+   ],
+   "시간대": [
+    {
+     "value": "점심",
+     "count": 5
+    },
+    {
+     "value": "밤",
+     "count": 4
+    },
+    {
+     "value": "아침",
+     "count": 4
+    },
+    {
+     "value": "일요일 저녁",
+     "count": 2
+    },
+    {
+     "value": "주말 아침",
+     "count": 2
+    },
+    {
+     "value": "저녁",
+     "count": 1
+    },
+    {
+     "value": "주말",
+     "count": 1
+    }
+   ],
+   "기타": [
+    {
+     "value": "처음 방문",
+     "count": 1
+    }
+   ],
+   "날씨": [
+    {
+     "value": "맑음",
+     "count": 1
+    },
+    {
+     "value": "비",
+     "count": 1
+    },
+    {
+     "value": "비 오는 날",
+     "count": 1
+    },
+    {
+     "value": "비 오는 날씨",
+     "count": 1
+    }
+   ]
+  },
+  "preferences": [
+   {
+    "target": "반복이 강한 곡",
+    "direction": "+",
+    "basis": "좋다고 했다"
+   }
+  ],
+  "criteria": [],
+  "writing": {
+   "styles": [
+    {
+     "pattern": "항목을 번호로 나눠 쓴다",
+     "intent": "정리·기록",
+     "examples": 0
+    },
+    {
+     "pattern": "결론부터 쓰고 근거는 두 줄로 줄인다",
+     "intent": "짧게 정리하기",
+     "examples": 0
+    },
+    {
+     "pattern": "긴 문장을 두 문장으로 나눈다",
+     "intent": "정보 정리 형태를 편하게 만든다",
+     "examples": 0
+    }
+   ],
+   "stats": {
+    "observations": 29,
+    "sentences": 44,
+    "avg_sentence_chars": 23.6,
+    "longest_sentence_chars": 41,
+    "avg_observation_chars": 36.3,
+    "endings": [
+     {
+      "name": "평어(-다)",
+      "count": 44,
+      "ratio": 1.0
+     }
+    ]
+   }
+  }
+ },
+ "index_mode": "hybrid",
+ "scenarios": [
+  {
+   "id": "doc_draft",
+   "name": "문서 생성",
+   "inputs": {
+    "topic": "이번 달 DJ 선곡 과정",
+    "kind": "블로그 글",
+    "points": "반복이 강한 곡 위주로 고른 이유\n비 오는 밤에는 차분한 곡"
+   },
+   "scenario": "doc_draft",
+   "mode": "spark",
+   "text": "주말 아침 개운하게 정리했다(obs-57607ac2).\n항목을 번호로 나눴다(obs-57607ac2).\n이번 달 DJ 선곡 과정을 정리했다.\n1 반복이 강한 곡 위주로 골랐다.\n이유는 [직접 채우기: 반복 위주 선곡 이유]다.\n2 비 오는 밤에 들을 곡을 골랐다.\n차분한 곡 위주로만 골랐다.\n곡명은 [직접 채우기: 비 오는 밤 곡명]이다.\n선곡 과정은 [직접 채우기: 선곡 과정]이다.\n정리는 또 번호로 나눴다(obs-57607ac2).",
+   "citations": [
+    "obs-03537ac7",
+    "obs-22a3b49b",
+    "obs-2ad76390",
+    "obs-398072d2",
+    "obs-4c0977a2",
+    "obs-57607ac2",
+    "obs-59501bf6",
+    "obs-71f716c1",
+    "obs-96a0e241",
+    "obs-ae5ff584",
+    "obs-be8d2fc4",
+    "obs-d3ae998c",
+    "obs-d80debfa",
+    "obs-ee2e4c46"
+   ],
+   "note": ""
+  },
+  {
+   "id": "music_recommend",
+   "name": "음악 추천",
+   "inputs": {
+    "situation": "비 오는 밤에 믹스 작업을 할 때",
+    "candidates": "Nuvole Bianche\nStrobe\nOpus\nAround the World",
+    "avoid": ""
+   },
+   "scenario": "music_recommend",
+   "mode": "spark",
+   "text": "비 오는 밤 믹스 작업용 추천:\n\n- Strobe: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Opus: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Around the World: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Nuvole Bianche: 비 오는 밤 차분한 곡으로 마무리한 기록이 있어 마무리용으로 적합하다 (obs-71f716c1).",
+   "citations": [
+    "obs-03537ac7",
+    "obs-22a3b49b",
+    "obs-2ad76390",
+    "obs-398072d2",
+    "obs-4c0977a2",
+    "obs-57607ac2",
+    "obs-59501bf6",
+    "obs-71f716c1",
+    "obs-96a0e241",
+    "obs-ae5ff584",
+    "obs-be8d2fc4",
+    "obs-d3ae998c",
+    "obs-d80debfa",
+    "obs-ee2e4c46"
+   ],
+   "note": ""
+  },
+  {
+   "id": "day_plan",
+   "name": "하루 계획",
+   "inputs": {
+    "state": "피곤함",
+    "tasks": "블로그 글 마무리\n팀장님 메일 답장\nDJ 세트 연습\n운동\n장보기"
+   },
+   "scenario": "day_plan",
+   "mode": "spark",
+   "text": "피곤한 날 기준으로 오늘은 비우고 쉬는 쪽으로 정리했다.\n\n**오늘의 원칙**\n- 피곤할 때는 휴식 우선 (hyp-9c8f3c04)\n- 일정이 빽빽하면 부담이 커질 수 있음 (hyp-1e0c2831)\n\n**정리안**\n\n1. 휴식: 먼저 확보\n   - 낮에 짧은 낮잠 / 눕기 시간을 일정에 넣기\n\n2. 가볍게 해도 되는 것\n   - 팀장님 메일 답장: 짧게 한 번만 처리하고 끝내기\n   - 장보기: 꼭 필요한 것만, 가능하면 온라인·근처로 최소화\n\n3. 밤·컨디션 봐서 조절\n   - DJ 세트 연습: 밤에 짧게만 (obs-4c0977a2). 비 오는 날은 차분한 곡 위주라는 기록이 있다 (obs-4c0977a2). 오늘 비가 오는지는 확인하고 골라보자.\n\n4. 내일로 미루기\n   - 블로그 글 마무리: 컨디션 좋을 때 정리·기록을 한다는 기록이 있어서 (hyp-b02d898f), 피곤한 오늘은 무리하지 않기\n   - 운동: 피곤할 때는 쉬는 쪽이 낫다 (hyp-9c8f3c04). 가벼운 스트레칭 정도로 대체",
+   "citations": [
+    "obs-03537ac7",
+    "obs-22a3b49b",
+    "obs-2ad76390",
+    "obs-398072d2",
+    "obs-4c0977a2",
+    "obs-57607ac2",
+    "obs-59501bf6",
+    "obs-71f716c1",
+    "obs-96a0e241",
+    "obs-ae5ff584",
+    "obs-be8d2fc4",
+    "obs-d3ae998c",
+    "obs-d80debfa",
+    "obs-ee2e4c46"
+   ],
+   "note": ""
+  },
+  {
+   "id": "choice_help",
+   "name": "선택 도우미",
+   "inputs": {
+    "request": "피곤한 날 저녁 주문",
+    "options": "단골 치킨집\n새로 생긴 쌀국수집"
+   },
+   "scenario": "choice_help",
+   "mode": "spark",
+   "text": "피곤한 날 저녁은 휴식을 우선하세요.\n\n익숙한 단골 치킨집에 늘 시키는 메뉴로 배달이 맞습니다. [obs-985576ab]\n\n피곤한 날은 일을 줄이는 습관이 있다는 점도 참고했습니다. [obs-03537ac7, obs-398072d2]",
+   "citations": [
+    "obs-03537ac7",
+    "obs-22a3b49b",
+    "obs-2ad76390",
+    "obs-398072d2",
+    "obs-44fad5e8",
+    "obs-4c0977a2",
+    "obs-57607ac2",
+    "obs-59501bf6",
+    "obs-71f716c1",
+    "obs-96a0e241",
+    "obs-985576ab",
+    "obs-ae5ff584",
+    "obs-bb18031d",
+    "obs-be8d2fc4",
+    "obs-d3ae998c",
+    "obs-d80debfa",
+    "obs-ee2e4c46"
+   ],
+   "note": ""
+  }
+ ],
+ "mock": {
+  "counts": {
+   "Observation": 29,
+   "Entity": 14,
+   "Context": 9,
+   "Hypothesis": 3,
+   "Preference": 0,
+   "Style": 1,
+   "Criterion": 0
+  },
+  "growth": [
+   {
+    "n": 1,
+    "entities": 2,
+    "contexts": 2,
+    "hypotheses": 0
+   },
+   {
+    "n": 2,
+    "entities": 4,
+    "contexts": 3,
+    "hypotheses": 1
+   },
+   {
+    "n": 3,
+    "entities": 5,
+    "contexts": 4,
+    "hypotheses": 1
+   },
+   {
+    "n": 4,
+    "entities": 5,
+    "contexts": 6,
+    "hypotheses": 2
+   },
+   {
+    "n": 5,
+    "entities": 6,
+    "contexts": 7,
+    "hypotheses": 2
+   },
+   {
+    "n": 6,
+    "entities": 7,
+    "contexts": 7,
+    "hypotheses": 2
+   },
+   {
+    "n": 7,
+    "entities": 8,
+    "contexts": 7,
+    "hypotheses": 2
+   },
+   {
+    "n": 8,
+    "entities": 9,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 9,
+    "entities": 10,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 10,
+    "entities": 10,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 11,
+    "entities": 11,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 12,
+    "entities": 11,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 13,
+    "entities": 12,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 14,
+    "entities": 12,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 15,
+    "entities": 12,
+    "contexts": 7,
+    "hypotheses": 3
+   },
+   {
+    "n": 16,
+    "entities": 12,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 17,
+    "entities": 12,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 18,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 19,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 20,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 21,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 22,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 23,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 24,
+    "entities": 13,
+    "contexts": 8,
+    "hypotheses": 3
+   },
+   {
+    "n": 25,
+    "entities": 14,
+    "contexts": 9,
+    "hypotheses": 3
+   },
+   {
+    "n": 26,
+    "entities": 14,
+    "contexts": 9,
+    "hypotheses": 3
+   },
+   {
+    "n": 27,
+    "entities": 14,
+    "contexts": 9,
+    "hypotheses": 3
+   },
+   {
+    "n": 28,
+    "entities": 14,
+    "contexts": 9,
+    "hypotheses": 3
+   },
+   {
+    "n": 29,
+    "entities": 14,
+    "contexts": 9,
+    "hypotheses": 3
+   }
+  ],
+  "hypotheses": [
+   {
+    "statement": "익숙한 선택에서 안정감을 느낀다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 10,
+    "contradicts": 0,
+    "evidence": [
+     "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
+     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
+     "점심에 평소 가는 식당에서 또 제육볶음을 먹었다."
+    ]
+   },
+   {
+    "statement": "새로운 경험을 탐색하려 한다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 5,
+    "contradicts": 0,
+    "evidence": [
+     "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
+     "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
+     "맑은 아침에 개운해서 새 카페 두 곳을 돌았다."
+    ]
+   },
+   {
+    "statement": "피곤할 때는 고르는 수고를 회피한다",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 4,
+    "contradicts": 0,
+    "evidence": [
+     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
+     "지쳐서 점심은 편의점에서 항상 사는 삼각김밥으로 때웠다.",
+     "일요일 저녁 피곤해서 단골 치킨집에 배달을 시켰다. 늘 시키는 메뉴다."
+    ]
+   }
+  ]
+ }
+}

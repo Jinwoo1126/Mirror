@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mirror 이해 보기</title>
+<script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<style>
+body { font-family: -apple-system, sans-serif; margin: 0; background: #fafafa; color: #222; }
+header { background: #1f2937; color: #fff; padding: 12px 20px; }
+header h1 { margin: 0; font-size: 18px; }
+nav { display: flex; gap: 8px; padding: 10px 20px; background: #e5e7eb; }
+nav button { padding: 6px 14px; border: 1px solid #9ca3af; background: #fff; cursor: pointer; }
+nav button.active { background: #1f2937; color: #fff; }
+section { display: none; padding: 16px 20px; }
+section.active { display: block; }
+#cy { width: 100%; height: 520px; border: 1px solid #9ca3af; background: #fff; }
+.card { border: 1px solid #d1d5db; background: #fff; padding: 12px; margin-bottom: 10px; }
+.card h3 { margin: 0 0 6px; font-size: 15px; }
+.badge { display: inline-block; font-size: 12px; background: #e5e7eb; padding: 1px 8px; margin-right: 6px; }
+.sup { color: #166534; } .con { color: #991b1b; }
+.ev { font-size: 13px; margin: 4px 0 4px 12px; }
+.btns button { margin-right: 6px; }
+pre.snippet { background: #111827; color: #d1fae5; padding: 8px; font-size: 12px; overflow-x: auto; }
+pre.report { background: #fff; border: 1px solid #d1d5db; padding: 12px; white-space: pre-wrap; }
+.offline { color: #991b1b; }
+</style>
+</head>
+<body>
+<header><h1>Mirror 이해 보기</h1></header>
+<nav>
+<button data-tab="graph" class="active">그래프</button>
+<button data-tab="hyps">가설</button>
+<button data-tab="report">주간 리포트</button>
+</nav>
+<section id="graph" class="active"><div id="cy"></div><p id="cy-note"></p></section>
+<section id="hyps"><div id="hyp-list"></div></section>
+<section id="report"><pre class="report" id="report-body"></pre></section>
+<script>
+let DATA = null;
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll("section").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  document.getElementById(b.dataset.tab).classList.add("active");
+}));
+function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function controlSnippet(action, kind, id, payload) {
+  const obj = { action, target: { kind, id } };
+  if (payload) obj.payload = payload;
+  return "mirror_control " + JSON.stringify(obj);
+}
+function showSnippet(el, text) {
+  el.innerHTML = "";
+  const pre = document.createElement("pre");
+  pre.className = "snippet"; pre.textContent = text;
+  const copy = document.createElement("button"); copy.textContent = "복사";
+  copy.addEventListener("click", () => {
+    if (navigator.clipboard) navigator.clipboard.writeText(text);
+  });
+  el.appendChild(pre); el.appendChild(copy);
+}
+function renderHyps() {
+  const list = document.getElementById("hyp-list");
+  list.innerHTML = "";
+  DATA.hypotheses.forEach(h => {
+    const div = document.createElement("div");
+    div.className = "card";
+    let html = `<h3>${esc(h.statement)}</h3>
+      <span class="badge">${esc(h.id)}</span>
+      <span class="badge">${esc(h.status)}</span>
+      <span class="badge">${esc(h.use_policy)}</span>
+      <span class="badge">${esc(h.domain || "-")}</span>
+      <p class="sup">근거 ${h.supports.length}건</p>`;
+    h.supports.forEach(s => { html += `<p class="ev sup">+ ${esc(s.occurred_at)} ${esc(s.text)}</p>`; });
+    html += `<p class="con">반례 ${h.contradicts.length}건</p>`;
+    h.contradicts.forEach(s => { html += `<p class="ev con">− ${esc(s.occurred_at)} ${esc(s.text)}</p>`; });
+    div.innerHTML = html;
+    const btns = document.createElement("div");
+    btns.className = "btns";
+    const out = document.createElement("div");
+    [["맞음", "query"], ["아님", "correct"], ["쓰지 마", "suppress"]].forEach(([label, action]) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.addEventListener("click", () => {
+        const payload = action === "correct"
+          ? { kind: "interpretation", text: "이해 보기에서 아님 선택" } : null;
+        showSnippet(out, controlSnippet(action, "Hypothesis", h.id, payload));
+      });
+      btns.appendChild(b);
+    });
+    div.appendChild(btns); div.appendChild(out);
+    list.appendChild(div);
+  });
+}
+function renderGraph() {
+  const note = document.getElementById("cy-note");
+  if (typeof cytoscape === "undefined") {
+    note.innerHTML = '<span class="offline">Cytoscape CDN을 불러오지 못했습니다(오프라인). '
+      + '가설 탭에서 목록으로 확인할 수 있습니다.</span>';
+    return;
+  }
+  const colors = { Observation: "#93c5fd", Entity: "#fcd34d", Context: "#c4b5fd",
+    Preference: "#6ee7b7", Criterion: "#fca5a5", Hypothesis: "#fdba74",
+    Style: "#e5e7eb", Correction: "#f87171" };
+  cytoscape({
+    container: document.getElementById("cy"),
+    elements: [
+      ...DATA.nodes.map(n => ({ data: { id: n.id, label: `${n.kind}\n${n.label}`,
+        color: colors[n.kind] || "#e5e7eb" } })),
+      ...DATA.edges.map((e, i) => ({ data: { id: "e" + i, source: e.source,
+        target: e.target, label: e.rel } })),
+    ],
+    style: [
+      { selector: "node", style: { "background-color": "data(color)",
+        "label": "data(label)", "font-size": 9, "text-wrap": "wrap",
+        "text-max-width": 120, "text-valign": "center",
+        "text-halign": "center" } },
+      { selector: "edge", style: { "line-color": "#9ca3af",
+        "target-arrow-color": "#9ca3af", "target-arrow-shape": "triangle",
+        "label": "data(label)", "font-size": 8, "curve-style": "bezier" } },
+    ],
+    layout: { name: "cose", animate: false },
+  });
+}
+fetch("mirror-graph.json").then(r => r.json()).then(data => {
+  DATA = data;
+  renderGraph(); renderHyps();
+  document.getElementById("report-body").textContent = data.report_markdown || "(없음)";
+}).catch(e => {
+  document.getElementById("cy-note").textContent =
+    "mirror-graph.json을 불러오지 못했습니다. `python -m mirror.ui_export`를 먼저 실행하세요.";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+ "before_round2_extractor": [
+  {
+   "set": "heldout3",
+   "mode": "strict",
+   "scenes": 16,
+   "gold": 48,
+   "predicted": 41,
+   "exact": 27,
+   "partial": 8,
+   "missing": 13,
+   "spurious": 6,
+   "unscored_pred": 0,
+   "exact_precision": 0.6585,
+   "exact_recall": 0.5625
+  },
+  {
+   "set": "heldout3",
+   "mode": "scoped",
+   "scenes": 16,
+   "gold": 48,
+   "predicted": 38,
+   "exact": 34,
+   "partial": 4,
+   "missing": 10,
+   "spurious": 0,
+   "unscored_pred": 3,
+   "exact_precision": 0.8947,
+   "exact_recall": 0.7083
+  }
+ ],
+ "after_round3_extractor": [
+  {
+   "set": "heldout3",
+   "mode": "strict",
+   "scenes": 16,
+   "gold": 48,
+   "predicted": 39,
+   "exact": 27,
+   "partial": 7,
+   "missing": 14,
+   "spurious": 5,
+   "unscored_pred": 0,
+   "exact_precision": 0.6923,
+   "exact_recall": 0.5625
+  },
+  {
+   "set": "heldout3",
+   "mode": "scoped",
+   "scenes": 16,
+   "gold": 48,
+   "predicted": 37,
+   "exact": 34,
+   "partial": 3,
+   "missing": 11,
+   "spurious": 0,
+   "unscored_pred": 2,
+   "exact_precision": 0.9189,
+   "exact_recall": 0.7083
+  }
+ ]
+}
