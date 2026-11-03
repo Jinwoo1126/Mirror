@@ -87,8 +87,7 @@ def observe(
     try:
         if hasattr(extractor, "known_hypotheses"):
             # LLM 추출기가 같은 뜻의 가설 문구를 재사용하도록 기존 가설을 알려준다
-            extractor.known_hypotheses = [r[0] for r in store._rows(
-                "MATCH (h:Hypothesis) RETURN h.statement")]
+            extractor.known_hypotheses = store.hypothesis_statements()
         result = extractor.extract(obs_in)
     except (ex.ExtractionError, ex.NotConfigured) as e:
         return ObserveResult(ok=False, revision=revision, error=f"extract: {e}")

@@ -1,14 +1,45 @@
+import os
+import uuid
+
 import pytest
 
 from mirror.extract import MockExtractor
 from mirror.store import MirrorStore
 
+# Set to run the same store tests against Postgres, e.g.
+#   MIRROR_TEST_PG_DSN=postgresql://postgres:...@127.0.0.1:54329/mirror
+PG_DSN = os.environ.get("MIRROR_TEST_PG_DSN")
 
-@pytest.fixture
-def store(tmp_path):
-    st = MirrorStore(str(tmp_path / "test.kuzu"))
+
+def new_pg_user(dsn: str) -> str:
+    import psycopg
+    uid = str(uuid.uuid4())
+    with psycopg.connect(dsn, autocommit=True) as c:
+        c.execute("insert into auth.users (id) values (%s)", (uid,))
+    return uid
+
+
+def drop_pg_user(dsn: str, uid: str) -> None:
+    import psycopg
+    with psycopg.connect(dsn, autocommit=True) as c:
+        c.execute("delete from auth.users where id = %s", (uid,))  # cascades
+
+
+@pytest.fixture(params=["kuzu", "postgres"])
+def store(request, tmp_path):
+    if request.param == "kuzu":
+        st = MirrorStore(str(tmp_path / "test.kuzu"))
+        yield st
+        st.close()
+        return
+    if not PG_DSN:
+        pytest.skip("set MIRROR_TEST_PG_DSN to test the Postgres store")
+    from mirror.pg_store import PostgresStore
+    uid = new_pg_user(PG_DSN)
+    st = PostgresStore(PG_DSN, uid)
     yield st
     st.close()
+    drop_pg_user(PG_DSN, uid)
 
 
 @pytest.fixture

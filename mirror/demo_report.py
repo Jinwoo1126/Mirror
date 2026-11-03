@@ -38,20 +38,10 @@ SCENARIO_RUNS = [
 
 
 def per_observation(store: MirrorStore) -> list[dict]:
-    rows = store._rows(
-        "MATCH (o:Observation) RETURN o.id, o.source_id, o.occurred_at, o.text "
-        "ORDER BY o.occurred_at")
     out = []
-    for oid, sid, at, text in rows:
-        ents = [r[0] for r in store._rows(
-            "MATCH (e:Entity)-[:OBSERVED_IN]->(o:Observation {id: $i}) RETURN e.name",
-            {"i": oid})]
-        ctxs = [r[0] for r in store._rows(
-            "MATCH (c:Context)-[:OBSERVED_IN]->(o:Observation {id: $i}) RETURN c.value",
-            {"i": oid})]
-        hyps = [r[0] for r in store._rows(
-            "MATCH (o:Observation {id: $i})-[:SUPPORTS]->(h:Hypothesis) RETURN h.statement",
-            {"i": oid})]
+    for oid, sid, at, text in store.observation_rows():
+        links = store.observation_links(oid)
+        ents, ctxs, hyps = links["entities"], links["contexts"], links["hypotheses"]
         out.append({"id": oid, "source_id": sid, "occurred_at": at, "text": text,
                     "entities": sorted(set(ents)), "contexts": sorted(set(ctxs)),
                     "hypotheses": sorted(set(hyps))})
@@ -69,7 +59,7 @@ def growth(rows: list[dict]) -> list[dict]:
 
 
 def kb_counts(store: MirrorStore) -> dict:
-    return {k: (store._one(f"MATCH (n:{k}) RETURN count(*)") or [0])[0]
+    return {k: store.count_nodes(k)
             for k in ("Observation", "Entity", "Context", "Hypothesis",
                       "Preference", "Style", "Criterion")}
 

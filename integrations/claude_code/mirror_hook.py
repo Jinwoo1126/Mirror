@@ -157,7 +157,8 @@ def _is_ours(entry: dict) -> bool:
     return any("mirror_hook.py" in h.get("command", "") for h in entry.get("hooks", []))
 
 
-def install(project: str, url: str, capture: bool, target: str = "claude") -> Path:
+def install(project: str, url: str, capture: bool, target: str = "claude",
+            token: str = "") -> Path:
     path = _settings_path(project, target)
     path.parent.mkdir(parents=True, exist_ok=True)
     settings = json.loads(path.read_text()) if path.exists() else {}
@@ -170,8 +171,11 @@ def install(project: str, url: str, capture: bool, target: str = "claude") -> Pa
         entry["statusMessage"] = "Asking Mirror..."
     events.append({"hooks": [entry]})
     path.write_text(json.dumps(settings, indent=2) + "\n")
-    (path.parent / "mirror-hook.json").write_text(
-        json.dumps({"url": url, "capture": capture, "token": ""}, indent=2) + "\n")
+    cfg_path = path.parent / "mirror-hook.json"
+    cfg_path.write_text(
+        json.dumps({"url": url, "capture": capture, "token": token}, indent=2) + "\n")
+    if token:
+        cfg_path.chmod(0o600)      # it holds a credential
     return path
 
 
@@ -229,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-skill", action="store_true", help="with --target muse: skip the skill")
     ap.add_argument("--print-mcp", metavar="URL", help="print the Muse Code mcp_servers entry for "
                     "the edge server's /mcp URL (add it to ~/.config/muse/settings.json yourself)")
-    ap.add_argument("--token-file", help="with --print-mcp: put the token from this file in the output")
+    ap.add_argument("--token-file", help="read the API token from this file (with --install: store it in the hook config; with --print-mcp: put it in the output)")
     ap.add_argument("--project", default=os.getcwd())
     ap.add_argument("--target", choices=sorted(TARGETS), default="claude",
                     help="which tool to install into: claude (Claude Code) or muse (Muse Code)")
@@ -239,7 +243,8 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(mcp_snippet(args.print_mcp, token), indent=2))
         return 0
     if args.install:
-        print("installed:", install(args.project, args.url, args.cap, args.target))
+        token = Path(args.token_file).read_text().strip() if args.token_file else ""
+        print("installed:", install(args.project, args.url, args.cap, args.target, token))
         if args.target == "muse" and not args.no_skill:
             print("skill:", install_skill(args.project))
         return 0

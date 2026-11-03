@@ -189,3 +189,14 @@ def test_the_mcp_snippet_has_the_shape_muse_code_accepted():
 def test_skill_file_has_the_frontmatter_muse_validates():
     text = (hook.SKILL_SRC / "SKILL.md").read_text()
     assert text.startswith("---\nname: mirror\ndescription: ")
+
+
+def test_install_can_store_a_token_from_a_file_with_private_permissions(tmp_path):
+    import stat
+    from integrations.claude_code import mirror_hook as hook
+    hook.install(str(tmp_path), "https://mirror.example", False, "claude", token="mir_abc")
+    cfg = tmp_path / ".claude" / "mirror-hook.json"
+    assert json.loads(cfg.read_text())["token"] == "mir_abc"
+    assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
+    hook.install(str(tmp_path / "b"), "https://mirror.example", False, "claude")
+    assert json.loads((tmp_path / "b" / ".claude" / "mirror-hook.json").read_text())["token"] == ""

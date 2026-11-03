@@ -97,10 +97,9 @@ def test_nightly_links_shared_alternatives(store):
 
 def test_nightly_merges_duplicate_entities(store):
     e1 = store.upsert_entity("장소", "A카페")
-    e2 = store.upsert_entity("장소", "B카페")
     # 별칭이 겹치지 않아 자동 병합되지 않은 표기 변형
-    store._conn.execute("MATCH (e:Entity {id: $id}) SET e.name = $n",
-                        {"id": e2.id, "n": "A 카페"})
+    e2 = store.upsert_entity("장소", "A 카페")
+    assert e2.id != e1.id
     out = hyp_mod.nightly_maintenance(store)
     assert len(out["merged_entities"]) == 1
     survivors = [e for e in (e1.id, e2.id)

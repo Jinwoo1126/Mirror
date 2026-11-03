@@ -14,8 +14,8 @@ def seeded(store, mock):
         store, mock, "s2",
         {"text": "주말에 처음으로 방탈출에 갔다.",
          "occurred_at": "2026-10-25T14:00:00+09:00"}, 1)
-    for row in store._rows("MATCH (h:Hypothesis) RETURN h.id"):
-        store.set_hypothesis_status(row[0], "active")
+    for hyp_id in store.node_ids("Hypothesis"):
+        store.set_hypothesis_status(hyp_id, "active")
     return store
 
 

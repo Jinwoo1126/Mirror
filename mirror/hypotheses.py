@@ -28,13 +28,9 @@ def _parse_dt(raw: str | None) -> datetime | None:
 def promote_candidates(store: MirrorStore, as_of: str | None = None) -> dict:
     """승격 조건을 만족하는 후보를 활성으로. {promoted, evaluated} 반환."""
     as_of = as_of or schema.utcnow_iso()
-    rows = store._rows(
-        "MATCH (h:Hypothesis) WHERE h.status = 'candidate' "
-        "AND h.recorded_at <= $as_of RETURN h.id",
-        {"as_of": as_of},
-    )
+    ids = store.hypothesis_ids_by_status([schema.STATUS_CANDIDATE], as_of)
     promoted = []
-    for (hyp_id,) in rows:
+    for hyp_id in ids:
         supports = store.supporting_observations(hyp_id, as_of=as_of)
         if store.contradicting_observations(hyp_id, as_of=as_of):
             continue
@@ -46,7 +42,7 @@ def promote_candidates(store: MirrorStore, as_of: str | None = None) -> dict:
         if len(days) >= 2:
             store.set_hypothesis_status(hyp_id, schema.STATUS_ACTIVE)
             promoted.append(hyp_id)
-    return {"promoted": promoted, "evaluated": len(rows)}
+    return {"promoted": promoted, "evaluated": len(ids)}
 
 
 def weekly_review(store: MirrorStore, as_of: str | None = None,
@@ -82,8 +78,7 @@ def nightly_maintenance(store: MirrorStore, as_of: str | None = None,
 
 
 def _merge_duplicate_entities(store: MirrorStore) -> list[dict]:
-    rows = store._rows(
-        "MATCH (e:Entity) RETURN e.id, e.kind, e.name, e.recorded_at")
+    rows = store.entity_ids()
     groups: dict[tuple[str, str], list] = {}
     for eid, kind, name, rec in rows:
         norm = "".join((name or "").strip().lower().split())
@@ -121,11 +116,7 @@ def _stale_hypotheses(store: MirrorStore, as_of: str,
 
 
 def _link_shared_alternatives(store: MirrorStore) -> int:
-    rows = store._rows(
-        "MATCH (o:Observation)-[e:SUPPORTS]->(h1:Hypothesis) "
-        "MATCH (o)-[e2:SUPPORTS]->(h2:Hypothesis) "
-        "WHERE h1.id < h2.id RETURN h1.id, h2.id, o.id, "
-        "h1.status, h2.status")
+    rows = store.cosupported_pairs()
     linked = 0
     keep_statuses = {schema.STATUS_CANDIDATE, schema.STATUS_ACTIVE,
                      schema.STATUS_SUSPENDED}
@@ -133,12 +124,7 @@ def _link_shared_alternatives(store: MirrorStore) -> int:
         if s1 not in keep_statuses or s2 not in keep_statuses:
             continue
         for a, b in ((h1, h2), (h2, h1)):
-            dup = store._one(
-                "MATCH (x:Hypothesis {id: $a})-[e:ALTERNATIVE_TO]->"
-                "(y:Hypothesis {id: $b}) RETURN e.evidence",
-                {"a": a, "b": b},
-            )
-            if dup is None:
+            if not store.has_alternative(a, b):
                 store.add_edge(schema.Edge(
                     rel=schema.ALTERNATIVE_TO, from_kind=schema.HYPOTHESIS,
                     from_id=a, to_kind=schema.HYPOTHESIS, to_id=b,

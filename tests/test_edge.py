@@ -154,3 +154,83 @@ def test_mcp_endpoint_answers_initialize_with_the_token(make):
                                          "clientInfo": {"name": "t", "version": "0"}}})
     assert r.status_code == 200
     assert r.json()["result"]["serverInfo"]["name"] == "mirror"
+
+
+# -- multi-user (hosted) mode ----------------------------------------------------
+
+GOOD = "mir_" + "g" * 43
+OTHER = "mir_" + "o" * 43
+
+
+@pytest.fixture
+def multi():
+    """Edge in multi-user mode against a fake main app that knows two tokens."""
+    seen = []
+
+    def backend(req: httpx.Request):
+        tok = req.headers.get("authorization", "").removeprefix("Bearer ")
+        seen.append((req.url.path, tok))
+        if tok not in (GOOD, OTHER):
+            return httpx.Response(401, json={"error": "invalid"})
+        if req.url.path == "/api/retrieve":
+            return httpx.Response(200, json={"items": ITEMS if tok == GOOD else []})
+        return httpx.Response(200, json={"ok": True})
+
+    up = []
+
+    def upstream(req: httpx.Request):
+        up.append(dict(req.headers))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "hi"}}]})
+
+    cfg = edge.Config(token="", upstream_key="OPERATOR-KEY", multiuser=True)
+    app = edge.create_app(
+        cfg, backend=httpx.AsyncClient(transport=httpx.MockTransport(backend),
+                                       base_url="http://backend"),
+        upstream=httpx.AsyncClient(transport=httpx.MockTransport(upstream)))
+    return TestClient(app), seen, up
+
+
+def test_multiuser_rejects_missing_wrong_and_non_token_credentials(multi):
+    client, seen, _ = multi
+    for headers in ({}, {"Authorization": "Bearer nope"}, {"Authorization": "Basic x"},
+                    {"Authorization": "Bearer mir_" + "z" * 43}):
+        assert client.post("/mcp", json={}, headers=headers).status_code == 401
+    assert client.post("/v1/chat/completions", json={}).status_code == 401
+
+
+def test_multiuser_passes_each_callers_own_token_to_the_backend(multi):
+    client, seen, up = multi
+    hdr = lambda t: {"Authorization": f"Bearer {t}", "X-Upstream-Key": "user-key"}
+    body = {"model": "m", "messages": [{"role": "user", "content": "What should I order?"}]}
+    r1 = client.post("/v1/chat/completions", headers=hdr(GOOD), json=body)
+    r2 = client.post("/v1/chat/completions", headers=hdr(OTHER), json=body)
+    assert r1.status_code == 200 and r1.headers["x-mirror-injected"] == "1"
+    assert r2.status_code == 200 and r2.headers["x-mirror-injected"] == "0"
+    retrieves = [tok for path, tok in seen if path == "/api/retrieve"]
+    assert retrieves == [GOOD, OTHER]            # each call carried its own caller's token
+
+
+def test_multiuser_never_spends_the_operators_upstream_key(multi):
+    client, seen, up = multi
+    body = {"model": "m", "messages": [{"role": "user", "content": "hello there"}]}
+    r = client.post("/v1/chat/completions", headers={"Authorization": f"Bearer {GOOD}"},
+                    json=body)
+    assert r.status_code == 503 and not up      # no key of their own: nothing was sent
+    r = client.post("/v1/chat/completions", json=body,
+                    headers={"Authorization": f"Bearer {GOOD}", "X-Upstream-Key": "theirs"})
+    assert r.status_code == 200
+    assert up[-1]["authorization"] == "Bearer theirs"
+    assert "OPERATOR-KEY" not in json.dumps(up)
+
+
+def test_multiuser_checks_a_token_once_then_caches(multi):
+    client, seen, _ = multi
+    h = {"Authorization": f"Bearer {GOOD}", "X-Upstream-Key": "k"}
+    body = {"model": "m", "messages": [{"role": "user", "content": "hello there"}]}
+    for _ in range(3):
+        client.post("/v1/chat/completions", headers=h, json=body)
+    assert [p for p, _ in seen].count("/api/status") == 1
+
+
+def test_multiuser_starts_without_a_shared_token():
+    assert edge.create_app(edge.Config(token="", multiuser=True)) is not None

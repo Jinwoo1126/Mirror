@@ -16,9 +16,8 @@ def seeded(store, mock):
         {"text": DINNER_TEXT,
          "occurred_at": "2026-10-16T20:00:00+09:00"}, 0)
     assert res.ok
-    hyp_id = store._rows("MATCH (h:Hypothesis {statement: $s}) RETURN h.id",
-                         {"s": H1_STATEMENT})[0][0]
-    all_hyps = [r[0] for r in store._rows("MATCH (h:Hypothesis) RETURN h.id")]
+    hyp_id = store.find_hypothesis_by_statement(H1_STATEMENT)
+    all_hyps = store.node_ids("Hypothesis")
     store.set_hypothesis_status(hyp_id, "active")
     return {"obs_id": res.obs_id, "hyp_id": hyp_id, "all_hyps": all_hyps,
             "revision": res.revision}

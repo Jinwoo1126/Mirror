@@ -52,9 +52,8 @@ class HybridIndex:
         return idx
 
     def _all_obs(self, store: MirrorStore) -> list:
-        rows = store._rows("MATCH (o:Observation) RETURN o.id")
         out = []
-        for (oid,) in rows:
+        for oid in store.node_ids(schema.OBSERVATION):
             obs = store.get_observation(oid)
             if obs is not None:
                 out.append(obs)

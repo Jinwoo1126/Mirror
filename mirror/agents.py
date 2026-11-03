@@ -96,14 +96,11 @@ class GraphAgent:
         return sem[0][0]
 
     def predict(self, episode, store, as_of):
-        rows = store._rows(
-            "MATCH (h:Hypothesis) WHERE h.status IN ['active', 'candidate'] "
-            "AND h.recorded_at <= $as_of RETURN h.id",
-            {"as_of": as_of},
-        )
+        ids = store.hypothesis_ids_by_status(
+            [schema.STATUS_ACTIVE, schema.STATUS_CANDIDATE], as_of)
         hyp_votes: dict[str, str] = {}
         evidence: dict[str, list[str]] = {}
-        for (hid,) in rows:
+        for hid in ids:
             hyp = store.get_hypothesis(hid)
             supports = store.supporting_observations(hid, as_of=as_of)
             texts = []

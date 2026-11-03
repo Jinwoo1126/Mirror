@@ -39,23 +39,21 @@ def export_graph(store: MirrorStore) -> dict:
     for kind in sorted(schema.NODE_TYPES):
         if kind == schema.RESPONSE:
             continue
-        for row in store._rows(f"MATCH (n:{kind}) RETURN n.id"):
-            node = store.get_node(kind, row[0])
+        for node_id in store.node_ids(kind):
+            node = store.get_node(kind, node_id)
             assert node is not None
-            nodes.append({"id": row[0], "kind": kind,
+            nodes.append({"id": node_id, "kind": kind,
                           "label": _label(kind, node),
                           "status": node.get("status", ""),
                           "detail": node})
     for rel, pairs in sorted(schema.EDGE_ENDPOINTS.items()):
         for from_kind, to_kind in sorted(pairs):
-            for row in store._rows(
-                    f"MATCH (a:{from_kind})-[e:{rel}]->(b:{to_kind}) "
-                    "RETURN a.id, b.id, e.evidence"):
+            for row in store.edge_rows(rel, from_kind, to_kind):
                 edges.append({"source": row[0], "target": row[1],
                               "rel": rel, "evidence": row[2]})
     hyps = []
-    for row in store._rows("MATCH (h:Hypothesis) RETURN h.id"):
-        hyp = store.get_hypothesis(row[0])
+    for hyp_id in store.node_ids(schema.HYPOTHESIS):
+        hyp = store.get_hypothesis(hyp_id)
         assert hyp is not None
         supports, contradicts = [], []
         for oid in store.supporting_observations(hyp.id):

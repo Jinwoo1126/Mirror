@@ -23,11 +23,7 @@ def weekly_report(store: MirrorStore, since: str,
                   as_of: str | None = None) -> dict:
     as_of = as_of or schema.utcnow_iso()
     new_hyps = []
-    for row in store._rows(
-            "MATCH (h:Hypothesis) WHERE h.recorded_at >= $since "
-            "AND h.recorded_at <= $as_of "
-            "RETURN h.id, h.statement, h.status, h.use_policy, h.domain",
-            {"since": since, "as_of": as_of}):
+    for row in store.hypotheses_recorded_between(since, as_of):
         new_hyps.append({
             "id": row[0], "statement": row[1], "status": row[2],
             "use_policy": row[3], "domain": row[4],
@@ -35,11 +31,7 @@ def weekly_report(store: MirrorStore, since: str,
             "contradicts": store.contradicting_observations(row[0]),
         })
     demoted, retired = [], []
-    for row in store._rows(
-            "MATCH (h:Hypothesis) WHERE h.status_changed_at >= $since "
-            "AND h.status_changed_at <= $as_of "
-            "RETURN h.id, h.statement, h.status",
-            {"since": since, "as_of": as_of}):
+    for row in store.hypotheses_changed_between(since, as_of):
         entry = {"id": row[0], "statement": row[1], "status": row[2],
                  "supports": store.supporting_observations(row[0])}
         if row[2] == schema.STATUS_SUSPENDED:
@@ -47,11 +39,7 @@ def weekly_report(store: MirrorStore, since: str,
         elif row[2] == schema.STATUS_RETIRED:
             retired.append(entry)
     corrections = []
-    for row in store._rows(
-            "MATCH (c:Correction) WHERE c.recorded_at >= $since "
-            "AND c.recorded_at <= $as_of "
-            "RETURN c.id, c.kind, c.target, c.text",
-            {"since": since, "as_of": as_of}):
+    for row in store.corrections_between(since, as_of):
         corrections.append({"id": row[0], "kind": row[1], "target": row[2],
                             "text": row[3]})
     report = {"since": since, "as_of": as_of, "new_hypotheses": new_hyps,

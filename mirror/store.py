@@ -7,8 +7,6 @@ valid_*는 현실 유효 구간, recorded_at은 알게 된 시점이다.
 
 from __future__ import annotations
 
-import kuzu
-
 from . import schema
 from .schema import (
     CORRECTION,
@@ -99,6 +97,8 @@ class MirrorStore:
     """Mirror 그래프 저장소. path는 Kuzu DB 디렉터리."""
 
     def __init__(self, path: str):
+        import kuzu  # imported here so a hosted deployment does not need it
+
         self.path = path
         self._db = kuzu.Database(path)
         self._conn = kuzu.Connection(self._db)
@@ -441,6 +441,19 @@ class MirrorStore:
                 "h.status_changed_at = $sca",
                 {"id": hyp_id, "st": status, "sca": now},
             )
+        return True
+
+    def set_hypothesis_use_policy(self, hyp_id: str, use_policy: str) -> bool:
+        """Change how a hypothesis may be used. Sensitive domains stay internal_only."""
+        hyp = self.get_hypothesis(hyp_id)
+        if hyp is None:
+            return False
+        hyp.use_policy = use_policy
+        schema.validate_hypothesis(hyp)
+        self._conn.execute(
+            "MATCH (h:Hypothesis {id: $id}) SET h.use_policy = $up",
+            {"id": hyp_id, "up": use_policy},
+        )
         return True
 
     # -- 엣지 ---------------------------------------------------------------
@@ -811,3 +824,155 @@ class MirrorStore:
             {"t": topic, "since": since},
         )
         return [{"level": r[0], "recorded_at": r[1]} for r in rows]
+
+    # -- 상위 조회 --------------------------------------------------------------
+    # 저장소 밖에서 쿼리 언어를 직접 쓰지 않도록 모은 조회들. 반환은 행(list/tuple)
+    # 형태로 두어 호출부가 그대로 풀어 쓸 수 있다. Postgres 구현과 같은 계약이다.
+
+    def count_nodes(self, kind: str) -> int:
+        if kind not in schema.NODE_TYPES:
+            raise SchemaError(f"unknown node type: {kind}")
+        row = self._one(f"MATCH (n:{kind}) RETURN count(*)")
+        return int(row[0]) if row else 0
+
+    def node_ids(self, kind: str) -> list[str]:
+        if kind not in schema.NODE_TYPES:
+            raise SchemaError(f"unknown node type: {kind}")
+        return [r[0] for r in self._rows(f"MATCH (n:{kind}) RETURN n.id")]
+
+    def edge_rows(self, rel: str, from_kind: str, to_kind: str) -> list[list]:
+        """(from_id, to_id, evidence) for one allowed (rel, from_kind, to_kind)."""
+        if (from_kind, to_kind) not in schema.EDGE_ENDPOINTS.get(rel, frozenset()):
+            raise SchemaError(f"{rel} cannot connect {from_kind} -> {to_kind}")
+        return self._rows(
+            f"MATCH (a:{from_kind})-[e:{rel}]->(b:{to_kind}) "
+            "RETURN a.id, b.id, e.evidence")
+
+    def observation_rows(self) -> list[list]:
+        """(id, source_id, occurred_at, text), oldest first."""
+        return self._rows(
+            "MATCH (o:Observation) RETURN o.id, o.source_id, o.occurred_at, o.text "
+            "ORDER BY o.occurred_at")
+
+    def observation_texts(self) -> list[list]:
+        """(text, occurred_at), oldest first."""
+        return self._rows(
+            "MATCH (o:Observation) RETURN o.text, o.occurred_at "
+            "ORDER BY o.occurred_at")
+
+    def recent_observations(self, limit: int) -> list[list]:
+        """(id, text, occurred_at, source_id), newest recorded first."""
+        return self._rows(
+            "MATCH (o:Observation) RETURN o.id, o.text, o.occurred_at, "
+            "o.source_id ORDER BY o.recorded_at DESC LIMIT $n", {"n": limit})
+
+    def observation_links(self, obs_id: str) -> dict:
+        """Entity names, context values and hypothesis statements tied to one observation."""
+        return {
+            "entities": [r[0] for r in self._rows(
+                "MATCH (e:Entity)-[:OBSERVED_IN]->(o:Observation {id: $i}) "
+                "RETURN e.name", {"i": obs_id})],
+            "contexts": [r[0] for r in self._rows(
+                "MATCH (c:Context)-[:OBSERVED_IN]->(o:Observation {id: $i}) "
+                "RETURN c.value", {"i": obs_id})],
+            "hypotheses": [r[0] for r in self._rows(
+                "MATCH (o:Observation {id: $i})-[:SUPPORTS]->(h:Hypothesis) "
+                "RETURN h.statement", {"i": obs_id})],
+        }
+
+    def hypothesis_statements(self) -> list[str]:
+        return [r[0] for r in self._rows("MATCH (h:Hypothesis) RETURN h.statement")]
+
+    def hypothesis_brief(self, limit: int) -> list[list]:
+        """(statement, status) for the first `limit` hypotheses."""
+        return self._rows(
+            "MATCH (h:Hypothesis) RETURN h.statement, h.status LIMIT $n", {"n": limit})
+
+    def hypothesis_ids_by_status(self, statuses: list[str], as_of: str) -> list[str]:
+        return [r[0] for r in self._rows(
+            "MATCH (h:Hypothesis) WHERE h.status IN $st AND h.recorded_at <= $as_of "
+            "RETURN h.id", {"st": list(statuses), "as_of": as_of})]
+
+    def hypotheses_recorded_between(self, since: str, as_of: str) -> list[list]:
+        """(id, statement, status, use_policy, domain)."""
+        return self._rows(
+            "MATCH (h:Hypothesis) WHERE h.recorded_at >= $since "
+            "AND h.recorded_at <= $as_of "
+            "RETURN h.id, h.statement, h.status, h.use_policy, h.domain",
+            {"since": since, "as_of": as_of})
+
+    def hypotheses_changed_between(self, since: str, as_of: str) -> list[list]:
+        """(id, statement, status) whose status changed in the window."""
+        return self._rows(
+            "MATCH (h:Hypothesis) WHERE h.status_changed_at >= $since "
+            "AND h.status_changed_at <= $as_of RETURN h.id, h.statement, h.status",
+            {"since": since, "as_of": as_of})
+
+    def corrections_between(self, since: str, as_of: str) -> list[list]:
+        """(id, kind, target, text)."""
+        return self._rows(
+            "MATCH (c:Correction) WHERE c.recorded_at >= $since "
+            "AND c.recorded_at <= $as_of RETURN c.id, c.kind, c.target, c.text",
+            {"since": since, "as_of": as_of})
+
+    def entity_observation_counts(self) -> list[list]:
+        """(name, kind, number of observations)."""
+        return self._rows(
+            "MATCH (e:Entity)-[:OBSERVED_IN]->(o:Observation) "
+            "RETURN e.name, e.kind, count(o)")
+
+    def context_observation_counts(self) -> list[list]:
+        """(kind, value, number of observations)."""
+        return self._rows(
+            "MATCH (c:Context)-[:OBSERVED_IN]->(o:Observation) "
+            "RETURN c.kind, c.value, count(o)")
+
+    def preference_rows(self) -> list[list]:
+        return self._rows(
+            "MATCH (p:Preference) RETURN p.target, p.direction, p.strength_evidence")
+
+    def criterion_rows(self) -> list[list]:
+        return self._rows("MATCH (c:Criterion) RETURN c.statement, c.applies_to")
+
+    def style_rows(self) -> list[list]:
+        """(pattern, intent, example_refs)."""
+        return self._rows("MATCH (s:Style) RETURN s.pattern, s.intent, s.example_refs")
+
+    def style_brief(self) -> list[list]:
+        """(id, pattern, intent)."""
+        return self._rows("MATCH (s:Style) RETURN s.id, s.pattern, s.intent")
+
+    def styles_by_intent(self, intent: str) -> list[list]:
+        """(id, example_refs)."""
+        return self._rows(
+            "MATCH (s:Style {intent: $i}) RETURN s.id, s.example_refs", {"i": intent})
+
+    def style_ids_by_pattern(self, pattern: str) -> list[str]:
+        return [r[0] for r in self._rows(
+            "MATCH (s:Style {pattern: $p}) RETURN s.id", {"p": pattern})]
+
+    def entity_aliases(self) -> list[list]:
+        """(name, aliases-json)."""
+        return self._rows("MATCH (e:Entity) RETURN e.name, e.aliases")
+
+    def entity_ids(self) -> list[list]:
+        """(id, kind, name, recorded_at)."""
+        return self._rows("MATCH (e:Entity) RETURN e.id, e.kind, e.name, e.recorded_at")
+
+    def entity_brief(self, limit: int) -> list[list]:
+        """(name, kind, description)."""
+        return self._rows(
+            "MATCH (e:Entity) RETURN e.name, e.kind, e.description LIMIT $n",
+            {"n": limit})
+
+    def cosupported_pairs(self) -> list[list]:
+        """Hypothesis pairs supported by one observation: (h1, h2, obs, status1, status2)."""
+        return self._rows(
+            "MATCH (o:Observation)-[e:SUPPORTS]->(h1:Hypothesis) "
+            "MATCH (o)-[e2:SUPPORTS]->(h2:Hypothesis) "
+            "WHERE h1.id < h2.id RETURN h1.id, h2.id, o.id, h1.status, h2.status")
+
+    def has_alternative(self, a: str, b: str) -> bool:
+        return self._one(
+            "MATCH (x:Hypothesis {id: $a})-[e:ALTERNATIVE_TO]->"
+            "(y:Hypothesis {id: $b}) RETURN e.evidence", {"a": a, "b": b}) is not None

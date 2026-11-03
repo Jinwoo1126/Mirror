@@ -10,6 +10,8 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import contextvars
 import json
 import os
 import re
@@ -19,10 +21,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from starlette.applications import Starlette
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import FileResponse, HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 from . import assistant as assistant_mod
+from . import auth as auth_mod
 from . import constellation as const_mod
 from . import control as control_mod
 from . import extract as ex
@@ -36,13 +40,38 @@ from . import retrieve as retrieve_mod
 from . import router as router_mod
 from . import scenarios as scen_mod
 from . import schema
+from . import tokens as tokens_mod
 from . import ui_export as ui_mod
 from .store import MirrorStore
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-_lock = threading.Lock()
+
+
+def hosted() -> bool:
+    """Hosted mode: Supabase auth, one Postgres-backed store per request."""
+    return os.environ.get("MIRROR_HOSTED") == "1"
+
+
+class _Lock:
+    """One global lock for the single-user local app. Hosted requests each have their
+    own store, so nothing is shared and a slow extraction must not block other users."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+
+    def __enter__(self):
+        if not hosted():
+            self._lock.acquire()
+
+    def __exit__(self, *exc):
+        if not hosted():
+            self._lock.release()
+
+
+_lock = _Lock()
 _store: MirrorStore | None = None
+_request_store: contextvars.ContextVar = contextvars.ContextVar("mirror_store", default=None)
 _extractor = None
 _index = None
 _router = None
@@ -52,6 +81,11 @@ _llm_unavailable: set[str] = set()
 
 def get_store() -> MirrorStore:
     global _store
+    if hosted():
+        st = _request_store.get()
+        if st is None:  # a route that forgot to sit behind HostedAuth
+            raise RuntimeError("no user store for this request")
+        return st
     if _store is None:
         _store = MirrorStore(os.environ.get("MIRROR_DB", "data/local/mirror.kuzu"))
     return _store
@@ -66,6 +100,8 @@ def get_extractor():
 
 def get_index():
     global _index
+    if hosted():
+        return None  # search index is per user; not built in hosted mode yet
     if _index is None and os.environ.get("MIRROR_NO_INDEX") != "1":
         from . import search as search_mod
 
@@ -100,7 +136,8 @@ def reset_state() -> None:
 # -- 채팅 LLM 자동 감지 ------------------------------------------------------
 
 def _try_spark(prompt: str, timeout: int | None = None) -> str:
-    if shutil.which(os.environ.get("MIRROR_MUSE_BIN", "muse")) is None:
+    muse_bin = os.environ.get("MIRROR_MUSE_BIN", "muse")
+    if shutil.which(muse_bin) is None and not llm_mod.use_http(muse_bin):
         raise llm_mod.LlmError("muse CLI not found")
     return llm_mod.run_muse_exec(
         prompt, model=os.environ.get("MIRROR_SPARK_MODEL", "muse-spark-1.3"),
@@ -177,6 +214,12 @@ def _json(data, status: int = 200) -> JSONResponse:
 
 # -- 라우트 --------------------------------------------------------------------
 
+async def privacy_page(request) -> HTMLResponse:
+    from . import privacy
+
+    return HTMLResponse(privacy.render())
+
+
 async def homepage(request) -> HTMLResponse:
     html = (STATIC_DIR / "app.html").read_text(encoding="utf-8")
     return HTMLResponse(html)
@@ -188,8 +231,7 @@ async def api_status(request):
         counts = {}
         for kind in ("Observation", "Hypothesis", "Entity", "Context",
                      "Preference", "Style"):
-            row = store._one(f"MATCH (n:{kind}) RETURN count(*)")
-            counts[kind] = row[0] if row else 0
+            counts[kind] = store.count_nodes(kind)
         index = get_index()
         return _json({
             "revision": store.get_revision(), "counts": counts,
@@ -239,10 +281,7 @@ async def api_memories_list(request):
                       "source_id": h["obs"].source_id,
                       "score": h["score"]} for h in hits]
         else:
-            rows = store._rows(
-                "MATCH (o:Observation) RETURN o.id, o.text, o.occurred_at, "
-                "o.source_id ORDER BY o.recorded_at DESC LIMIT $n",
-                {"n": limit})
+            rows = store.recent_observations(limit)
             items = [{"id": r[0], "text": r[1], "occurred_at": r[2],
                       "source_id": r[3]} for r in rows]
             if query:
@@ -255,13 +294,25 @@ async def api_memories_add(request):
     text = (body.get("text") or "").strip()
     if not text:
         return _json({"error": "empty text"}, 400)
+    import uuid as _uuid
+
+    source_id = body.get("source_id") or (
+        "user-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        + "-" + _uuid.uuid4().hex[:4])
+    if hosted():
+        # Learning takes 10-40 s: queue it and answer now; the worker does the rest.
+        store = get_store()
+        if store.get_observation_by_source(source_id) is not None:
+            return _json({"ok": True, "duplicate": True, "status": "done"})
+        try:
+            job_id = store.enqueue_job("learn", {
+                "text": text, "source_id": source_id,
+                "occurred_at": body.get("occurred_at") or schema.utcnow_iso()})
+        except ValueError as e:
+            return _json({"error": str(e)}, 429)
+        return _json({"ok": True, "queued": True, "job_id": job_id, "status": "queued"}, 202)
     with _lock:
         store = get_store()
-        import uuid as _uuid
-
-        source_id = body.get("source_id") or (
-            "user-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-            + "-" + _uuid.uuid4().hex[:4])
         res = observe_mod.observe(
             store, get_extractor(), source_id,
             {"text": text,
@@ -270,6 +321,13 @@ async def api_memories_add(request):
         if res.ok and not res.duplicate and get_index() is not None:
             get_index().refresh(store)
         return _json(res, 200 if res.ok else 422)
+
+
+async def api_job(request):
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    job = get_store().get_job(request.path_params["job_id"])
+    return _json(job, 200) if job else _json({"error": "no such job"}, 404)
 
 
 async def api_memories_delete(request):
@@ -474,8 +532,88 @@ async def api_maintain(request):
         return _json({"error": f"unknown job: {job}"}, 400)
 
 
+async def healthz(request):
+    return _json({"ok": True})
+
+
+async def api_config(request):
+    """What the browser needs to sign in. Public by design: the anon key is meant to
+    be shipped to browsers, and row level security is what protects the data."""
+    if not hosted():
+        return _json({"hosted": False})
+    return _json({"hosted": True,
+                  "supabase_url": os.environ.get("SUPABASE_URL", ""),
+                  "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY", "")})
+
+
+async def api_export(request):
+    """Download everything Mirror stores about the signed-in user."""
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    data = await run_in_threadpool(get_store().export_all)
+    day = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return JSONResponse(data, headers={
+        "Content-Disposition": f'attachment; filename="mirror-export-{day}.json"',
+        "Cache-Control": "no-store"})
+
+
+async def api_account_delete(request):
+    """Delete everything stored for the signed-in user, and the account itself when the
+    server holds the admin key."""
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    store = get_store()
+    uid = str(store.uid)
+    await run_in_threadpool(store.delete_all_data)
+    removed_account = False
+    admin_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if admin_key and base:
+        import httpx
+
+        def _drop() -> bool:
+            r = httpx.delete(f"{base}/auth/v1/admin/users/{uid}", timeout=15,
+                             headers={"Authorization": f"Bearer {admin_key}",
+                                      "apikey": admin_key})
+            return r.status_code in (200, 204)
+        removed_account = await run_in_threadpool(_drop)
+    return _json({"ok": True, "data_deleted": True, "account_deleted": removed_account})
+
+
+async def api_tokens_list(request):
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    return _json({"tokens": get_store().list_tokens()})
+
+
+async def api_tokens_create(request):
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    body = await request.json()
+    try:
+        return _json(get_store().create_token(body.get("name", "")), 201)
+    except ValueError as e:
+        return _json({"error": str(e)}, 400)
+
+
+async def api_tokens_revoke(request):
+    if not hosted():
+        return _json({"error": "only available in hosted mode"}, 404)
+    ok = get_store().revoke_token(request.path_params["token_id"])
+    return _json({"ok": ok}, 200 if ok else 404)
+
+
 routes = [
     Route("/", homepage),
+    Route("/api/jobs/{job_id}", api_job),
+    Route("/api/tokens", api_tokens_list),
+    Route("/api/tokens", api_tokens_create, methods=["POST"]),
+    Route("/api/tokens/{token_id}", api_tokens_revoke, methods=["DELETE"]),
+    Route("/healthz", healthz),
+    Route("/api/config", api_config),
+    Route("/api/account", api_account_delete, methods=["DELETE"]),
+    Route("/api/export", api_export),
+    Route("/privacy", privacy_page),
     Route("/api/status", api_status),
     Route("/api/chat", api_chat, methods=["POST"]),
     Route("/api/memories", api_memories_list),
@@ -499,15 +637,146 @@ routes = [
     Route("/api/maintain", api_maintain, methods=["POST"]),
 ]
 
-app = Starlette(routes=routes)
+PUBLIC_API = {"/api/config"}
+
+# What a personal API token may call. Everything else (issuing tokens, deleting the
+# account, bulk maintenance, deleting memories) needs a real signed-in session.
+TOKEN_ROUTES = (
+    ("GET", "/api/status"), ("GET", "/api/profile"), ("GET", "/api/map"),
+    ("GET", "/api/memories"), ("POST", "/api/memories"), ("POST", "/api/retrieve"),
+    ("POST", "/api/chat"), ("POST", "/api/declare"), ("POST", "/api/scenarios/match"),
+    ("GET", "/api/scenarios"),
+)
+
+
+def token_allowed(method: str, path: str) -> bool:
+    if any(method == m and path == p for m, p in TOKEN_ROUTES):
+        return True
+    if method == "POST" and path.startswith("/api/scenarios/") and path.endswith("/run"):
+        return True
+    if method == "GET" and path.startswith("/api/jobs/"):
+        return True
+    return (method == "POST" and path.startswith("/api/hypotheses/")
+            and path.endswith("/feedback"))
+
+# Calls that spend LLM budget get a tighter limit than ordinary reads.
+COSTLY = (("GET", "/api/export"), ("POST", "/api/chat"), ("POST", "/api/memories"), ("POST", "/api/maintain"),
+          ("POST", "/api/decide"))
+
+
+def _is_costly(method: str, path: str) -> bool:
+    return any(method == m and path == p for m, p in COSTLY) or (
+        method == "POST" and path.startswith("/api/scenarios/") and path.endswith("/run"))
+
+
+class RateLimiter:
+    """Sliding window per user, kept in this worker's memory. With N workers the real
+    ceiling is up to N times the setting; move it to the database or Redis if that
+    matters."""
+
+    def __init__(self):
+        self.hits: dict[tuple[str, str], list[float]] = {}
+
+    def allow(self, uid: str, bucket: str, limit: int, window: float = 60.0) -> bool:
+        import time
+
+        now = time.monotonic()
+        key = (uid, bucket)
+        recent = [t for t in self.hits.get(key, []) if now - t < window]
+        if len(recent) >= limit:
+            self.hits[key] = recent
+            return False
+        recent.append(now)
+        self.hits[key] = recent
+        if len(self.hits) > 10000:  # drop idle users so the table cannot grow forever
+            self.hits = {k: v for k, v in self.hits.items() if v and now - v[-1] < window}
+        return True
+
+
+_limiter = RateLimiter()
+
+
+class HostedAuth:
+    """In hosted mode every /api request needs a valid Supabase token. The token's
+    subject, never anything the client sends, picks the user whose store is opened."""
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def _reject(self, send, status: int, message: str):
+        body = json.dumps({"error": message}).encode()
+        await send({"type": "http.response.start", "status": status,
+                    "headers": [(b"content-type", b"application/json"),
+                                (b"content-length", str(len(body)).encode())]})
+        await send({"type": "http.response.body", "body": body})
+
+    async def __call__(self, scope, receive, send):
+        path = scope.get("path", "")
+        if (scope["type"] != "http" or not hosted() or not path.startswith("/api/")
+                or path in PUBLIC_API):
+            return await self.inner(scope, receive, send)
+        headers = dict(scope["headers"])
+        token = auth_mod.bearer(headers.get(b"authorization", b"").decode("latin-1"))
+        dsn = os.environ.get("MIRROR_PG_DSN", "")
+        method = scope.get("method", "GET")
+        if tokens_mod.looks_like_token(token):
+            if not dsn:
+                return await self._reject(send, 500, "server has no database configured")
+            uid = await run_in_threadpool(tokens_mod.resolve, dsn, token)
+            if uid is None:
+                return await self._reject(send, 401, "invalid or revoked API token")
+            if not token_allowed(method, path):
+                return await self._reject(
+                    send, 403, "API tokens cannot use this endpoint; sign in instead")
+        else:
+            try:
+                uid = await run_in_threadpool(auth_mod.verify_token, token)
+            except auth_mod.AuthError as e:
+                return await self._reject(send, 401, str(e))
+        costly = _is_costly(method, path)
+        limit = int(os.environ.get("MIRROR_RATE_COSTLY" if costly else "MIRROR_RATE_ALL",
+                                   "10" if costly else "120"))
+        if not _limiter.allow(uid, "costly" if costly else "all", limit):
+            return await self._reject(send, 429, "Too many requests. Try again in a minute.")
+        if not dsn:
+            return await self._reject(send, 500, "server has no database configured")
+        from .pg_store import PostgresStore
+
+        store = await run_in_threadpool(PostgresStore, dsn, uid)
+        marker = _request_store.set(store)
+        try:
+            await self.inner(scope, receive, send)
+        finally:
+            _request_store.reset(marker)
+            await run_in_threadpool(store.close)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(_app):
+    """Hosted: run a background worker thread next to the web server. Several app
+    processes can each run one; jobs are claimed so none runs twice."""
+    worker = None
+    if hosted() and os.environ.get("MIRROR_WORKER", "1") != "0" \
+            and os.environ.get("MIRROR_PG_DSN"):
+        from . import worker as worker_mod
+
+        worker = worker_mod.start_thread(os.environ["MIRROR_PG_DSN"])
+    try:
+        yield
+    finally:
+        if worker:
+            worker[1].set()
+
+
+app = HostedAuth(Starlette(routes=routes, lifespan=lifespan))
 
 
 def main(argv: list[str] | None = None) -> None:
     import uvicorn
 
     parser = argparse.ArgumentParser(description="Mirror web app")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--host", default=os.environ.get("HOST", "127.0.0.1"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")))
     parser.add_argument("--db", default="")
     parser.add_argument("--avatar-dir", default="")
     parser.add_argument("--name", default="", help="shown in the person switcher")

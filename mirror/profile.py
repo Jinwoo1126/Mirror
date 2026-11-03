@@ -57,9 +57,7 @@ def _evidence_label(n: int) -> str:
 
 
 def build_profile(store: MirrorStore) -> dict:
-    obs_rows = store._rows(
-        "MATCH (o:Observation) RETURN o.text, o.occurred_at "
-        "ORDER BY o.occurred_at")
+    obs_rows = store.observation_texts()
     texts = [r[0] or "" for r in obs_rows]
     dates = [r[1] for r in obs_rows if r[1] and r[1] != "unknown"]
 
@@ -79,18 +77,14 @@ def build_profile(store: MirrorStore) -> dict:
     tendencies.sort(key=lambda t: (-t["supports"], t["statement"]))
 
     entities: dict[str, list[dict]] = {}
-    for name, kind, n in store._rows(
-            "MATCH (e:Entity)-[:OBSERVED_IN]->(o:Observation) "
-            "RETURN e.name, e.kind, count(o)"):
+    for name, kind, n in store.entity_observation_counts():
         entities.setdefault(kind or "기타", []).append(
             {"name": name, "count": n})
     for lst in entities.values():
         lst.sort(key=lambda e: (-e["count"], e["name"]))
 
     situations: dict[str, list[dict]] = {}
-    for kind, value, n in store._rows(
-            "MATCH (c:Context)-[:OBSERVED_IN]->(o:Observation) "
-            "RETURN c.kind, c.value, count(o)"):
+    for kind, value, n in store.context_observation_counts():
         situations.setdefault(kind or "기타", []).append(
             {"value": value, "count": n})
     for lst in situations.values():
@@ -98,17 +92,13 @@ def build_profile(store: MirrorStore) -> dict:
 
     preferences = [
         {"target": t, "direction": d, "basis": b}
-        for t, d, b in store._rows(
-            "MATCH (p:Preference) RETURN p.target, p.direction, "
-            "p.strength_evidence")]
+        for t, d, b in store.preference_rows()]
     criteria = [
         {"statement": s, "applies_to": a}
-        for s, a in store._rows(
-            "MATCH (c:Criterion) RETURN c.statement, c.applies_to")]
+        for s, a in store.criterion_rows()]
     styles = [
         {"pattern": p, "intent": i, "examples": len(schema.parse_json_list(e))}
-        for p, i, e in store._rows(
-            "MATCH (s:Style) RETURN s.pattern, s.intent, s.example_refs")]
+        for p, i, e in store.style_rows()]
 
     return {
         "observations": len(texts),

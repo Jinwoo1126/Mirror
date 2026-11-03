@@ -37,9 +37,7 @@ def test_level1_on_disagreement(store, mock):
 
 def test_level2_and_frequency_cap(store, mock):
     hyp_id = _two_day_hyp(store, mock)
-    store._conn.execute(
-        "MATCH (h:Hypothesis {id: $id}) SET h.use_policy = 'presentable'",
-        {"id": hyp_id})
+    assert store.set_hypothesis_use_policy(hyp_id, "presentable")
     ctx = {"topic": "저녁", "hyp_id": hyp_id}
     first = policy_mod.decide(store, "저녁", None, ctx, {"l2_enabled": True})
     assert first.level == 2
@@ -53,9 +51,7 @@ def test_level2_requires_two_days_and_opt_in(store, mock):
         "text": "피곤한 저녁에 익숙한 곳에서 먹었다.",
         "occurred_at": "2026-10-16T20:00:00+09:00"}, 0)
     hyp_id = store.find_hypothesis_by_statement("피곤할 때는 고르는 수고를 회피한다")
-    store._conn.execute(
-        "MATCH (h:Hypothesis {id: $id}) SET h.use_policy = 'presentable'",
-        {"id": hyp_id})
+    assert store.set_hypothesis_use_policy(hyp_id, "presentable")
     ctx = {"topic": "저녁", "hyp_id": hyp_id}
     out = policy_mod.decide(store, "저녁", None, ctx, {"l2_enabled": True})
     assert out.level == 0  # 근거 1일뿐

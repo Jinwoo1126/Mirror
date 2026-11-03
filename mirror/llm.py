@@ -32,10 +32,67 @@ def parse_json_output(text: str) -> dict:
     return data
 
 
+META_API_BASE = "https://api.meta.ai/v1"
+
+
+def use_http(muse_bin: str = "muse") -> bool:
+    """HTTP로 Meta Model API를 부를지. 키가 없으면 항상 CLI 경로."""
+    import os as _os
+    import shutil as _shutil
+
+    if not _os.environ.get("META_API_KEY"):
+        return False
+    if _os.environ.get("MIRROR_LLM_TRANSPORT") == "http":
+        return True
+    return _shutil.which(muse_bin) is None
+
+
+def run_meta_http(prompt_text: str, model: str = "muse-spark-1.3",
+                  effort: str = "minimal", timeout: int = 180,
+                  client=None) -> str:
+    """Meta Model API (OpenAI 호환 chat completions). 본문 텍스트 반환."""
+    import os as _os
+
+    import httpx
+
+    key = _os.environ.get("META_API_KEY", "")
+    if not key:
+        raise LlmError("META_API_KEY is not set")
+    base = _os.environ.get("MIRROR_META_API_BASE", META_API_BASE).rstrip("/")
+    body = {"model": model, "reasoning_effort": effort,
+            "messages": [{"role": "user", "content": prompt_text}]}
+    try:
+        owns = client is None
+        client = client or httpx.Client(timeout=timeout)
+        try:
+            r = client.post(f"{base}/chat/completions", json=body,
+                            headers={"Authorization": f"Bearer {key}"})
+        finally:
+            if owns:
+                client.close()
+    except httpx.TimeoutException as e:
+        raise LlmError(f"meta api timed out: {e}") from e
+    except httpx.HTTPError as e:
+        raise LlmError(f"meta api request failed: {e}") from e
+    if r.status_code != 200:
+        raise LlmError(f"meta api failed ({r.status_code}): {r.text[:300]}")
+    try:
+        return r.json()["choices"][0]["message"]["content"] or ""
+    except (KeyError, IndexError, ValueError, TypeError) as e:
+        raise LlmError(f"meta api returned an unexpected body: {r.text[:200]}") from e
+
+
+
 def run_muse_exec(prompt_text: str, model: str = "muse-spark-1.3",
                   effort: str = "minimal", timeout: int = 180,
                   muse_bin: str = "muse") -> str:
-    """`muse exec` 헤드리스 호출. stdout 반환, 실패 시 LlmError."""
+    """`muse exec` 헤드리스 호출. stdout 반환, 실패 시 LlmError.
+
+    서버처럼 CLI를 둘 수 없는 환경에서는 META_API_KEY로 Meta Model API를 직접
+    호출한다 (MIRROR_LLM_TRANSPORT=http, 또는 CLI가 없고 키가 있을 때).
+    """
+    if use_http(muse_bin):
+        return run_meta_http(prompt_text, model=model, effort=effort, timeout=timeout)
     import subprocess as _subprocess
     import tempfile as _tempfile
 

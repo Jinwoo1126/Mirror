@@ -22,10 +22,9 @@ def _resolve_style(store: MirrorStore, explicit_style: str | None,
     node = store.get_node(schema.STYLE, explicit_style)
     if node is not None:
         return explicit_style, "explicit style id overrides router"
-    rows = store._rows("MATCH (s:Style {pattern: $p}) RETURN s.id",
-                       {"p": explicit_style})
-    if rows:
-        return rows[0][0], "explicit style pattern overrides router"
+    ids = store.style_ids_by_pattern(explicit_style)
+    if ids:
+        return ids[0], "explicit style pattern overrides router"
     return decision.style_id, "explicit style not found; router kept"
 
 

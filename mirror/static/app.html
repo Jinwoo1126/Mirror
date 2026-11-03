@@ -287,9 +287,45 @@ textarea { resize: vertical; min-height: 44px; }
   .bubble { max-width: 90%; }
   .bar { grid-template-columns: 84px 1fr 50px; }
 }
+
+.gate { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px;
+  background: var(--bg, #f6f8f7); }
+.gate[hidden] { display: none; }
+.gate .card { width: min(380px, 100%); display: grid; gap: 12px; padding: 28px; border-radius: 16px;
+  background: var(--surface, #fff); border: 1px solid var(--line, #dfe5e3); }
+.gate h2 { margin: 0; font-size: 20px; }
+.gate p { margin: 0; color: var(--muted, #5b6b68); font-size: 13px; line-height: 1.5; }
+.gate .btn { justify-content: center; width: 100%; }
+.gate input { width: 100%; padding: 10px 12px; border-radius: 10px; font: inherit;
+  border: 1px solid var(--line, #dfe5e3); background: transparent; color: inherit; }
+.gate .or { text-align: center; font-size: 12px; color: var(--muted, #5b6b68); }
+.gate .fine { font-size: 11.5px; }
+.gate .err { color: #b42318; font-size: 13px; min-height: 1em; }
+.hosted-only { display: none; }
+body.hosted .hosted-only { display: flex; }
+#connect pre { background: var(--surface-2, rgba(127,127,127,.12)); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+#connect code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.acct { display: none; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+body.signed-in .acct { display: flex; }
+.acct button { font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line, #dfe5e3); background: transparent; color: inherit; }
+.acct button.danger { color: #b42318; }
 </style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+<div class="gate" id="gate" hidden><div class="card">
+  <div class="brand"><div class="logo">M</div><div><b>Mirror</b></div></div>
+  <h2>Sign in to your Mirror</h2>
+  <p>Your map is private to your account. Only you can see it, and you can delete it at any time.</p>
+  <button class="btn primary" id="g-google" type="button">Continue with Google</button>
+  <button class="btn" id="g-meta" type="button">Continue with Meta</button>
+  <div class="or">or use email</div>
+  <input id="g-email" type="email" autocomplete="email" placeholder="you@example.com" aria-label="Email">
+  <button class="btn" id="g-mail" type="button">Email me a sign-in link</button>
+  <p class="fine">Mirror stores the text you add and the patterns it works out from it. To do that, the text is sent to an AI provider (Meta) for processing. You can download or delete everything at any time from the menu. <a href="/privacy" target="_blank" rel="noopener">Read the privacy notice</a>.</p>
+  <div class="err" id="g-err" role="alert"></div>
+</div></div>
 <div class="app">
 <nav class="side" aria-label="Menu">
   <div class="brand"><div class="logo">M</div><div><b>Mirror</b><span>Memory that understands you</span></div></div>
@@ -303,7 +339,15 @@ textarea { resize: vertical; min-height: 44px; }
   <button class="tab" data-tab="graph"><i data-lucide="share-2"></i>Graph</button>
   <button class="tab" data-tab="rel"><i data-lucide="link-2"></i>Relations</button>
   <button class="tab" data-tab="report"><i data-lucide="clipboard-check"></i>Weekly report</button>
+  <div class="grp hosted-only">Connect</div>
+  <button class="tab hosted-only" data-tab="connect"><i data-lucide="plug"></i>Connect</button>
   <div class="status" id="status">Connecting...</div>
+  <div class="acct" id="acct">
+    <button id="a-out" type="button">Sign out</button>
+    <button id="a-exp" type="button">Download my data</button>
+    <button id="a-del" type="button" class="danger">Delete my data</button>
+    <a href="/privacy" target="_blank" rel="noopener" style="font-size:12px;align-self:center">Privacy</a>
+  </div>
 </nav>
 
 <main class="main"><div class="page">
@@ -350,6 +394,31 @@ textarea { resize: vertical; min-height: 44px; }
 <section id="hyps"><div id="hyp-list"></div></section>
 <section id="rel"><div class="card" id="rel-list"></div></section>
 
+<section id="connect">
+  <div class="card" style="display:grid;gap:12px">
+    <b>Personal API tokens</b>
+    <p class="muted" style="margin:0">A token lets a tool you use, like Claude Code, Muse Code or a Muse connector, read and add to your Mirror without signing in. It can only do those things. It cannot delete your data or create more tokens. Revoke one and it stops working at once.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="tok-name" maxlength="60" placeholder="Name, e.g. Claude Code on my laptop" aria-label="Token name" style="flex:1;min-width:200px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit">
+      <button class="btn primary" id="tok-new" type="button">Create token</button>
+    </div>
+    <div id="tok-fresh" hidden class="card" style="display:none;gap:8px;border-color:var(--accent-line);background:var(--accent-soft)">
+      <b>Copy it now. It will not be shown again.</b>
+      <code id="tok-value" style="word-break:break-all;user-select:all"></code>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="tok-copy" type="button">Copy token</button></div>
+    </div>
+    <div id="tok-list"></div>
+  </div>
+  <div class="card" style="display:grid;gap:10px;margin-top:14px">
+    <b>Add it to Claude Code or Muse Code</b>
+    <p class="muted" style="margin:0">Save the token in a private file, then install the hook. Use <code>--target muse</code> for Muse Code.</p>
+    <pre id="snip-hook" style="margin:0;overflow:auto"></pre>
+    <b style="margin-top:6px">Call it from anything else</b>
+    <p class="muted" style="margin:0">Any service that can make an HTTPS request can ask Mirror for what is relevant to a task.</p>
+    <pre id="snip-api" style="margin:0;overflow:auto"></pre>
+  </div>
+</section>
+
 <section id="report">
   <div class="toolbar">
     <button class="btn ghost sm" id="m-nightly"><i data-lucide="moon"></i>Nightly consolidation</button>
@@ -364,16 +433,86 @@ textarea { resize: vertical; min-height: 44px; }
 <div id="toast" aria-live="polite"></div>
 
 <script>
+const AUTH = (() => {
+  const a = { hosted: false, token: "", client: null };
+  let release; a.ready = new Promise(r => { release = r; });
+  a.headers = () => (a.token ? { Authorization: "Bearer " + a.token } : {});
+  a.expired = () => { a.token = ""; document.getElementById("gate").hidden = false; document.body.classList.remove("signed-in"); };
+  const g = id => document.getElementById(id);
+  const fail = m => { g("g-err").textContent = m || ""; };
+  const signedIn = session => {
+    if (!session) return;
+    a.token = session.access_token; g("gate").hidden = true; document.body.classList.add("signed-in"); fail(""); release();
+  };
+  a.init = async () => {
+    let cfg = { hosted: false };
+    try { cfg = await (await fetch("/api/config")).json(); } catch (e) {}
+    if (!cfg.hosted) { release(); return; }
+    a.hosted = true; document.body.classList.add("hosted");
+    if (!(cfg.supabase_url && cfg.supabase_anon_key && window.supabase)) {
+      g("gate").hidden = false; fail("Sign-in is not available right now."); return;
+    }
+    a.client = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+    a.client.auth.onAuthStateChange((ev, s) => { if (s) signedIn(s); else if (ev === "SIGNED_OUT") a.expired(); });
+    const { data } = await a.client.auth.getSession();
+    if (data.session) signedIn(data.session); else g("gate").hidden = false;
+    const oauth = provider => async () => {
+      const { error } = await a.client.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin } });
+      if (error) fail(error.message);
+    };
+    g("g-google").onclick = oauth("google");
+    g("g-meta").onclick = oauth("facebook");
+    g("g-mail").onclick = async () => {
+      const email = g("g-email").value.trim();
+      if (!email) { fail("Enter your email."); return; }
+      const { error } = await a.client.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin } });
+      fail(error ? error.message : "Check your inbox for the sign-in link.");
+    };
+    g("a-out").onclick = async () => { await a.client.auth.signOut(); location.reload(); };
+    g("a-exp").onclick = async () => {
+      const r = await fetch("/api/export", { headers: a.headers() });
+      if (!r.ok) { fail("Could not export your data. Try again."); return; }
+      const url = URL.createObjectURL(await r.blob());
+      const link = document.createElement("a"); link.href = url;
+      link.download = "mirror-export-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    };
+    g("a-del").onclick = async () => {
+      if (!window.confirm("Delete everything Mirror has stored about you? This cannot be undone.")) return;
+      const r = await fetch("/api/account", { method: "DELETE", headers: a.headers() });
+      if (r.ok) { await a.client.auth.signOut(); location.reload(); } else fail("Could not delete. Try again.");
+    };
+  };
+  return a;
+})();
+</script>
+<script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const icons = () => { try { window.lucide && lucide.createIcons(); } catch (e) {} };
 const JSONH = { "Content-Type": "application/json" };
 async function api(path, opts) {
+  await AUTH.ready;
+  opts = Object.assign({}, opts, { headers: Object.assign({}, opts && opts.headers, AUTH.headers()) });
   const r = await fetch(path, opts);
+  if (r.status === 401 && AUTH.hosted) { AUTH.expired(); }
   let data = {};
   try { data = await r.json(); } catch (e) {}
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Hosted Mirror learns in the background: saving returns a job, which we follow to the end.
+async function saveMemory(text) {
+  const r = await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text }) });
+  if (!r.job_id) return r;
+  for (let i = 0; i < 90; i++) {
+    const j = await api("/api/jobs/" + r.job_id);
+    if (j.status === "done") return j;
+    if (j.status === "failed") throw new Error(j.error || "Mirror could not learn from that");
+    await sleep(i < 5 ? 1500 : 3000);
+  }
+  throw new Error("Still processing. It will appear when it finishes.");
 }
 function toast(msg, kind) {
   const t = document.createElement("div");
@@ -404,6 +543,7 @@ const PAGES = {
   graph: ["Graph", "How memories, things, situations and hypotheses connect."],
   rel: ["Relation vocabulary", "Relationship phrases collected from your memories."],
   report: ["Weekly report", "How Mirror's understanding changed this week."],
+  connect: ["Connect", "Let your other tools use what Mirror knows about you."],
 };
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === name));
@@ -411,7 +551,7 @@ function showTab(name) {
   $("ptitle").textContent = PAGES[name][0]; $("psub").textContent = PAGES[name][1];
   $("psub").style.display = PAGES[name][1] ? "" : "none";
   ({ profile: loadProfile, scen: loadScen, graph: loadGraph,
-     hyps: loadHyps, rel: loadRels, report: loadReport }[name] || (() => {}))();
+     hyps: loadHyps, rel: loadRels, report: loadReport, connect: loadConnect }[name] || (() => {}))();
   document.querySelector(".main").scrollTo({ top: 0 });
   try { history.replaceState(null, "", "#" + name); } catch (e) {}
 }
@@ -447,9 +587,10 @@ function addMsg(cls, text, saveText) {
     const b = document.createElement("button"); b.className = "btn ghost sm";
     b.innerHTML = '<i data-lucide="bookmark-plus"></i>Save to memory';
     b.addEventListener("click", async () => {
-      try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: saveText }) });
-        b.innerHTML = "Saved"; b.disabled = true; toast("Saved to memory"); loadStatus();
-      } catch (e) { toast("Could not save: " + e.message, "bad"); }
+      b.disabled = true; b.innerHTML = "Saving...";
+      try { await saveMemory(saveText);
+        b.innerHTML = "Saved"; toast("Saved to memory"); loadStatus();
+      } catch (e) { b.disabled = false; b.innerHTML = "Save to memory"; toast("Could not save: " + e.message, "bad"); }
     });
     act.appendChild(b); div.querySelector(".bubble").appendChild(act);
   }
@@ -465,8 +606,7 @@ async function sendChat() {
   const options = optsRaw ? optsRaw.split(",").map(s => s.trim()).filter(Boolean) : null;
   addMsg("user", text, text);
   if ($("auto-mem").checked) {
-    try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text }) }); loadStatus(); }
-    catch (e) { toast("Auto-save failed: " + e.message, "bad"); }
+    saveMemory(text).then(loadStatus).catch(e => toast("Auto-save failed: " + e.message, "bad"));   // the chat does not wait
   }
   const wait = addMsg("bot", "");
   wait.querySelector(".body").innerHTML = '<span class="typing"><b></b><b></b><b></b></span>';
@@ -810,6 +950,44 @@ function renderMd(md) {
   });
   return html || empty("clipboard-check", "Nothing changed this week", "");
 }
+const ago = s => { if (!s) return "never used"; const m = Math.round((Date.now() - Date.parse(s)) / 60000);
+  return m < 1 ? "used just now" : m < 60 ? `used ${m} min ago` : m < 1440 ? `used ${Math.round(m / 60)} h ago` : `used ${Math.round(m / 1440)} d ago`; };
+function connectSnippets(tok) {
+  const o = location.origin, shown = tok || "mir_YOUR_TOKEN";
+  $("snip-hook").textContent = `printf '%s' '${shown}' > ~/.mirror-token && chmod 600 ~/.mirror-token\npython integrations/claude_code/mirror_hook.py --install --target claude \\\n  --url ${o} --token-file ~/.mirror-token`;
+  $("snip-api").textContent = `curl -s ${o}/api/retrieve \\\n  -H "Authorization: Bearer ${shown}" -H "Content-Type: application/json" \\\n  -d '{"request": "plan my week", "budget": 6}'`;
+}
+async function loadConnect() {
+  connectSnippets("");
+  $("tok-list").innerHTML = skel(1);
+  try {
+    const { tokens } = await api("/api/tokens");
+    $("tok-list").innerHTML = tokens.length ? tokens.map(k => `<div class="li" style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)">
+      <span><b>${esc(k.name)}</b> <code class="muted">${esc(k.prefix)}…</code><br><span class="muted" style="font-size:12px">created ${esc((k.created_at || "").slice(0, 10))} · ${esc(ago(k.last_used_at))}</span></span>
+      <button class="btn" data-revoke="${esc(k.id)}" type="button">Revoke</button></div>`).join("")
+      : empty("key-round", "No tokens yet", "Create one to connect a tool.");
+    $("tok-list").querySelectorAll("[data-revoke]").forEach(b => b.addEventListener("click", async () => {
+      try { await api("/api/tokens/" + b.dataset.revoke, { method: "DELETE" }); toast("Token revoked"); loadConnect(); }
+      catch (e) { toast("Could not revoke: " + e.message, "bad"); }
+    }));
+  } catch (e) { $("tok-list").innerHTML = empty("wifi-off", "Could not load tokens", e.message); }
+  icons();
+}
+$("tok-new").addEventListener("click", async () => {
+  const name = $("tok-name").value.trim();
+  if (!name) { toast("Give the token a name", "bad"); return; }
+  try {
+    const k = await api("/api/tokens", { method: "POST", headers: JSONH, body: JSON.stringify({ name }) });
+    $("tok-name").value = ""; $("tok-value").textContent = k.token;
+    $("tok-fresh").hidden = false; $("tok-fresh").style.display = "grid";
+    connectSnippets(k.token); loadConnectList();
+  } catch (e) { toast(e.message, "bad"); }
+});
+async function loadConnectList() { const keep = $("tok-value").textContent; await loadConnect(); if (keep) connectSnippets(keep); }
+$("tok-copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("tok-value").textContent); toast("Copied"); }
+  catch (e) { toast("Select the token and copy it", "bad"); }
+});
 async function loadReport() {
   $("report-body").innerHTML = skel(1);
   try { $("report-body").innerHTML = renderMd((await api("/api/report")).markdown); } catch (e) { $("report-body").innerHTML = empty("wifi-off", "Could not load", e.message); }
@@ -825,6 +1003,7 @@ async function loadReport() {
 hello(); loadStatus(); icons();
 window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (PAGES[h]) showTab(h); });
 const start = (location.hash || "").slice(1); if (PAGES[start]) showTab(start); else showTab("chat");
+window.addEventListener('load', () => AUTH.init());
 </script>
 </body>
 </html>

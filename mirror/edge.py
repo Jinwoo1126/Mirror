@@ -19,9 +19,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextvars
+import hashlib
 import hmac
 import json
 import os
+import time
 from dataclasses import dataclass, field
 
 import httpx
@@ -55,6 +58,10 @@ class Config:
     inject: bool = True
     capture: bool = False          # off by default: the user's messages leave the gateway
     context_budget: int = 6
+    # Hosted: every caller brings their own personal API token (mir_...). It is passed to
+    # the main app, which is the real gate. The gateway never spends the operator's
+    # upstream key here; callers send their own in X-Upstream-Key.
+    multiuser: bool = False
     pending: list = field(default_factory=list)   # background capture tasks
 
 
@@ -65,7 +72,8 @@ def config_from_env() -> Config:
         upstream_base=os.environ.get("MIRROR_UPSTREAM_BASE", "https://api.openai.com/v1"),
         upstream_key=os.environ.get("MIRROR_UPSTREAM_KEY", ""),
         inject=os.environ.get("MIRROR_INJECT", "1") != "0",
-        capture=os.environ.get("MIRROR_CAPTURE", "0") == "1")
+        capture=os.environ.get("MIRROR_CAPTURE", "0") == "1",
+        multiuser=os.environ.get("MIRROR_EDGE_MULTIUSER", "0") == "1")
 
 
 # -- shared helpers ------------------------------------------------------------
@@ -124,6 +132,60 @@ class BearerAuth:
         await self.app(scope, receive, send)
 
 
+_caller_token: contextvars.ContextVar = contextvars.ContextVar("mirror_caller_token",
+                                                              default="")
+
+
+class TokenPassthrough:
+    """Multi-user front door. Accepts a personal API token, checks once with the main app
+    that it is live (and remembers a good answer for a minute), then lets the request
+    through with the token attached to every backend call."""
+
+    TTL = 60.0
+
+    def __init__(self, app, backend: httpx.AsyncClient):
+        self.app, self.backend = app, backend
+        self.ok_until: dict[str, float] = {}
+
+    async def _deny(self, scope, receive, send, status=401, msg="unauthorized"):
+        resp = JSONResponse({"error": msg}, status_code=status,
+                            headers={"WWW-Authenticate": "Bearer"})
+        await resp(scope, receive, send)
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        auth = dict(scope["headers"]).get(b"authorization", b"").decode("latin-1")
+        scheme, _, tok = auth.partition(" ")
+        if scheme.lower() != "bearer" or not tok.startswith("mir_") or len(tok) > 100:
+            return await self._deny(scope, receive, send)
+        key = hashlib.sha256(tok.encode()).hexdigest()
+        now = time.monotonic()
+        if self.ok_until.get(key, 0) < now:
+            try:
+                r = await self.backend.get("/api/status",
+                                           headers={"authorization": f"Bearer {tok}"})
+            except Exception:
+                return await self._deny(scope, receive, send, 503, "Mirror is unreachable")
+            if r.status_code != 200:
+                self.ok_until.pop(key, None)
+                return await self._deny(scope, receive, send)
+            self.ok_until[key] = now + self.TTL
+            if len(self.ok_until) > 5000:
+                self.ok_until = {k: v for k, v in self.ok_until.items() if v > now}
+        marker = _caller_token.set(tok)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            _caller_token.reset(marker)
+
+
+def backend_headers() -> dict:
+    tok = _caller_token.get()
+    return {"authorization": f"Bearer {tok}"} if tok else {}
+
+
 # -- app -----------------------------------------------------------------------
 
 def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
@@ -133,7 +195,7 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
 
     async def fetch_context(text: str) -> tuple[list[dict], list[dict]]:
         try:
-            r = await backend.post("/api/retrieve", json={
+            r = await backend.post("/api/retrieve", headers=backend_headers(), json={
                 "request": text, "budget": cfg.context_budget})
             if r.status_code != 200:
                 return [], []
@@ -143,7 +205,8 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
             return [], []     # Mirror being down must never break the user's request
 
     async def remember(text: str) -> dict:
-        r = await backend.post("/api/memories", json={"text": text})
+        r = await backend.post("/api/memories", headers=backend_headers(),
+                               json={"text": text})
         return r.json()
 
     async def capture(text: str) -> None:
@@ -164,7 +227,8 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
     @mcp.tool()
     async def mirror_scenario(scenario_id: str, inputs: dict) -> dict:
         """Run one scenario in full (for example code_review or deadline_pressure)."""
-        r = await backend.post(f"/api/scenarios/{scenario_id}/run", json={"inputs": inputs})
+        r = await backend.post(f"/api/scenarios/{scenario_id}/run",
+                               headers=backend_headers(), json={"inputs": inputs})
         return r.json()
 
     @mcp.tool()
@@ -176,7 +240,7 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
     async def mirror_feedback(hypothesis_id: str, verdict: str) -> dict:
         """Tell Mirror a remembered point is right or wrong. verdict: correct, wrong or dont_use."""
         r = await backend.post(f"/api/hypotheses/{hypothesis_id}/feedback",
-                               json={"verdict": verdict})
+                               headers=backend_headers(), json={"verdict": verdict})
         return r.json()
 
     app = mcp.streamable_http_app(
@@ -184,9 +248,17 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=False))   # the bearer token is the gate
 
+    def upstream_key(request) -> str:
+        if cfg.multiuser:      # never the operator's key; the caller pays for their own
+            return request.headers.get("x-upstream-key", "")
+        return cfg.upstream_key
+
     async def chat_completions(request):
-        if not cfg.upstream_key:
-            return JSONResponse({"error": "gateway has no upstream key configured"}, 503)
+        key = upstream_key(request)
+        if not key:
+            return JSONResponse({"error": "no upstream key: send your own in "
+                                          "X-Upstream-Key" if cfg.multiuser else
+                                          "gateway has no upstream key configured"}, 503)
         body = await request.json()
         skip = request.headers.get("x-mirror-skip") == "1"
         text = last_user_text(body.get("messages", []))
@@ -195,7 +267,7 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
             items, scenarios = await fetch_context(text)
             if items:
                 body["messages"] = with_context(body["messages"], items, scenarios)
-        headers = {"authorization": f"Bearer {cfg.upstream_key}",
+        headers = {"authorization": f"Bearer {key}",
                    "content-type": "application/json"}
         out_headers = {"x-mirror-injected": str(len(items))}
         if cfg.capture and not skip and text:
@@ -222,13 +294,15 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
 
     async def models(request):
         r = await upstream.get(cfg.upstream_base.rstrip("/") + "/models",
-                               headers={"authorization": f"Bearer {cfg.upstream_key}"})
+                               headers={"authorization": f"Bearer {upstream_key(request)}"})
         return Response(r.content, status_code=r.status_code,
                         media_type=r.headers.get("content-type", "application/json"))
 
     app.router.routes.append(Route("/v1/chat/completions", chat_completions,
                                    methods=["POST"]))
     app.router.routes.append(Route("/v1/models", models, methods=["GET"]))
+    if cfg.multiuser:
+        return TokenPassthrough(app, backend)
     return BearerAuth(app, cfg.token)
 
 
@@ -240,7 +314,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--port", type=int, default=8100)
     args = ap.parse_args(argv)
     cfg = config_from_env()
-    if not cfg.token:
+    if not cfg.token and not cfg.multiuser:
         raise SystemExit("MIRROR_TOKEN is required. The edge server refuses to start "
                          "without a bearer token.")
     uvicorn.run(create_app(cfg), host=args.host, port=args.port, log_level="warning")

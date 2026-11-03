@@ -43,8 +43,7 @@ class RouterDecision:
 
 
 def _match_style(store: MirrorStore, intent: str) -> tuple[str | None, list[str]]:
-    rows = store._rows("MATCH (s:Style {intent: $i}) RETURN s.id, s.example_refs",
-                       {"i": intent})
+    rows = store.styles_by_intent(intent)
     if not rows:
         return None, []
     return rows[0][0], schema.parse_json_list(rows[0][1])[:3]
@@ -53,7 +52,7 @@ def _match_style(store: MirrorStore, intent: str) -> tuple[str | None, list[str]
 def _match_scope(store: MirrorStore, request: str) -> tuple[list[str], list[str]]:
     domains = [d for d, kws in _DOMAIN_KW if any(k in request for k in kws)]
     entities = []
-    for row in store._rows("MATCH (e:Entity) RETURN e.name, e.aliases"):
+    for row in store.entity_aliases():
         name, aliases = row[0] or "", schema.parse_json_list(row[1])
         if name and name in request and name not in entities:
             entities.append(name)
@@ -135,7 +134,7 @@ class LlmRouter:
 
     def decide(self, request: str, store: MirrorStore) -> RouterDecision:
         styles = [{"id": r[0], "pattern": r[1], "intent": r[2]} for r in
-                  store._rows("MATCH (s:Style) RETURN s.id, s.pattern, s.intent")]
+                  store.style_brief()]
         domains = [d for d, _ in _DOMAIN_KW]
         try:
             data = self._call(ROUTER_SYSTEM_PROMPT,

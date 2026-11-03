@@ -1,0 +1,13 @@
+.venv
+.git
+.claude
+.muse
+data
+eval
+tests
+docs
+avatar-candidates
+*.kuzu
+*.kuzu.wal
+__pycache__
+.pytest_cache

@@ -147,12 +147,7 @@ def pick_hypotheses(store: MirrorStore, request: str, options: list[str],
     """관련 활성·보류 가설 중 ALTERNATIVE_TO 경쟁군 최대 max_n개."""
     pool: list[schema.Hypothesis] = []
     for status in (schema.STATUS_ACTIVE, schema.STATUS_SUSPENDED):
-        rows = store._rows(
-            "MATCH (h:Hypothesis) WHERE h.status = $st "
-            "AND h.recorded_at <= $as_of RETURN h.id",
-            {"st": status, "as_of": as_of},
-        )
-        for (hid,) in rows:
+        for hid in store.hypothesis_ids_by_status([status], as_of):
             hyp = store.get_hypothesis(hid)
             if hyp is not None:
                 pool.append(hyp)

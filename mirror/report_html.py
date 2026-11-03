@@ -201,13 +201,11 @@ def collect_onto() -> dict:
     try:
         vocab = store.relation_vocabulary()
         entities = []
-        for row in store._rows("MATCH (e:Entity) RETURN e.name, e.kind, "
-                               "e.description LIMIT 6"):
+        for row in store.entity_brief(6):
             entities.append({"name": row[0], "kind": row[1],
                              "description": (row[2] or "")[:160]})
         hyps = []
-        for row in store._rows("MATCH (h:Hypothesis) RETURN h.statement, "
-                               "h.status LIMIT 10"):
+        for row in store.hypothesis_brief(10):
             hyps.append({"statement": row[0], "status": row[1]})
         return {"available": True, "vocabulary": vocab,
                 "entities": entities, "hypotheses": hyps}

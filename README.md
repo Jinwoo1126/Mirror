@@ -27,7 +27,12 @@ mirror/
   ingest.py eval_precision.py 일괄 수집 + 추출 정밀도 채점
   ui_export.py server.py      UI 내보내기 + MCP 서버
   vstore.py bm25.py search.py 로컬 임베딩 + BM25 + 하이브리드 검색(RRF)
-  app.py static/app.html      로컬 웹앱 (채팅·기억·그래프·가설·관계·리포트)
+  app.py static/app.html      웹앱 (채팅·기억·그래프·가설·관계·리포트·Connect)
+  pg_store.py auth.py         호스팅: Postgres 저장소(사용자별 RLS) + Supabase 토큰 검증
+  tokens.py worker.py         호스팅: 개인 API 토큰 + 백그라운드 학습 워커
+  privacy.py edge.py          호스팅: 개인정보 처리방침 페이지 + MCP/게이트웨이(다중 사용자 모드)
+supabase/                        마이그레이션(스키마·RLS·토큰·작업 큐) + 로컬 테스트용 auth 스텁
+Dockerfile fly.toml              호스팅 배포 파일 (Fly.io)
 data/sample_observations.jsonl   샘플 관찰 8건
 eval/gold_observations.jsonl     손작성 정답 트리플 4장면
 eval/dj_episodes.jsonl           DJ 선택 에피소드 10건 (리플레이용)
@@ -45,6 +50,7 @@ tests/                           pytest 커밋 테스트 (단위+통합)
 
 > Connecting other AI services (gateway, remote MCP, hooks): see `docs/CONNECT.md`.
 > Using your own character image for the body map: see `docs/AVATAR.md`.
+> Running it as a hosted multi-user service (Supabase + Fly.io): see `docs/DEPLOY.md`.
 
 ## 설치
 
@@ -53,7 +59,7 @@ uv venv --python 3.11
 uv pip install -e '.[test]'
 ```
 
-Claude/Ollama 추출기를 쓰려면 `.[Muse]` / `.[ollama]` 추가 설치.
+Claude/Ollama 추출기를 쓰려면 `.[Muse]` / `.[ollama]`, Postgres 호스팅 모드를 쓰려면 `.[hosted]` 추가 설치.
 Spark 추출기는 로그인된 `muse` CLI를 사용 (`muse-spark-1.3` 기본).
 
 ## 사용
@@ -83,13 +89,44 @@ st = MirrorStore('data/local/mirror.kuzu'); print(H.nightly_maintenance(st)); pr
 # 6. 이해 보기 화면 내보내기 → ui/index.html을 브라우저로 열기
 python -m mirror.ui_export --db data/local/mirror.kuzu --out ui/mirror-graph.json
 
-# 7. 테스트 (단위+통합)
+# 7. 테스트 (단위+통합). Postgres 테스트는 DSN이 있을 때만 돌고 없으면 건너뛴다
 python -m pytest
+# Postgres 포함 (로컬 컨테이너 띄우는 법은 supabase/README.md)
+MIRROR_TEST_PG_DSN=postgresql://postgres:mirror-test-only@127.0.0.1:54329/mirror python -m pytest
 
 # 8. 로컬 웹앱 실행 → 브라우저에서 http://127.0.0.1:8000 열기
 python -m mirror.app
 # 다른 DB/포트: python -m mirror.app --db data/local/mirror.kuzu --port 8000
 ```
+
+## 호스팅 서비스 (여러 사용자)
+
+같은 앱을 여러 사람이 쓰는 웹 서비스로도 돌릴 수 있다. `MIRROR_HOSTED=1`이면 Kuzu 대신
+Postgres(Supabase)에 사용자별로 저장하고, 모든 `/api/*`는 Supabase 로그인 토큰이 있어야 열린다.
+
+- 데이터 격리: 모든 테이블에 `user_id`와 행 수준 보안(RLS). 앱의 쿼리도 사용자 권한 세션에서 돌아서
+  쿼리에 필터가 빠져도 남의 행은 보이지 않는다. 계정을 지우면 데이터도 함께 지워진다.
+- 개인 API 토큰: 웹의 Connect 탭에서 발급·폐기. Claude Code·Muse Code 훅이나 다른 서비스가 로그인
+  없이 쓴다. 해시만 저장하고, 조회·기억 추가 같은 일부 API만 허용한다.
+- 백그라운드 학습: 메모 저장은 바로 응답하고 추출은 워커가 처리한다(재시도, 사용자별 직렬화).
+- 사용자 권리: "Download my data"(JSON 내보내기), "Delete my data", `/privacy` 처리방침.
+- LLM: 서버에서는 `muse` CLI 없이 `META_API_KEY`로 Meta Model API를 HTTP로 호출한다.
+
+상태: 위 코드와 테스트는 끝났고, 로컬 Docker 이미지로 로그인 전후 화면과 토큰·훅 연결까지 확인했다.
+**아직 인터넷에 배포하지 않았다.** Google·Meta 실제 로그인과 Meta API 실호출은 계정과 키가 없어
+검증하지 못했다. 배포 절차와 남은 과제는 `docs/DEPLOY.md`, 로컬 Postgres 테스트는 `supabase/README.md`.
+
+| 환경 변수 | 용도 |
+|---|---|
+| `MIRROR_HOSTED=1` | 호스팅 모드 켜기 |
+| `MIRROR_PG_DSN` | Postgres 연결 문자열 |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | 브라우저 로그인 설정 (공개해도 되는 값) |
+| `SUPABASE_JWT_SECRET` | 구형 공유 비밀 방식 프로젝트일 때만 |
+| `SUPABASE_SERVICE_ROLE_KEY` | 서버 비밀. 계정 삭제 시 계정까지 제거 (선택) |
+| `META_API_KEY` | LLM 호출 |
+| `MIRROR_OPERATOR_NAME`, `MIRROR_CONTACT_EMAIL` | 처리방침에 표시할 운영자 정보 |
+| `MIRROR_RATE_ALL`, `MIRROR_RATE_COSTLY` | 사용자별 분당 호출 한도 (기본 120, 10) |
+| `MIRROR_WORKER=0` | 웹 프로세스에서 워커 스레드 끄기 (`python -m mirror.worker`로 분리할 때) |
 
 ## 실사용 지능
 

@@ -69,8 +69,8 @@ def test_observe_skips_blocked_understanding(store, mock):
     first = observe_mod.observe(store, mock, "s1", _event(), 0)
     assert first.ok
     statement = "피곤할 때는 고르는 수고를 회피한다"
-    hyp_id = store._rows("MATCH (h:Hypothesis {statement: $s}) RETURN h.id",
-                         {"s": statement})[0][0]
+    hyp_id = store.find_hypothesis_by_statement(statement)
+    assert hyp_id
     deleted = control_mod.control(store, "delete",
                                   {"kind": "Hypothesis", "id": hyp_id})
     assert deleted.ok
@@ -81,6 +81,4 @@ def test_observe_skips_blocked_understanding(store, mock):
         deleted.revision)
     assert res.ok
     assert any("hyp-0" in s for s in res.skipped_blocked)
-    rows = store._rows("MATCH (h:Hypothesis {statement: $s}) RETURN h.id",
-                       {"s": statement})
-    assert rows == []
+    assert store.find_hypothesis_by_statement(statement) is None
