@@ -111,7 +111,7 @@ SCENARIOS: dict[str, Scenario] = {s.id: s for s in (
          Field("points", "Points to include", "textarea", "One per line")],
         "Writing the full text needs an LLM connection. For now you get an outline, "
         "a style guide and the memories you can draw on.",
-        triggers=[r"write (a|an|the) ", r"blog post", r"\bmemo\b", r"first draft", r"초안"]),
+        triggers=[r"write (a|an|the) (blog|post|memo|article|essay|report|email|document|summary)", r"blog post", r"\bmemo\b", r"first draft", r"초안"]),
     Scenario(
         "music_recommend", "Pick music",
         "Choose tracks that fit the moment, based on what Mirror knows about you.",

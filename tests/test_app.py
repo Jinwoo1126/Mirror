@@ -124,3 +124,30 @@ def test_static_serves_only_the_avatar_files(client, tmp_path, monkeypatch):
     assert client.get("/static/secret.txt").status_code == 404
     assert client.get("/static/avatar.png").status_code == 404      # allowed name, no file
     assert client.get("/static/..%2Fapp.py").status_code == 404
+
+
+def test_gate_by_relevance_uses_a_lower_bar_when_a_situation_matched():
+    from mirror import app as app_mod
+
+    items = [{"id": "a", "score": 0.66}, {"id": "b", "score": 0.60}, {"id": "c", "score": 0.50}]
+    plain = app_mod.gate_by_relevance(items, matched=False, hybrid=True)
+    assert [i["id"] for i in plain] == ["a"]
+    matched = app_mod.gate_by_relevance(items, matched=True, hybrid=True)
+    assert [i["id"] for i in matched] == ["a", "b"]
+    assert [i["id"] for i in app_mod.gate_by_relevance(items, False, True, min_score=0.4)] == ["a", "b"]
+
+
+def test_gate_by_relevance_does_not_drop_anything_without_embeddings():
+    from mirror import app as app_mod
+
+    items = [{"id": "a", "score": 0.1}]
+    assert app_mod.gate_by_relevance(items, matched=False, hybrid=False) == items
+
+
+def test_gate_drops_items_far_behind_the_best_and_caps_the_count():
+    from mirror import app as app_mod
+
+    items = [{"id": str(i), "score": 0.90 - i * 0.01} for i in range(9)] + [{"id": "far", "score": 0.70}]
+    kept = app_mod.gate_by_relevance(items, matched=False, hybrid=True)
+    assert len(kept) == app_mod.MAX_ITEMS and "far" not in [i["id"] for i in kept]
+    assert [i["id"] for i in kept] == ["0", "1", "2", "3", "4"]   # best first

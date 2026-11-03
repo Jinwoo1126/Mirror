@@ -353,6 +353,33 @@ async def api_scenarios_match(request):
     return _json({"matches": scen_mod.match_scenarios(body.get("text", ""))})
 
 
+# Embedding similarity is weak on its own, so the bar depends on whether the request already
+# names a situation (a scenario trigger matched). Tuned on a small set of prompts; the
+# caller can override it with "min_score".
+MIN_SCORE_PLAIN = 0.66
+MIN_SCORE_MATCHED = 0.58
+MARGIN = 0.08      # how far behind the best match an item may be
+MAX_ITEMS = 5
+
+
+def gate_by_relevance(items: list[dict], matched: bool, hybrid: bool,
+                      min_score: float | None = None) -> list[dict]:
+    """Keep only hypotheses that are actually related to the request.
+
+    Without embeddings the scores are on another scale, so nothing is dropped there.
+    """
+    if not hybrid:
+        return items
+    floor = min_score if min_score is not None else (
+        MIN_SCORE_MATCHED if matched else MIN_SCORE_PLAIN)
+    kept = sorted((i for i in items if (i.get("score") or 0) >= floor),
+                  key=lambda i: -(i.get("score") or 0))
+    if kept:   # drop what is far behind the best match, and keep the context short
+        top = kept[0].get("score") or 0
+        kept = [i for i in kept if (i.get("score") or 0) >= top - MARGIN][:MAX_ITEMS]
+    return kept
+
+
 async def api_retrieve(request):
     """Related understanding for outside callers (the edge server).
 
@@ -384,12 +411,16 @@ async def api_retrieve(request):
                 continue
             items.append({"kind": it["kind"], "id": it["id"],
                           "statement": it["statement"], "status": it["status"],
+                          "score": it.get("score"),
                           "use_policy": it["use_policy"],
                           "evidence": len(it.get("supports", [])),
                           "counter_examples": len(it.get("contradicts", [])),
                           "evidence_ids": it.get("supports", [])})
         elif body.get("include_memories"):
             items.append(it)
+    index = get_index()
+    items = gate_by_relevance(items, bool(matched), index is not None and index.mode == "hybrid",
+                              body.get("min_score"))
     return _json({"items": items, "scenarios": [{"id": m["id"], "name": m["name"]} for m in matched],
                   "revision": out.get("revision")})
 

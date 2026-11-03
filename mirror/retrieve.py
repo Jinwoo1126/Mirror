@@ -104,7 +104,7 @@ def _retrieve(store, request_text, explicit_conditions, as_of, budget,
         if score <= 0:
             continue
         items.append((float(score) + 0.5, {
-            "kind": schema.HYPOTHESIS, "id": hyp.id,
+            "kind": schema.HYPOTHESIS, "id": hyp.id, "score": round(float(score), 4),
             "statement": hyp.statement, "conditions": hyp.conditions,
             "status": hyp.status, "use_policy": hyp.use_policy,
             "domain": hyp.domain,

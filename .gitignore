@@ -29,3 +29,6 @@ mirror/static/avatar.jpg
 mirror/static/avatar.jpeg
 mirror/static/avatar.json
 avatar-candidates/
+
+# Claude Code project-local settings and the Mirror hook config
+.claude/

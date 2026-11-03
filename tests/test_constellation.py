@@ -109,3 +109,8 @@ def test_general_pattern_is_not_pulled_by_a_few_memories():
 def test_clear_majority_of_evidence_sets_the_region():
     food = ["ate lunch", "had coffee", "ordered dinner", "a snack", "wrote a memo"]
     assert cn.classify_pattern("Repeats familiar choices", food) == "mouth"
+
+
+def test_a_sql_request_does_not_trigger_the_document_scenario():
+    assert "doc_draft" not in [m["id"] for m in sc.match_scenarios("Write a SQL query to find duplicates")]
+    assert "doc_draft" in [m["id"] for m in sc.match_scenarios("Write a blog post about my week")]

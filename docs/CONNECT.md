@@ -7,7 +7,7 @@ three paths. They differ in how automatic they are and in which services support
 |---|---|---|
 | **Gateway** (`/v1/chat/completions`) | Yes. Context is added to every request. | Any tool that lets you set an OpenAI-compatible base URL |
 | **Remote MCP** (`/mcp`) | No. The AI decides when to call the tools. | Clients that support custom MCP connectors |
-| **Client hooks** | Yes | Clients with hooks (for example Claude Code). Not built yet. |
+| **Client hooks** | Yes | Clients with hooks. A Claude Code hook is included (see below). |
 
 Which services support custom base URLs, remote MCP or hooks changes often. Check each
 service's own documentation before you rely on one.
@@ -118,3 +118,30 @@ and Korean. A pattern's own wording decides first; only when it has no clue does
 majority of its evidence decide; otherwise it goes to the brain. `POST /api/declare`
 adds something the person says about themselves. Add `"private": true` to keep it out of
 anything sent to other AI services.
+
+## Claude Code hook
+
+`integrations/claude_code/mirror_hook.py` is a `UserPromptSubmit` hook. Before Claude sees a
+prompt it asks Mirror what is related and adds it as hidden context (`additionalContext`).
+It uses only the Python standard library and fails open: if Mirror is down, slow or
+confused, the prompt goes through untouched.
+
+```sh
+# from the project you want it in; writes .claude/settings.local.json (git-ignored)
+python3 integrations/claude_code/mirror_hook.py --install --url http://HOST:8000
+python3 integrations/claude_code/mirror_hook.py --uninstall
+```
+
+- Claude Code watches its settings files, so a new hook applies from the next prompt.
+- Only related hypotheses are added. Relevance is the embedding score of each hypothesis
+  against the prompt, with a higher bar (0.66) for plain prompts and a lower one (0.58) when
+  the prompt names a known situation (a scenario trigger matched). Items far behind the best
+  match are dropped and at most 5 are added. These numbers were tuned on a small set of
+  prompts, and on prompts that were not used for tuning about 6 of 8 behaved as expected:
+  an unrelated prompt can still get one or two items. Override per request with `min_score`.
+- `--capture-prompts` (off by default) also remembers what you type, in the background. Prompts
+  that look like they contain a secret, are shorter than 8 characters or longer than 2000 are
+  never sent. Slash commands and automatic prompts are skipped.
+- `MIRROR_HOOK=off` turns it off for a session. `MIRROR_HOOK_DEBUG=1` prints errors to stderr.
+- Point it at a Mirror instance that holds your own data. A demo database would put someone
+  else's habits into your prompts.
