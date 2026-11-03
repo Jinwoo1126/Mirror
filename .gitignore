@@ -21,3 +21,11 @@ mirror-results.html
 *.kuzu
 *.kuzu.wal
 *.kuzu.shadow
+
+# generated body-map character (terms for publishing generated images not checked)
+mirror/static/avatar.webp
+mirror/static/avatar.png
+mirror/static/avatar.jpg
+mirror/static/avatar.jpeg
+mirror/static/avatar.json
+avatar-candidates/

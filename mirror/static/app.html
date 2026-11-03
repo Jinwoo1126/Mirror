@@ -561,7 +561,7 @@ function renderSky() {
   for (let i = 0; i < 150; i++) svg += `<circle class="bgstar${i % 9 === 0 ? " tw" : ""}" cx="${(rand() * 1300 - 150).toFixed(0)}" cy="${(rand() * 1100 - 60).toFixed(0)}" r="${(rand() * 1.4 + .4).toFixed(2)}" style="animation-delay:${(rand() * 4).toFixed(1)}s"/>`;
   const dim = SKY.sel ? " dim" : "";
   const A = SKY.avatar;
-  svg += `<g class="body${dim}">${A ? `<image href="/static/${esc(A.image)}" x="${A.x}" y="${A.y}" width="${A.w}" height="${A.h}" preserveAspectRatio="xMidYMid meet"/>` : avatarSvg()}</g>`;
+  svg += `<g class="body${dim}">${A ? `<ellipse class="av-pad" cx="500" cy="${A.y + A.h - 8}" rx="190" ry="28"/><ellipse class="av-pad b" cx="500" cy="${A.y + A.h - 8}" rx="130" ry="18"/><ellipse class="av-pad b" cx="500" cy="${A.y + A.h - 8}" rx="70" ry="10"/><image href="/static/${esc(A.image)}" x="${A.x}" y="${A.y}" width="${A.w}" height="${A.h}" preserveAspectRatio="xMidYMid meet"/>` : avatarSvg()}</g>`;
   SKY.map.regions.forEach(r => {
     const h = BODY[r.id], total = r.total, rad = total ? Math.min(30, 12 + 4.5 * Math.log2(1 + total)) : 8;
     const on = SKY.sel === r.id, off = SKY.sel && !on;

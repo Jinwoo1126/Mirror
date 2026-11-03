@@ -3,7 +3,23 @@
 The "You" page draws a holographic avatar in SVG by default. If you have a character
 image, Mirror uses it as the body instead, and the stars stay on top of it.
 
-## 1. Make the image
+## Fastest: Muse Image
+
+Muse Image (Meta's image model, about $0.01 per image) is reachable at
+`POST https://api.meta.ai/v1/images/generations` with the model `muse-image-1.0` and the
+same bearer key as Muse Spark. This repo has a helper that generates candidates, cuts out
+the green background and installs one with the right star positions:
+
+```sh
+MODEL_API_KEY=... python -m mirror.avatar_gen --generate --n 2      # writes avatar-candidates/
+python -m mirror.avatar_gen --input avatar-candidates/avatar2.png    # installs the one you pick
+```
+
+The generated image and `avatar.json` are git-ignored, because the terms for publishing
+generated images were not checked. Everyone who clones the repo sees the built-in avatar
+until they generate their own.
+
+## 1. Make the image yourself
 
 Any image generator works. Aim for a transparent PNG (or WebP) of a single character,
 front view, full body, standing straight with arms slightly away from the body, about
@@ -14,8 +30,7 @@ front view, full body, standing straight with arms slightly away from the body, 
 > friendly proportions, smooth visor face, no background, transparent background, centered,
 > high resolution
 
-Muse can read images (`muse exec --image`) but cannot generate them, so use an
-image-generation tool you already have.
+Any image-generation tool works.
 
 ## 2. Add the two files
 
