@@ -84,8 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("input", help="input JSONL path")
     parser.add_argument("--db", default="data/local/mirror.kuzu",
                         help="Kuzu DB directory")
-    parser.add_argument("--extractor", default="mock",
-                        choices=["mock", "spark", "Muse", "ollama"])
+    parser.add_argument("--extractor", default="spark",
+                        choices=["spark", "Muse", "ollama"])
     parser.add_argument("--model", default="", help="extractor model override")
     parser.add_argument("--dry-run", action="store_true",
                         help="extract+validate only, no writes")

@@ -104,3 +104,11 @@ def test_chat_generate_keeps_backend_after_transient_error(monkeypatch):
     assert app_mod.chat_generate("p", timeout=5)[0] == "local"
     assert app_mod.chat_generate("p", timeout=5) == ("spark", "ok")
     assert calls == [5, 5]
+
+
+def test_product_default_extractor_is_llm_not_rules(monkeypatch):
+    from mirror import app as app_mod
+
+    monkeypatch.delenv("MIRROR_EXTRACTOR", raising=False)
+    monkeypatch.setattr(app_mod, "_extractor", None)
+    assert app_mod.get_extractor().name == "spark"

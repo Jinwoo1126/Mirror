@@ -149,8 +149,8 @@ def _run(store, episodes, extractor, agents, promote, index) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Mirror replay harness")
     parser.add_argument("episodes", help="episodes JSONL path")
-    parser.add_argument("--extractor", default="mock",
-                        choices=["mock", "spark", "Muse", "ollama"])
+    parser.add_argument("--extractor", default="spark",
+                        choices=["spark", "Muse", "ollama"])
     parser.add_argument("--agents", default="A,M1,M2")
     parser.add_argument("--db", default="")
     parser.add_argument("--no-promote", action="store_true")

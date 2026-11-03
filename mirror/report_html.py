@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
 import subprocess
 import sys
@@ -151,7 +152,7 @@ def collect_eval() -> dict:
     from mirror import extract as ex
 
     return ev.score_file(str(REPO / "eval" / "gold_observations.jsonl"),
-                         ex.MockExtractor())
+                         ex.get_extractor(os.environ.get("MIRROR_EXTRACTOR", "spark")))
 
 
 def collect_search() -> dict:

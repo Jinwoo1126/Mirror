@@ -56,7 +56,7 @@ def get_store() -> MirrorStore:
 def get_extractor():
     global _extractor
     if _extractor is None:
-        _extractor = ex.get_extractor(os.environ.get("MIRROR_EXTRACTOR", "mock"))
+        _extractor = ex.get_extractor(os.environ.get("MIRROR_EXTRACTOR", "spark"))
     return _extractor
 
 

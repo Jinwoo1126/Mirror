@@ -1,0 +1,1229 @@
+{
+ "gold_heldout3.jsonl": {
+  "llm": {
+   "gold": 31,
+   "predicted": 46,
+   "exact": 25,
+   "partial": 6,
+   "missing": 0,
+   "spurious": 15,
+   "extract_failed": 0,
+   "unscored_pred": 45,
+   "error_types": {
+    "endpoint_not_in_gold": 15
+   },
+   "scenes": 16,
+   "exact_precision": 0.5435,
+   "exact_recall": 0.8065
+  },
+  "mock": {
+   "gold": 31,
+   "predicted": 23,
+   "exact": 20,
+   "partial": 3,
+   "missing": 8,
+   "spurious": 0,
+   "extract_failed": 0,
+   "unscored_pred": 16,
+   "error_types": {},
+   "scenes": 16,
+   "exact_precision": 0.8696,
+   "exact_recall": 0.6452
+  },
+  "llm_scenes": [
+   {
+    "source_id": "c1",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "c2",
+    "exact": 4,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "c3",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:라테",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:첫 방문",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c4",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:라면",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:귀찮음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c5",
+    "exact": 0,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:막걸리",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c6",
+    "exact": 2,
+    "partial": 2,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "c7",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:국밥",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c8",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:빠듯함",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c9",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:기분이 좋음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c10",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:비 오는 날",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c11",
+    "exact": 0,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:오후",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:멍함",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c12",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:앱 시안",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c13",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:퇴근 시간",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c14",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:아메리카노",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c15",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:별일 없음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "c16",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   }
+  ]
+ },
+ "gold_heldout4.jsonl": {
+  "llm": {
+   "gold": 36,
+   "predicted": 54,
+   "exact": 29,
+   "partial": 6,
+   "missing": 1,
+   "spurious": 19,
+   "extract_failed": 0,
+   "unscored_pred": 55,
+   "error_types": {
+    "endpoint_not_in_gold": 19
+   },
+   "scenes": 20,
+   "exact_precision": 0.537,
+   "exact_recall": 0.8056
+  },
+  "mock": {
+   "gold": 36,
+   "predicted": 25,
+   "exact": 18,
+   "partial": 6,
+   "missing": 12,
+   "spurious": 1,
+   "extract_failed": 0,
+   "unscored_pred": 21,
+   "error_types": {
+    "endpoint_not_in_gold": 1
+   },
+   "scenes": 20,
+   "exact_precision": 0.72,
+   "exact_recall": 0.5
+  },
+  "llm_scenes": [
+   {
+    "source_id": "d1",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:아메리카노",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d2",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:집",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:집에서 쉼",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d3",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d4",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:김치찌개",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d5",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:나",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:친구 J와 동행",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d6",
+    "exact": 3,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d7",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:새로운 메뉴 탐색이 귀찮은 상태",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d8",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d9",
+    "exact": 0,
+    "partial": 2,
+    "missing": 1,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:점심",
+      "Observation",
+      "obs"
+     ]
+    ],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d10",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:새로운 칵테일",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:퇴근길",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d11",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d12",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:회의 자료",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d13",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:버스",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d14",
+    "exact": 2,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:집",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:비 오는 날씨",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d15",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:평범한 하루",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d16",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d17",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 3,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:공연",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:후렴",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:관객들",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d18",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:귀찮음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "d19",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "d20",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:조깅",
+      "Observation",
+      "obs"
+     ]
+    ]
+   }
+  ]
+ },
+ "gold_heldout5.jsonl": {
+  "llm": {
+   "gold": 40,
+   "predicted": 73,
+   "exact": 34,
+   "partial": 6,
+   "missing": 0,
+   "spurious": 33,
+   "extract_failed": 0,
+   "unscored_pred": 68,
+   "error_types": {
+    "endpoint_not_in_gold": 33
+   },
+   "scenes": 24,
+   "exact_precision": 0.4658,
+   "exact_recall": 0.85
+  },
+  "mock": {
+   "gold": 40,
+   "predicted": 24,
+   "exact": 17,
+   "partial": 5,
+   "missing": 18,
+   "spurious": 2,
+   "extract_failed": 0,
+   "unscored_pred": 16,
+   "error_types": {
+    "endpoint_not_in_gold": 2
+   },
+   "scenes": 24,
+   "exact_precision": 0.7083,
+   "exact_recall": 0.425
+  },
+  "llm_scenes": [
+   {
+    "source_id": "e1",
+    "exact": 4,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "e2",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:참치김밥",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e3",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:말차 라떼",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:처음 방문",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e4",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:된장찌개",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e5",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:김치볶음밥",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:귀찮음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e6",
+    "exact": 0,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:매운 닭발",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:친구와 함께",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e7",
+    "exact": 3,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "e8",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:집",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:조용히 쉬는 중",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e9",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:맥주",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:영화",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e10",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 3,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:가족",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:크리스마스",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:가족과 함께",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e11",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:스쿼트",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e12",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:예산이 빠듯함",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e13",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "e14",
+    "exact": 3,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "e15",
+    "exact": 1,
+    "partial": 2,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:상쾌함",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e16",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:야근",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e17",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:새로운 곡",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:처음 시도",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e18",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:버스킹",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e19",
+    "exact": 2,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 0,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": []
+   },
+   {
+    "source_id": "e20",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:책",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:배송이 이틀 걸림",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e21",
+    "exact": 0,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 3,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:집",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:새로운 전시",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:귀찮음",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e22",
+    "exact": 1,
+    "partial": 1,
+    "missing": 0,
+    "spurious": 3,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:집",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:연말 밤",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:남편과 함께",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e23",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 2,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:영어 공부",
+      "Observation",
+      "obs"
+     ],
+     [
+      "OBSERVED_IN",
+      "Context",
+      "ctx:내일부터",
+      "Observation",
+      "obs"
+     ]
+    ]
+   },
+   {
+    "source_id": "e24",
+    "exact": 1,
+    "partial": 0,
+    "missing": 0,
+    "spurious": 1,
+    "error": null,
+    "missing_triples": [],
+    "spurious_triples": [
+     [
+      "OBSERVED_IN",
+      "Entity",
+      "ent:소설",
+      "Observation",
+      "obs"
+     ]
+    ]
+   }
+  ]
+ }
+}

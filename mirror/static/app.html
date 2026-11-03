@@ -2,446 +2,660 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Mirror</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
 <style>
-:root { --accent: #0f766e; --ink: #1c1917; --muted: #57534e; --line: #e7e5e4; --bg: #ffffff; --panel: #f5f5f4; }
+/* 디자인: shadcn/ui와 Linear 계열의 정돈된 앱 UI. 청록 포인트 하나에 초록기 도는 회색 바탕. */
+:root {
+  --bg: #f1f5f4; --surface: #ffffff; --surface-2: #f7faf9; --ink: #0e1e1d;
+  --ink-2: #455756; --ink-3: #7b8d8b; --line: #dbe4e2; --line-2: #e9f0ee;
+  --accent: #0f766e; --accent-ink: #ffffff; --accent-soft: #dcf2ee; --accent-line: #a7dcd4;
+  --good: #15803d; --good-soft: #e0f3e6; --warn: #b45309; --warn-soft: #fbecd5;
+  --bad: #b91c1c; --bad-soft: #fbe3e3;
+  --shadow: 0 1px 2px rgba(14,30,29,.05), 0 6px 18px rgba(14,30,29,.05);
+  --radius: 14px; --radius-sm: 9px;
+  --f-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --nav-h: 0px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1413; --surface: #111d1c; --surface-2: #162624; --ink: #e5f0ee;
+    --ink-2: #9fb4b1; --ink-3: #6f8683; --line: #223534; --line-2: #1a2b2a;
+    --accent: #2dd4bf; --accent-ink: #062b27; --accent-soft: #123532; --accent-line: #1f5b55;
+    --good: #4ade80; --good-soft: #12301f; --warn: #fbbf24; --warn-soft: #34270d;
+    --bad: #f87171; --bad-soft: #3a1818;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
 * { box-sizing: border-box; }
-body { margin: 0; color: var(--ink); background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
-#layout { display: flex; height: 100vh; }
-#side { width: 220px; background: var(--panel); border-right: 1px solid var(--line);
-  padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
-#side h1 { font-size: 20px; margin: 0 0 2px 8px; }
-#side .sub { font-size: 12px; color: var(--muted); margin: 0 0 12px 8px; }
-#side button.tab { text-align: left; padding: 8px 10px; border: none; background: none;
-  font-size: 14px; cursor: pointer; border-radius: 6px; color: var(--ink); }
-#side button.tab.active { background: #1c1917; color: #fff; }
-#status { margin-top: auto; font-size: 12px; color: var(--muted); padding: 8px; }
-#status .mode { display: inline-block; background: var(--accent); color: #fff;
-  padding: 1px 8px; border-radius: 10px; font-size: 11px; }
-#main { flex: 1; overflow-y: auto; padding: 20px 28px; max-width: 900px; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.6 var(--f-ui);
+  -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+i[data-lucide], svg.lucide { width: 18px; height: 18px; stroke-width: 1.9; flex: none; }
+
+/* 레이아웃 */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); height: 100%; }
+.side { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 14px 14px;
+  display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 18px; }
+.logo { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; font-weight: 800; font-size: 17px; letter-spacing: -.03em; }
+.brand b { display: block; font-size: 17px; letter-spacing: -.02em; line-height: 1.2; }
+.brand span { display: block; font-size: 12px; color: var(--ink-3); }
+.grp { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--ink-3); padding: 14px 10px 6px; text-transform: uppercase; }
+.tab { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 11px; border: 0; background: none;
+  border-radius: var(--radius-sm); color: var(--ink-2); font-size: 14.5px; font-weight: 500; text-align: left; }
+.tab:hover { background: var(--surface-2); color: var(--ink); }
+.tab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.status { margin-top: auto; padding: 12px; background: var(--surface-2); border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--ink-2); display: flex; flex-direction: column; gap: 8px; }
+.status .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; }
+.dot.off { background: var(--bad); }
+
+.main { overflow-y: auto; padding: 0 clamp(16px, 4vw, 44px) calc(40px + var(--nav-h)); scroll-behavior: smooth; }
+.page { max-width: 880px; margin: 0 auto; }
+.head { padding: 32px 0 20px; }
+.head h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; text-wrap: balance; }
+.head p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 60ch; }
 section { display: none; }
-section.active { display: block; }
-h2 { font-size: 17px; margin: 0 0 12px; }
-#chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-.msg { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; max-width: 85%; }
-.msg.user { align-self: flex-end; background: var(--panel); }
-.msg.bot { align-self: flex-start; white-space: pre-wrap; }
-.msg .meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
-.msg .cite { font-size: 11px; color: var(--muted); }
-.row { display: flex; gap: 8px; }
-input[type=text], textarea { flex: 1; padding: 9px 10px; font-size: 14px;
-  border: 1px solid var(--line); border-radius: 6px; font-family: inherit; }
-button.act { padding: 9px 14px; font-size: 14px; border: 1px solid #1c1917;
-  background: #1c1917; color: #fff; border-radius: 6px; cursor: pointer; }
-button.ghost { padding: 6px 10px; font-size: 12px; border: 1px solid var(--line);
-  background: #fff; border-radius: 6px; cursor: pointer; }
-button.ghost:hover { border-color: var(--accent); color: var(--accent); }
-.toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-.toolbar label { font-size: 13px; color: var(--muted); }
-.card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-.card h3 { margin: 0 0 6px; font-size: 14px; }
-.card p { margin: 4px 0; font-size: 13px; }
-.badge { display: inline-block; font-size: 11px; background: var(--panel);
-  border: 1px solid var(--line); padding: 1px 7px; border-radius: 8px; margin-right: 5px; }
-.ev { font-size: 12px; margin: 3px 0 3px 10px; }
-.sup { color: #166534; } .con { color: #991b1b; }
-#cy { width: 100%; height: 500px; border: 1px solid var(--line); border-radius: 8px; }
-pre.report { background: var(--panel); padding: 14px; white-space: pre-wrap;
-  font-size: 13px; border-radius: 8px; }
-table.vocab { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.vocab th, table.vocab td { border-bottom: 1px solid var(--line);
-  padding: 6px 8px; text-align: left; }
-.opt-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-.offline { color: #991b1b; font-size: 13px; }
+section.active { display: block; animation: rise .22s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { section.active { animation: none; } * { scroll-behavior: auto !important; } }
 
-.pf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
-.pf-head { margin-bottom: 14px; font-size: 13px; color: var(--muted); }
-.pf-head b { color: var(--ink); font-size: 15px; }
-.pf-card h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 8px; }
-.pf-tend { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.pf-tend:first-of-type { border-top: 0; }
-.pf-tend small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
-.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.pf-chip { font-size: 13px; border: 1px solid var(--line); border-radius: 12px; padding: 2px 10px; background: var(--panel); }
-.pf-chip i { font-style: normal; color: var(--muted); margin-left: 4px; font-size: 12px; }
-.pf-kind { font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
-.pf-kind:first-of-type { margin-top: 0; }
-.pf-bar { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0; }
-.pf-bar .t { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
-.pf-bar .t div { height: 100%; background: var(--accent); }
-.pf-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+/* 공통 컴포넌트 */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+.card + .card { margin-top: 12px; }
+.card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -.005em; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 15px;
+  border-radius: var(--radius-sm); border: 1px solid transparent; font-weight: 600; font-size: 14px; transition: background .15s, border-color .15s, transform .05s; }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: var(--surface); border-color: var(--line); color: var(--ink); }
+.btn.ghost:hover { border-color: var(--accent-line); background: var(--surface-2); }
+.btn.sm { height: 30px; padding: 0 11px; font-size: 12.5px; }
+.btn.icon { width: 34px; padding: 0; }
+.btn.danger:hover { color: var(--bad); border-color: var(--bad); }
+.btn:disabled { opacity: .55; cursor: default; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.input, .field select, .field textarea, .field input { width: 100%; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); font-size: 15px; outline: none; transition: border-color .15s, box-shadow .15s; }
+.input:focus, .field select:focus, .field textarea:focus, .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea { resize: vertical; min-height: 44px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.pill.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.pill.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; background: var(--surface-2); border: 1px solid var(--line); }
+.chip i { font-style: normal; font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.id { font: 500 11px var(--f-mono); color: var(--ink-3); background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 6px; padding: 1px 6px; }
+.muted { color: var(--ink-3); font-size: 13px; }
+.empty { text-align: center; padding: 38px 16px; color: var(--ink-3); }
+.empty .lucide { width: 30px; height: 30px; margin-bottom: 8px; color: var(--accent-line); }
+.empty b { display: block; color: var(--ink-2); margin-bottom: 4px; }
+.skel { height: 74px; border-radius: var(--radius); background: linear-gradient(90deg, var(--line-2), var(--surface-2), var(--line-2)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+@keyframes sh { to { background-position: -200% 0; } }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.search { position: relative; flex: 1; min-width: 200px; }
+.search .lucide { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-3); width: 17px; height: 17px; }
+.search .input { padding-left: 36px; }
+.switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none; }
+.switch input { appearance: none; width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; cursor: pointer; margin: 0; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(14px); }
 
-.sc-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 13px; }
-.sc-field label { color: var(--muted); }
-.sc-field select, .sc-field input, .sc-field textarea { padding: 8px 10px; font-size: 14px; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; }
-.sc-field textarea { min-height: 72px; }
-button.ghost.on { background: #1c1917; color: #fff; border-color: #1c1917; }
-.sc-out { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
-.sc-meta { font-size: 12px; color: var(--muted); margin-top: 8px; }
+/* 채팅 */
+#chat .page { display: flex; flex-direction: column; min-height: calc(100vh - 150px); }
+#chat-log { display: flex; flex-direction: column; gap: 16px; flex: 1; padding-bottom: 20px; }
+.msg { display: flex; gap: 11px; max-width: 100%; }
+.msg.user { flex-direction: row-reverse; }
+.av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 12px; font-weight: 700; }
+.msg.bot .av { background: var(--accent); color: var(--accent-ink); }
+.msg.user .av { background: var(--line); color: var(--ink-2); }
+.bubble { padding: 11px 15px; border-radius: 16px; max-width: min(640px, 86%); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
+.msg.bot .bubble { background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 5px; box-shadow: var(--shadow); }
+.msg.user .bubble { background: var(--accent); color: var(--accent-ink); border-top-right-radius: 5px; }
+.bubble .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; white-space: normal; }
+.msg.user .btn.ghost { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); color: inherit; }
+.msg.user .btn.ghost:hover { background: rgba(255,255,255,.3); }
+.bubble .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; white-space: normal; }
+.typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+.typing b { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); animation: bl 1s infinite; }
+.typing b:nth-child(2) { animation-delay: .15s; } .typing b:nth-child(3) { animation-delay: .3s; }
+@keyframes bl { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.hello { text-align: center; padding: 36px 10px 8px; }
+.hello .logo { margin: 0 auto 14px; width: 46px; height: 46px; border-radius: 14px; font-size: 22px; }
+.hello h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: -.02em; }
+.hello p { margin: 0 auto; color: var(--ink-2); max-width: 44ch; font-size: 14px; }
+.hello .chips { justify-content: center; margin-top: 18px; }
+.hello .chip { cursor: pointer; background: var(--surface); transition: border-color .15s; }
+.hello .chip:hover { border-color: var(--accent); color: var(--accent); }
+.composer { position: sticky; bottom: calc(14px + var(--nav-h)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow), 0 -8px 24px var(--bg); padding: 10px 10px 10px 16px; }
+.composer .line { display: flex; align-items: flex-end; gap: 8px; }
+.composer textarea { flex: 1; border: 0; background: none; outline: none; resize: none; padding: 8px 0; max-height: 160px; min-height: 24px; font-size: 15px; line-height: 1.5; }
+.composer .opts { display: none; padding: 8px 0 2px; }
+.composer .opts.on { display: block; }
+.composer .opts input { width: 100%; border: 1px dashed var(--line); border-radius: 8px; padding: 7px 10px; background: var(--surface-2); outline: none; font-size: 13.5px; }
+.composer .bar { display: flex; align-items: center; gap: 14px; padding: 8px 4px 0 0; margin-top: 4px; border-top: 1px solid var(--line-2); }
+.composer .bar .btn.link { border: 0; background: none; height: 26px; padding: 0 6px; color: var(--ink-2); font-size: 12.5px; font-weight: 500; }
+.composer .bar .btn.link.on { color: var(--accent); }
+
+/* 기억·가설 목록 */
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 9px; }
+.item + .item { margin-top: 10px; }
+.item .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.item .txt { font-size: 15px; word-break: keep-all; overflow-wrap: anywhere; }
+.item .foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ev { display: flex; gap: 9px; font-size: 13.5px; color: var(--ink-2); padding: 6px 0 6px 2px; border-top: 1px solid var(--line-2); }
+.ev .lucide { width: 15px; height: 15px; margin-top: 3px; }
+.ev.sup .lucide { color: var(--good); } .ev.con .lucide { color: var(--bad); }
+.ev small { color: var(--ink-3); font: 500 11.5px var(--f-mono); margin-right: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; height: 30px; padding: 0 13px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button:hover { background: var(--surface-2); }
+.seg button.ok:hover { color: var(--good); } .seg button.no:hover, .seg button.stop:hover { color: var(--bad); }
+
+/* 프로필 */
+.tend { padding: 11px 0; border-top: 1px solid var(--line-2); }
+.tend:first-of-type { border-top: 0; padding-top: 2px; }
+.tend .st { font-size: 15px; font-weight: 500; }
+.tend .mt { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.meter { display: inline-flex; gap: 3px; } .meter b { width: 14px; height: 6px; border-radius: 3px; background: var(--line); } .meter b.on { background: var(--accent); }
+.kind { font-size: 12px; font-weight: 600; color: var(--ink-3); margin: 12px 0 7px; } .kind:first-of-type { margin-top: 0; }
+.bar { display: grid; grid-template-columns: 96px 1fr 58px; align-items: center; gap: 10px; font-size: 13px; margin: 6px 0; }
+.bar .t { height: 8px; background: var(--line-2); border-radius: 4px; overflow: hidden; } .bar .t div { height: 100%; background: var(--accent); border-radius: 4px; }
+.bar span:last-child { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pbanner { display: flex; gap: 12px; align-items: flex-start; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--ink);
+  border-radius: var(--radius); padding: 13px 16px; margin-bottom: 14px; font-size: 14px; }
+.pbanner .lucide { color: var(--accent); margin-top: 2px; }
+.pbanner b { display: block; }
+
+/* 시나리오 */
+.scs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; margin-bottom: 16px; }
+.sc { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); transition: border-color .15s, transform .1s; }
+.sc:hover { border-color: var(--accent-line); transform: translateY(-1px); }
+.sc.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sc .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.sc b { font-size: 15px; } .sc span { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.result { white-space: pre-wrap; font-size: 15px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+.result-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+
+/* 그래프 */
+.graphwrap { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+#cy { width: 100%; height: clamp(420px, calc(100vh - 290px), 760px); }
+.legend { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 5px 12px; max-width: calc(100% - 24px);
+  background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px); padding: 7px 11px; border-radius: 10px; border: 1px solid var(--line-2); font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend b { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.detail { margin-top: 12px; min-height: 64px; }
+
+/* 표 / 리포트 */
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 11px 12px; border-bottom: 1px solid var(--line-2); } .tbl tr:last-child td { border-bottom: 0; }
+.tbl td.n { font-variant-numeric: tabular-nums; font-weight: 600; width: 64px; }
+.tw { overflow-x: auto; }
+.rep h3 { margin: 18px 0 8px; font-size: 14.5px; color: var(--ink); font-weight: 700; } .rep h3:first-child { margin-top: 0; }
+.rep .li { display: flex; gap: 9px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line-2); font-size: 14.5px; flex-wrap: wrap; }
+.rep .li small { color: var(--ink-3); font: 500 11.5px var(--f-mono); }
+.rep .range { color: var(--ink-3); font: 500 12.5px var(--f-mono); }
+.out { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); font-family: var(--f-mono); white-space: pre-wrap; word-break: break-all; }
+
+/* 토스트 */
+#toast { position: fixed; left: 50%; bottom: calc(24px + var(--nav-h) + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 28px rgba(0,0,0,.25); animation: rise .2s ease both; }
+.toast.bad { background: var(--bad); color: #fff; }
+
+/* 모바일: 하단 탭 */
+@media (max-width: 860px) {
+  :root { --nav-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+  .app { display: block; height: 100%; }
+  .main { height: 100%; padding-bottom: calc(24px + var(--nav-h)); }
+  .side { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; top: auto; flex-direction: row; gap: 2px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-right: 0; border-top: 1px solid var(--line); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .side::-webkit-scrollbar { display: none; }
+  .brand, .grp, .status { display: none; }
+  .tab { flex: 0 0 auto; flex-direction: column; gap: 3px; width: auto; min-width: 66px; padding: 7px 9px; font-size: 11.5px; text-align: center; justify-content: center; }
+  .head { padding: 22px 0 14px; } .head h1 { font-size: 22px; }
+  #chat .page { min-height: calc(100vh - 130px); }
+  .bubble { max-width: 90%; }
+  .bar { grid-template-columns: 84px 1fr 50px; }
+}
 </style>
 </head>
 <body>
-<div id="layout">
-<div id="side">
-<h1>Mirror</h1>
-<p class="sub">나를 이해하는 기억</p>
-<button class="tab active" data-tab="chat">채팅</button>
-<button class="tab" data-tab="profile">프로필</button>
-<button class="tab" data-tab="scen">시나리오</button>
-<button class="tab" data-tab="mem">기억 스택</button>
-<button class="tab" data-tab="graph">그래프</button>
-<button class="tab" data-tab="hyps">가설</button>
-<button class="tab" data-tab="rel">관계</button>
-<button class="tab" data-tab="report">주간 리포트</button>
-<div id="status">연결 중...</div>
-</div>
-<div id="main">
+<div class="app">
+<nav class="side" aria-label="메뉴">
+  <div class="brand"><div class="logo">M</div><div><b>Mirror</b><span>나를 이해하는 기억</span></div></div>
+  <div class="grp">대화</div>
+  <button class="tab active" data-tab="chat"><i data-lucide="message-circle"></i>채팅</button>
+  <button class="tab" data-tab="scen"><i data-lucide="sparkles"></i>시나리오</button>
+  <div class="grp">나</div>
+  <button class="tab" data-tab="profile"><i data-lucide="user-round"></i>프로필</button>
+  <button class="tab" data-tab="mem"><i data-lucide="library"></i>기억</button>
+  <button class="tab" data-tab="hyps"><i data-lucide="lightbulb"></i>가설</button>
+  <div class="grp">구조</div>
+  <button class="tab" data-tab="graph"><i data-lucide="share-2"></i>그래프</button>
+  <button class="tab" data-tab="rel"><i data-lucide="link-2"></i>관계</button>
+  <button class="tab" data-tab="report"><i data-lucide="clipboard-check"></i>주간 리포트</button>
+  <div class="status" id="status">연결 중...</div>
+</nav>
+
+<main class="main"><div class="page">
+<div class="head"><h1 id="ptitle">채팅</h1><p id="psub"></p></div>
+
 <section id="chat" class="active">
-<h2>채팅</h2>
-<div class="toolbar">
-<label><input type="checkbox" id="auto-mem"> 내 메시지 자동 저장</label>
-<span style="font-size:12px;color:var(--muted)">기본은 수동 저장 (각 메시지별 버튼)</span>
-</div>
-<div id="chat-log"></div>
-<div class="row">
-<input type="text" id="chat-in" placeholder="물어보거나, 있었던 일을 적어보세요">
-<button class="act" id="chat-send">보내기</button>
-</div>
-<div class="row" style="margin-top:8px">
-<input type="text" id="chat-opts" placeholder="선택지 (쉼표 구분, 결정 도움용 — 선택)">
-</div>
+  <div id="chat-log"></div>
+  <div class="composer">
+    <div class="line">
+      <textarea id="chat-in" rows="1" placeholder="물어보거나, 있었던 일을 적어보세요"></textarea>
+      <button class="btn primary icon" id="chat-send" aria-label="보내기"><i data-lucide="arrow-up"></i></button>
+    </div>
+    <div class="opts" id="opts-box"><input id="chat-opts" type="text" placeholder="선택지를 쉼표로 구분해 적으면 비교해 줍니다 (예: 치킨, 쌀국수)"></div>
+    <div class="bar">
+      <label class="switch"><input type="checkbox" id="auto-mem"> 내 메시지 자동 저장</label>
+      <button class="btn link" id="opts-toggle" type="button"><i data-lucide="git-compare"></i>선택지 비교</button>
+    </div>
+  </div>
 </section>
-<section id="profile"><h2>나의 프로필</h2><div id="profile-body"></div></section>
-<section id="scen"><h2>시나리오</h2>
-<div id="scen-pick" class="toolbar"></div>
-<p id="scen-sum" class="pf-note"></p>
-<div id="scen-form"></div>
-<div id="scen-out"></div></section>
+
+<section id="profile"><div id="profile-body"></div></section>
+
+<section id="scen">
+  <div class="scs" id="scen-pick"></div>
+  <div id="scen-form"></div>
+  <div id="scen-out"></div>
+</section>
+
 <section id="mem">
-<h2>기억 스택</h2>
-<div class="toolbar">
-<input type="text" id="mem-q" placeholder="기억 검색">
-<button class="ghost" id="mem-search">검색</button>
-</div>
-<div class="row" style="margin-bottom:12px">
-<textarea id="mem-add" rows="2" placeholder="새 기억 입력"></textarea>
-<button class="act" id="mem-add-btn">추가</button>
-</div>
-<div id="mem-list"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="field" style="margin-bottom:10px"><label for="mem-add">새 기억</label>
+      <textarea id="mem-add" rows="2" placeholder="있었던 일을 한두 문장으로 적어보세요"></textarea></div>
+    <button class="btn primary" id="mem-add-btn"><i data-lucide="plus"></i>기억 추가</button>
+  </div>
+  <div class="toolbar"><div class="search"><i data-lucide="search"></i><input class="input" id="mem-q" type="text" placeholder="기억 검색"></div>
+    <button class="btn ghost" id="mem-search">검색</button></div>
+  <div id="mem-list"></div>
 </section>
-<section id="graph"><h2>그래프</h2><div id="cy"></div><p id="cy-note"></p></section>
-<section id="hyps"><h2>가설</h2><div id="hyp-list"></div></section>
-<section id="rel"><h2>관계 어휘</h2><div id="rel-list"></div></section>
-<section id="report"><h2>주간 리포트</h2>
-<div class="toolbar"><button class="ghost" id="m-nightly">야간 통합</button>
-<button class="ghost" id="m-weekly">주간 점검</button>
-<button class="ghost" id="m-promote">승격</button>
-<span id="m-out" style="font-size:12px"></span></div>
-<pre class="report" id="report-body"></pre></section>
+
+<section id="graph">
+  <div class="graphwrap"><div id="cy"></div><div class="legend" id="legend"></div></div>
+  <div class="card detail" id="cy-note"><span class="muted">노드를 누르면 연결된 관계와 내용이 보입니다.</span></div>
+</section>
+
+<section id="hyps"><div id="hyp-list"></div></section>
+<section id="rel"><div class="card" id="rel-list"></div></section>
+
+<section id="report">
+  <div class="toolbar">
+    <button class="btn ghost sm" id="m-nightly"><i data-lucide="moon"></i>야간 통합</button>
+    <button class="btn ghost sm" id="m-weekly"><i data-lucide="calendar-check"></i>주간 점검</button>
+    <button class="btn ghost sm" id="m-promote"><i data-lucide="arrow-up-circle"></i>승격</button>
+  </div>
+  <div class="card rep" id="report-body"></div>
+  <div class="out" id="m-out"></div>
+</section>
+</div></main>
 </div>
-</div>
+<div id="toast" aria-live="polite"></div>
+
 <script>
 const $ = id => document.getElementById(id);
-function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const icons = () => { try { window.lucide && lucide.createIcons(); } catch (e) {} };
+const JSONH = { "Content-Type": "application/json" };
 async function api(path, opts) {
   const r = await fetch(path, opts);
-  const data = await r.json();
+  let data = {};
+  try { data = await r.json(); } catch (e) {}
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
-document.querySelectorAll("#side button.tab").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll("#side button.tab").forEach(x => x.classList.remove("active"));
-  document.querySelectorAll("#main section").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  $(b.dataset.tab).classList.add("active");
-  if (b.dataset.tab === "profile") loadProfile();
-  if (b.dataset.tab === "scen") loadScen();
-  if (b.dataset.tab === "mem") loadMems();
-  if (b.dataset.tab === "graph") loadGraph();
-  if (b.dataset.tab === "hyps") loadHyps();
-  if (b.dataset.tab === "rel") loadRels();
-  if (b.dataset.tab === "report") loadReport();
-}));
+function toast(msg, kind) {
+  const t = document.createElement("div");
+  t.className = "toast" + (kind === "bad" ? " bad" : "");
+  t.textContent = msg; $("toast").appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+const empty = (icon, title, body) => `<div class="empty"><i data-lucide="${icon}"></i><b>${esc(title)}</b>${esc(body)}</div>`;
+const skel = n => Array.from({ length: n }, () => '<div class="skel" style="margin-bottom:10px"></div>').join("");
+const cites = (ids, n = 3) => !ids.length ? "" :
+  `<span class="pill accent">근거 ${ids.length}건</span>` + ids.slice(0, n).map(c => `<span class="id">${esc(c)}</span>`).join("") +
+  (ids.length > n ? `<span class="id" title="${esc(ids.slice(n).join(", "))}">+${ids.length - n}</span>` : "");
+const day = s => (s || "").slice(0, 10);
 
-function chips(items, key) {
-  return `<div class="pf-chips">${items.map(e => `<span class="pf-chip">${esc(e[key])}<i>${e.count}</i></span>`).join("")}</div>`;
+/* 탭 */
+const PAGES = {
+  chat: ["채팅", "기억을 바탕으로 답하고, 근거를 함께 보여줍니다."],
+  scen: ["시나리오", "문서, 음악, 하루 계획, 선택처럼 자주 하는 일을 내 기록으로 돕습니다."],
+  profile: ["나의 프로필", "저장된 기록에서 센 값만 보여줍니다. 성격이나 유형을 단정하지 않습니다."],
+  mem: ["기억", "저장된 기록입니다. 지우면 그 기록에서 나온 이해도 함께 정리됩니다."],
+  hyps: ["가설", "기록에서 반복된 것을 근거와 함께 둡니다. 틀렸다면 알려주세요."],
+  graph: ["그래프", "기록, 대상, 상황, 가설이 어떻게 이어져 있는지 봅니다."],
+  rel: ["관계 어휘", "기록에서 쌓인 관계 표현입니다."],
+  report: ["주간 리포트", "이번 주 이해가 어떻게 바뀌었는지 보여줍니다."],
+};
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === name));
+  document.querySelectorAll("main section").forEach(x => x.classList.toggle("active", x.id === name));
+  $("ptitle").textContent = PAGES[name][0]; $("psub").textContent = PAGES[name][1];
+  $("psub").style.display = PAGES[name][1] ? "" : "none";
+  ({ profile: loadProfile, scen: loadScen, mem: () => loadMems($("mem-q").value), graph: loadGraph,
+     hyps: loadHyps, rel: loadRels, report: loadReport }[name] || (() => {}))();
+  document.querySelector(".main").scrollTo({ top: 0 });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
 }
-function groups(obj, key) {
-  const kinds = Object.keys(obj);
-  if (!kinds.length) return '<p class="pf-note">아직 없습니다.</p>';
-  return kinds.map(k => `<div class="pf-kind">${esc(k)}</div>${chips(obj[k], key)}`).join("");
-}
-async function loadProfile() {
-  const box = $("profile-body");
-  try {
-    const p = await api("/api/profile");
-    const d = x => (x || "").slice(0, 10);
-    const w = p.writing.stats, wr = p.writing;
-    const tend = p.tendencies.length ? p.tendencies.map(t =>
-      `<div class="pf-tend">${esc(t.statement)}<small>${esc(t.evidence_label)} · 반례 ${t.contradicts}건 · ${esc(t.domain)}</small></div>`).join("")
-      : '<p class="pf-note">아직 없습니다.</p>';
-    const endings = (w.endings || []).map(e =>
-      `<div class="pf-bar"><span style="width:110px">${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio*100)}%"></div></span><span>${e.count}문장</span></div>`).join("");
-    const styles = wr.styles.length ? wr.styles.map(s =>
-      `<span class="pf-chip">${esc(s.pattern)}<i>${esc(s.intent)}</i></span>`).join("") : '<span class="pf-note">저장된 스타일 없음</span>';
-    const prefs = p.preferences.length ? p.preferences.map(x =>
-      `<span class="pf-chip">${esc(x.target)}<i>${x.direction === "+" ? "좋아함" : "싫어함"}</i></span>`).join("") : '<span class="pf-note">아직 없습니다.</span>';
-    const crit = p.criteria.length ? p.criteria.map(x =>
-      `<div class="pf-tend">${esc(x.statement)}<small>${esc(x.applies_to)}</small></div>`).join("") : '<p class="pf-note">아직 없습니다.</p>';
-    box.innerHTML = `
-      <div class="pf-head"><b>기록 ${p.observations}건</b> · ${d(p.period.from)} ~ ${d(p.period.to)}<br>
-      저장된 기록에서 센 값만 보여줍니다. 성격이나 유형을 단정하지 않습니다.</div>
-      <div class="card pf-card"><h3>기록에서 반복된 것</h3>${tend}</div>
-      <div class="pf-grid">
-        <div class="card pf-card"><h3>자주 등장하는 대상</h3>${groups(p.entities, "name")}</div>
-        <div class="card pf-card"><h3>그럴 때의 상황</h3>${groups(p.situations, "value")}</div>
-      </div>
-      <div class="pf-grid">
-        <div class="card pf-card"><h3>선호</h3><div class="pf-chips">${prefs}</div></div>
-        <div class="card pf-card"><h3>판단 기준</h3>${crit}</div>
-      </div>
-      <div class="card pf-card"><h3>글 스타일</h3>
-        <div class="pf-chips" style="margin-bottom:10px">${styles}</div>
-        ${w.sentences ? `<p style="font-size:13px;margin:0 0 6px">문장 ${w.sentences}개 · 평균 ${w.avg_sentence_chars}자 · 가장 긴 문장 ${w.longest_sentence_chars}자</p>${endings}` : ""}
-        <p class="pf-note">관찰 ${w.observations}건에서 센 값입니다. 글쓰기 도움에 쓰려면 내가 쓴 글을 더 넣어야 합니다.</p>
-      </div>`;
-  } catch (e) { box.innerHTML = `<p class="offline">${esc(e.message)}</p>`; }
-}
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
-let SCEN = [], scenCur = null;
-async function loadScen() {
-  if (!SCEN.length) SCEN = (await api("/api/scenarios")).scenarios;
-  $("scen-pick").innerHTML = SCEN.map(s =>
-    `<button class="ghost${scenCur === s.id ? " on" : ""}" data-sc="${s.id}">${esc(s.name)}</button>`).join("");
-  $("scen-pick").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { scenCur = b.dataset.sc; $("scen-out").innerHTML = ""; loadScen(); }));
-  const s = SCEN.find(x => x.id === scenCur);
-  $("scen-sum").textContent = s ? s.summary : "위에서 시나리오를 고르세요.";
-  $("scen-form").innerHTML = s ? s.fields.map(f => {
-    const id = `sc-${f.key}`;
-    const ctl = f.kind === "select"
-      ? `<select id="${id}">${f.options.map(o => `<option>${esc(o)}</option>`).join("")}</select>`
-      : f.kind === "textarea" ? `<textarea id="${id}" placeholder="${esc(f.placeholder)}"></textarea>`
-      : `<input id="${id}" type="text" placeholder="${esc(f.placeholder)}">`;
-    return `<div class="sc-field"><label for="${id}">${esc(f.label)}${f.required ? " *" : ""}</label>${ctl}</div>`;
-  }).join("") + '<button class="act" id="sc-run">실행</button>' : "";
-  if (s) $("sc-run").addEventListener("click", () => runScen(s));
-}
-async function runScen(s) {
-  const inputs = {};
-  s.fields.forEach(f => { inputs[f.key] = $("sc-" + f.key).value; });
-  $("scen-out").innerHTML = '<p class="pf-note">만드는 중…</p>';
-  try {
-    const r = await api(`/api/scenarios/${s.id}/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputs }) });
-    $("scen-out").innerHTML = `<div class="card"><div class="sc-out">${esc(r.text)}</div>
-      <div class="sc-meta"><span class="badge">${esc(r.mode)}</span>${r.note ? esc(r.note) : ""}
-      ${r.citations.length ? "<br>근거 " + r.citations.map(esc).join(", ") : ""}</div></div>`;
-  } catch (e) { $("scen-out").innerHTML = `<p class="offline">${esc(e.message)}</p>`; }
-}
 async function loadStatus() {
   try {
     const s = await api("/api/status");
-    $("status").innerHTML = `revision ${s.revision} · 관찰 ${s.counts.Observation} · 가설 ${s.counts.Hypothesis}<br>` +
-      `검색 <span class="mode">${esc(s.index_mode)}</span> ` +
-      `답변 <span class="mode">${esc(s.llm_backend || "local")}</span>`;
-  } catch (e) { $("status").textContent = "연결 실패"; }
+    $("status").innerHTML = `<div class="row"><span><span class="dot"></span>연결됨</span><span class="id">rev ${s.revision}</span></div>
+      <div class="row"><span>기억</span><b>${s.counts.Observation}</b></div>
+      <div class="row"><span>가설</span><b>${s.counts.Hypothesis}</b></div>
+      <div class="row"><span>검색</span><span class="pill accent">${esc(s.index_mode)}</span></div>
+      <div class="row"><span>답변</span><span class="pill ${s.llm_backend ? "good" : "warn"}">${esc(s.llm_backend || s.extractor)}</span></div>`;
+  } catch (e) { $("status").innerHTML = '<span class="dot off"></span>연결 실패'; }
 }
-// 채팅
-function addMsg(cls, text, meta, saveText) {
+
+/* 채팅 */
+const SUGGEST = ["피곤한 날 저녁엔 뭘 주로 선택했지?", "요즘 자주 가는 곳이 어디야?", "내가 새로운 걸 시도하는 건 언제야?"];
+function hello() {
+  $("chat-log").innerHTML = `<div class="hello"><div class="logo">M</div><h2>무엇을 도와드릴까요?</h2>
+    <p>있었던 일을 적으면 기억에 쌓고, 물어보면 기록을 찾아 근거와 함께 답합니다.</p>
+    <div class="chips">${SUGGEST.map(q => `<span class="chip" data-q="${esc(q)}">${esc(q)}</span>`).join("")}</div></div>`;
+  $("chat-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("chat-in").value = c.dataset.q; sendChat(); }));
+}
+function addMsg(cls, text, saveText) {
+  $("chat-log").querySelector(".hello")?.remove();
   const div = document.createElement("div");
   div.className = "msg " + cls;
-  div.innerHTML = `<div>${esc(text)}</div>` + (meta ? `<div class="meta">${meta}</div>` : "");
+  div.innerHTML = `<div class="av">${cls === "user" ? "나" : "M"}</div><div class="bubble"><div class="body">${esc(text)}</div></div>`;
   if (saveText) {
-    const b = document.createElement("button");
-    b.className = "ghost"; b.textContent = "기억에 저장"; b.style.marginTop = "6px";
+    const act = document.createElement("div"); act.className = "actions";
+    const b = document.createElement("button"); b.className = "btn ghost sm";
+    b.innerHTML = '<i data-lucide="bookmark-plus"></i>기억에 저장';
     b.addEventListener("click", async () => {
-      try {
-        await api("/api/memories", { method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: saveText }) });
-        b.textContent = "저장됨"; b.disabled = true; loadStatus();
-      } catch (e) { b.textContent = "실패: " + e.message; }
+      try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: saveText }) });
+        b.innerHTML = "저장됨"; b.disabled = true; toast("기억에 저장했습니다"); loadStatus();
+      } catch (e) { toast("저장하지 못했습니다: " + e.message, "bad"); }
     });
-    div.appendChild(b);
+    act.appendChild(b); div.querySelector(".bubble").appendChild(act);
   }
-  $("chat-log").appendChild(div);
-  div.scrollIntoView();
+  $("chat-log").appendChild(div); icons();
+  $("chat-log").lastElementChild.scrollIntoView({ block: "end", behavior: "smooth" });
   return div;
 }
 async function sendChat() {
   const text = $("chat-in").value.trim();
   if (!text) return;
-  $("chat-in").value = "";
+  $("chat-in").value = ""; autosize();
   const optsRaw = $("chat-opts").value.trim();
   const options = optsRaw ? optsRaw.split(",").map(s => s.trim()).filter(Boolean) : null;
-  addMsg("user", text, null, text);
+  addMsg("user", text, text);
   if ($("auto-mem").checked) {
-    try { await api("/api/memories", { method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }) }); loadStatus(); } catch (e) {}
+    try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text }) }); loadStatus(); }
+    catch (e) { toast("자동 저장 실패: " + e.message, "bad"); }
   }
-  const waiting = addMsg("bot", "생각 중...", null, null);
+  const wait = addMsg("bot", "");
+  wait.querySelector(".body").innerHTML = '<span class="typing"><b></b><b></b><b></b></span>';
+  $("chat-send").disabled = true;
   try {
-    const r = await api("/api/chat", { method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, options }) });
-    waiting.firstChild.textContent = r.text;
-    let meta = `모드 ${esc(r.mode)} · 의도 ${esc(r.decision.intent)}`;
-    if (r.citations && r.citations.length) meta += `<br><span class="cite">근거 ${r.citations.map(esc).join(", ")}</span>`;
-    waiting.querySelector(".meta")?.remove();
-    const m = document.createElement("div");
-    m.className = "meta"; m.innerHTML = meta;
-    waiting.appendChild(m);
+    const r = await api("/api/chat", { method: "POST", headers: JSONH, body: JSON.stringify({ message: text, options }) });
+    wait.querySelector(".body").textContent = r.text;
+    const bub = wait.querySelector(".bubble");
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.innerHTML = `<span class="pill ${r.mode === "local" ? "warn" : "good"}">${esc(r.mode)}</span><span class="pill">${esc(r.decision.intent)}</span>` +
+      cites(r.citations || []);
+    bub.appendChild(meta);
     const prop = r.proposal && r.proposal.intervention;
     if (prop && prop.level === 1 && prop.options_presented.length) {
-      const box = document.createElement("div");
-      box.className = "opt-btns";
+      const box = document.createElement("div"); box.className = "actions";
       prop.options_presented.forEach(o => {
-        const b = document.createElement("button");
-        b.className = "ghost"; b.textContent = o;
-        b.addEventListener("click", () => {
-          $("chat-in").value = `선택: ${o}`; sendChat();
-        });
+        const b = document.createElement("button"); b.className = "btn ghost sm"; b.textContent = o;
+        b.addEventListener("click", () => { $("chat-in").value = `선택: ${o}`; sendChat(); });
         box.appendChild(b);
       });
-      waiting.appendChild(box);
+      bub.appendChild(box);
     }
-  } catch (e) { waiting.firstChild.textContent = "오류: " + e.message; }
-  loadStatus();
+  } catch (e) { wait.querySelector(".body").textContent = "오류: " + e.message; }
+  $("chat-send").disabled = false; loadStatus(); icons();
 }
+function autosize() { const t = $("chat-in"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
+$("chat-in").addEventListener("input", autosize);
+$("chat-in").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendChat(); } });
 $("chat-send").addEventListener("click", sendChat);
-$("chat-in").addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
-// 기억
+$("opts-toggle").addEventListener("click", () => { const on = $("opts-box").classList.toggle("on"); $("opts-toggle").classList.toggle("on", on); if (on) $("chat-opts").focus(); });
+
+/* 프로필 */
+const chipsOf = (items, key) => `<div class="chips">${items.map(e => `<span class="chip">${esc(e[key])}<i>${e.count}</i></span>`).join("")}</div>`;
+const groupsOf = (obj, key) => Object.keys(obj).length
+  ? Object.keys(obj).map(k => `<div class="kind">${esc(k)}</div>${chipsOf(obj[k], key)}`).join("") : '<span class="muted">아직 없습니다.</span>';
+async function loadProfile() {
+  const box = $("profile-body"); box.innerHTML = skel(3);
+  try {
+    const p = await api("/api/profile");
+    const w = p.writing.stats, wr = p.writing;
+    const meter = n => `<span class="meter">${[1, 2, 3, 4].map(i => `<b class="${i <= n ? "on" : ""}"></b>`).join("")}</span>`;
+    const tend = p.tendencies.length ? p.tendencies.map(t => `<div class="tend"><div class="st">${esc(t.statement)}</div>
+      <div class="mt">${meter(Math.min(t.supports, 4))}<span class="pill ${t.supports > 1 ? "good" : "warn"}">${esc(t.evidence_label)}</span>
+      <span class="muted">반례 ${t.contradicts}건 · ${esc(t.domain)}</span></div></div>`).join("") : '<span class="muted">아직 없습니다.</span>';
+    const endings = (w.endings || []).map(e => `<div class="bar"><span>${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio * 100)}%"></div></span><span>${e.count}문장</span></div>`).join("");
+    const styles = wr.styles.length ? `<div class="chips" style="margin-bottom:12px">${wr.styles.map(s => `<span class="chip">${esc(s.pattern)}<i>${esc(s.intent)}</i></span>`).join("")}</div>` : "";
+    const prefs = p.preferences.length ? `<div class="chips">${p.preferences.map(x => `<span class="chip">${esc(x.target)}<i>${x.direction === "+" ? "좋아함" : "싫어함"}</i></span>`).join("")}</div>` : '<span class="muted">아직 없습니다.</span>';
+    const crit = p.criteria.length ? p.criteria.map(x => `<div class="tend"><div class="st">${esc(x.statement)}</div><div class="muted">${esc(x.applies_to)}</div></div>`).join("") : '<span class="muted">아직 없습니다.</span>';
+    box.innerHTML = `<div class="pbanner"><i data-lucide="info"></i><div><b>기록 ${p.observations}건 · ${esc(day(p.period.from))} ~ ${esc(day(p.period.to))}</b>
+      기록이 적을수록 아래 내용은 후보에 가깝습니다. 근거가 한 건이면 후보로 표시합니다.</div></div>
+      <div class="stack">
+      <div class="card"><h3>기록에서 반복된 것</h3>${tend}</div>
+      <div class="grid2"><div class="card"><h3>자주 등장하는 대상</h3>${groupsOf(p.entities, "name")}</div>
+      <div class="card"><h3>그럴 때의 상황</h3>${groupsOf(p.situations, "value")}</div></div>
+      <div class="grid2"><div class="card"><h3>선호</h3>${prefs}</div><div class="card"><h3>판단 기준</h3>${crit}</div></div>
+      <div class="card"><h3>글 스타일</h3>${styles}
+      ${w.sentences ? `<div class="muted" style="margin-bottom:8px">문장 ${w.sentences}개 · 평균 ${w.avg_sentence_chars}자 · 가장 긴 문장 ${w.longest_sentence_chars}자</div>${endings}` : ""}
+      <div class="muted" style="margin-top:10px">기록 ${w.observations}건에서 센 값입니다. 글쓰기 도움에 쓰려면 내가 쓴 글을 더 넣어야 합니다.</div></div></div>`;
+  } catch (e) { box.innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+  icons();
+}
+
+/* 시나리오 */
+let SCEN = [], scenCur = null;
+const SC_ICON = { doc_draft: "file-pen-line", music_recommend: "music", day_plan: "calendar-days", choice_help: "git-compare" };
+async function loadScen() {
+  if (!SCEN.length) { try { SCEN = (await api("/api/scenarios")).scenarios; } catch (e) { $("scen-pick").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); return; } }
+  $("scen-pick").innerHTML = SCEN.map(s => `<button class="sc${scenCur === s.id ? " on" : ""}" data-sc="${s.id}"><span class="ic"><i data-lucide="${SC_ICON[s.id] || "sparkles"}"></i></span><b>${esc(s.name)}</b><span>${esc(s.summary)}</span></button>`).join("");
+  $("scen-pick").querySelectorAll(".sc").forEach(b => b.addEventListener("click", () => { scenCur = b.dataset.sc; $("scen-out").innerHTML = ""; loadScen(); }));
+  const s = SCEN.find(x => x.id === scenCur);
+  $("scen-form").innerHTML = s ? `<div class="card">${s.fields.map(f => {
+    const id = `sc-${f.key}`;
+    const ctl = f.kind === "select" ? `<select id="${id}">${f.options.map(o => `<option>${esc(o)}</option>`).join("")}</select>`
+      : f.kind === "textarea" ? `<textarea id="${id}" rows="3" placeholder="${esc(f.placeholder)}"></textarea>`
+      : `<input id="${id}" type="text" placeholder="${esc(f.placeholder)}">`;
+    return `<div class="field"><label for="${id}">${esc(f.label)}${f.required ? ' <span style="color:var(--bad)">*</span>' : ""}</label>${ctl}</div>`;
+  }).join("")}<button class="btn primary" id="sc-run"><i data-lucide="wand-sparkles"></i>실행</button></div>`
+    : empty("sparkles", "시나리오를 골라주세요", "위에서 하고 싶은 일을 누르면 입력 칸이 나옵니다.");
+  if (s) $("sc-run").addEventListener("click", () => runScen(s));
+  icons();
+}
+async function runScen(s) {
+  const inputs = {}; s.fields.forEach(f => { inputs[f.key] = $("sc-" + f.key).value; });
+  $("sc-run").disabled = true; $("scen-out").innerHTML = '<div class="card" style="margin-top:12px"><span class="typing"><b></b><b></b><b></b></span> <span class="muted">내 기록을 읽고 만드는 중입니다</span></div>';
+  try {
+    const r = await api(`/api/scenarios/${s.id}/run`, { method: "POST", headers: JSONH, body: JSON.stringify({ inputs }) });
+    $("scen-out").innerHTML = `<div class="card" style="margin-top:12px"><div class="result">${esc(r.text)}</div>
+      <div class="result-meta"><span class="pill ${r.mode === "local" ? "warn" : "good"}">${esc(r.mode)}</span>
+      ${cites(r.citations)}</div>
+      ${r.note ? `<div class="muted" style="margin-top:8px">${esc(r.note)}</div>` : ""}</div>`;
+  } catch (e) { $("scen-out").innerHTML = `<div class="card" style="margin-top:12px">${empty("circle-alert", "실행하지 못했습니다", e.message)}</div>`; }
+  $("sc-run").disabled = false; icons();
+}
+
+/* 기억 */
 async function loadMems(q) {
-  const data = await api("/api/memories?q=" + encodeURIComponent(q || ""));
-  const list = $("mem-list");
-  list.innerHTML = "";
-  data.items.forEach(o => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `<p>${esc(o.text)}</p>
-      <span class="badge">${esc(o.id)}</span><span class="badge">${esc(o.occurred_at || "")}</span>` +
-      (o.score !== undefined ? `<span class="badge">점수 ${o.score}</span>` : "");
-    const del = document.createElement("button");
-    del.className = "ghost"; del.textContent = "삭제"; del.style.marginLeft = "8px";
-    del.addEventListener("click", async () => {
-      if (!confirm("이 기억을 삭제할까요?")) return;
-      await api("/api/memories/" + o.id, { method: "DELETE" });
-      loadMems($("mem-q").value); loadStatus();
+  const list = $("mem-list"); list.innerHTML = skel(3);
+  try {
+    const data = await api("/api/memories?q=" + encodeURIComponent(q || ""));
+    if (!data.items.length) { list.innerHTML = `<div class="card">${empty("library", q ? "검색 결과가 없습니다" : "아직 기억이 없습니다", q ? "다른 말로 검색해보세요." : "위에서 첫 기억을 추가해보세요.")}</div>`; icons(); return; }
+    list.innerHTML = "";
+    data.items.forEach(o => {
+      const div = document.createElement("div"); div.className = "item";
+      div.innerHTML = `<div class="top"><div class="txt">${esc(o.text)}</div></div>
+        <div class="foot"><span class="pill"><i data-lucide="calendar" style="width:12px;height:12px"></i>${esc(day(o.occurred_at) || "-")}</span><span class="id">${esc(o.id)}</span>
+        ${o.score !== undefined ? `<span class="pill accent">관련도 ${o.score}</span>` : ""}</div>`;
+      const del = document.createElement("button"); del.className = "btn ghost icon danger sm"; del.setAttribute("aria-label", "삭제");
+      del.innerHTML = '<i data-lucide="trash-2"></i>';
+      del.addEventListener("click", async () => {
+        if (!confirm("이 기억을 삭제할까요? 여기서 나온 이해도 함께 정리됩니다.")) return;
+        try { await api("/api/memories/" + o.id, { method: "DELETE" }); toast("삭제했습니다"); loadMems($("mem-q").value); loadStatus(); }
+        catch (e) { toast("삭제하지 못했습니다: " + e.message, "bad"); }
+      });
+      div.querySelector(".top").appendChild(del); list.appendChild(div);
     });
-    div.appendChild(del);
-    list.appendChild(div);
-  });
+  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "불러오지 못했습니다", e.message)}</div>`; }
+  icons();
 }
 $("mem-search").addEventListener("click", () => loadMems($("mem-q").value));
+$("mem-q").addEventListener("keydown", e => { if (e.key === "Enter") loadMems($("mem-q").value); });
 $("mem-add-btn").addEventListener("click", async () => {
-  const t = $("mem-add").value.trim();
-  if (!t) return;
-  $("mem-add").value = "";
-  await api("/api/memories", { method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: t }) });
-  loadMems(); loadStatus();
+  const t = $("mem-add").value.trim(); if (!t) return;
+  const b = $("mem-add-btn"); b.disabled = true; b.textContent = "읽는 중...";
+  try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: t }) });
+    $("mem-add").value = ""; toast("기억을 추가했습니다"); loadMems(); loadStatus();
+  } catch (e) { toast("추가하지 못했습니다: " + e.message, "bad"); }
+  b.disabled = false; b.innerHTML = '<i data-lucide="plus"></i>기억 추가'; icons();
 });
-// 그래프
-let cyLoaded = false;
+
+/* 그래프 */
+const KCOL = { Observation: "#6bb3e0", Entity: "#e3b341", Context: "#a78bdb", Preference: "#4cc38a", Criterion: "#ee8a8a", Hypothesis: "#f09a55", Style: "#9aa8a6", Correction: "#e06666" };
+const KKO = { Observation: "기억", Entity: "대상", Context: "상황", Preference: "선호", Criterion: "기준", Hypothesis: "가설", Style: "문체", Correction: "정정" };
+let cy = null;
 async function loadGraph() {
-  if (cyLoaded) return;
-  const data = await api("/api/graph");
-  if (typeof cytoscape === "undefined") {
-    $("cy-note").innerHTML = '<span class="offline">그래프 라이브러리(CDN)를 불러오지 못했습니다.</span>';
-    return;
-  }
-  const colors = { Observation: "#bae6fd", Entity: "#fde68a", Context: "#ddd6fe",
-    Preference: "#a7f3d0", Criterion: "#fecaca", Hypothesis: "#fed7aa",
-    Style: "#e7e5e4", Correction: "#fca5a5" };
-  cytoscape({ container: $("cy"),
-    elements: [
-      ...data.nodes.map(n => ({ data: { id: n.id, label: `${n.kind}\n${n.label}`,
-        color: colors[n.kind] || "#e7e5e4" } })),
-      ...data.edges.map((e, i) => ({ data: { id: "e" + i, source: e.source,
-        target: e.target, label: e.rel === "RELATED_TO" ? (e.phrase || e.rel) : e.rel } })),
-    ],
+  if (cy) { cy.resize(); return; }
+  $("legend").innerHTML = Object.keys(KCOL).filter(k => k !== "Correction").map(k => `<span><b style="background:${KCOL[k]}"></b>${KKO[k]}</span>`).join("");
+  if (typeof cytoscape === "undefined") { $("cy-note").innerHTML = empty("wifi-off", "그래프 라이브러리를 불러오지 못했습니다", "인터넷 연결을 확인해주세요."); icons(); return; }
+  let data; try { data = await api("/api/graph"); } catch (e) { $("cy-note").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); icons(); return; }
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const txt = dark ? "#dbe9e7" : "#1b2c2b", edge = dark ? "#3a5250" : "#c3d0ce";
+  const short = s => (s.length > 14 ? s.slice(0, 14) + "…" : s);
+  cy = cytoscape({ container: $("cy"),
+    elements: [...data.nodes.map(n => ({ data: { id: n.id, kind: n.kind, full: n.label, label: short(n.label), color: KCOL[n.kind] || "#9aa8a6" } })),
+      ...data.edges.map((e, i) => ({ data: { id: "e" + i, source: e.source, target: e.target, label: e.rel === "RELATED_TO" ? (e.phrase || e.rel) : e.rel } }))],
     style: [
-      { selector: "node", style: { "background-color": "data(color)", "label": "data(label)",
-        "font-size": 9, "text-wrap": "wrap", "text-max-width": 120,
-        "text-valign": "center", "text-halign": "center" } },
-      { selector: "edge", style: { "line-color": "#a8a29e", "target-arrow-color": "#a8a29e",
-        "target-arrow-shape": "triangle", "label": "data(label)", "font-size": 8,
-        "curve-style": "bezier" } },
+      { selector: "node", style: { "background-color": "data(color)", label: "data(label)", "font-size": 12, "min-zoomed-font-size": 7, "font-family": "Pretendard Variable, sans-serif", color: txt,
+        "text-valign": "bottom", "text-margin-y": 6, width: 22, height: 22, "border-width": 2, "border-color": dark ? "#111d1c" : "#fff", "text-outline-width": 3, "text-outline-color": dark ? "#0b1413" : "#f1f5f4" } },
+      { selector: 'node[kind = "Hypothesis"]', style: { width: 30, height: 30, shape: "round-rectangle" } },
+      { selector: 'node[kind = "Observation"]', style: { width: 14, height: 14, label: "" } },
+      { selector: "edge", style: { width: 1.3, "line-color": edge, "target-arrow-color": edge, "target-arrow-shape": "triangle", "arrow-scale": .8, "curve-style": "bezier", "font-size": 9, color: txt, "text-background-color": dark ? "#111d1c" : "#fff", "text-background-opacity": .9, "text-background-padding": 2 } },
+      { selector: ".dim", style: { opacity: .12 } },
+      { selector: "edge.hi", style: { label: "data(label)", "line-color": "#0f766e", "target-arrow-color": "#0f766e", width: 2, opacity: 1 } },
+      { selector: "node.hi", style: { opacity: 1 } },
+      { selector: "node.sel", style: { "border-color": "#0f766e", "border-width": 4 } },
     ],
-    layout: { name: "cose", animate: false } });
-  cyLoaded = true;
+    layout: { name: "cose", animate: false, nodeRepulsion: 4200, idealEdgeLength: 55, gravity: 1.4, componentSpacing: 30, numIter: 1500, padding: 24 }, wheelSensitivity: .25 });
+  cy.on("tap", "node", ev => {
+    const n = ev.target, nb = n.closedNeighborhood();
+    cy.elements().addClass("dim").removeClass("hi sel"); nb.removeClass("dim").addClass("hi"); n.addClass("sel");
+    const rel = n.connectedEdges().map(e => { const o = e.source().id() === n.id() ? e.target() : e.source(); return `<span class="chip">${esc(e.data("label"))} · ${esc(KKO[o.data("kind")] || "")} ${esc(short(o.data("full")))}</span>`; });
+    $("cy-note").innerHTML = `<span class="pill accent">${esc(KKO[n.data("kind")] || n.data("kind"))}</span> <span class="id">${esc(n.id())}</span>
+      <div style="margin:8px 0 10px">${esc(n.data("full"))}</div><div class="chips">${rel.join("") || '<span class="muted">연결 없음</span>'}</div>`;
+  });
+  cy.on("tap", ev => { if (ev.target === cy) { cy.elements().removeClass("dim hi sel"); $("cy-note").innerHTML = '<span class="muted">노드를 누르면 연결된 관계와 내용이 보입니다.</span>'; } });
 }
-// 가설
+
+/* 가설 */
 async function loadHyps() {
-  const data = await api("/api/hypotheses");
-  const list = $("hyp-list");
-  list.innerHTML = "";
-  data.hypotheses.forEach(h => {
-    const div = document.createElement("div");
-    div.className = "card";
-    let html = `<h3>${esc(h.statement)}</h3>
-      <span class="badge">${esc(h.id)}</span><span class="badge">${esc(h.status)}</span>
-      <span class="badge">${esc(h.use_policy)}</span><span class="badge">${esc(h.domain || "-")}</span>
-      <p class="sup">근거 ${h.supports.length}건</p>`;
-    h.supports.forEach(s => { html += `<p class="ev sup">+ ${esc((s.occurred_at || "").slice(0, 10))} ${esc(s.text)}</p>`; });
-    html += `<p class="con">반례 ${h.contradicts.length}건</p>`;
-    h.contradicts.forEach(s => { html += `<p class="ev con">− ${esc((s.occurred_at || "").slice(0, 10))} ${esc(s.text)}</p>`; });
-    div.innerHTML = html;
-    ["맞음", "아님", "쓰지 마"].forEach(v => {
-      const b = document.createElement("button");
-      b.className = "ghost"; b.textContent = v; b.style.marginRight = "6px";
-      b.addEventListener("click", async () => {
-        await api(`/api/hypotheses/${h.id}/feedback`, { method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ verdict: v }) });
-        loadHyps(); loadStatus();
+  const list = $("hyp-list"); list.innerHTML = skel(3);
+  try {
+    const data = await api("/api/hypotheses");
+    if (!data.hypotheses.length) { list.innerHTML = `<div class="card">${empty("lightbulb", "아직 가설이 없습니다", "기록이 쌓이면 반복된 것이 가설로 올라옵니다.")}</div>`; icons(); return; }
+    list.innerHTML = "";
+    const tone = { active: ["good", "승격"], candidate: ["warn", "후보"], suspended: ["", "보류"] };
+    data.hypotheses.forEach(h => {
+      const t = tone[h.status] || ["", h.status];
+      const div = document.createElement("div"); div.className = "item";
+      div.innerHTML = `<div class="top"><div class="txt" style="font-weight:600">${esc(h.statement)}</div><span class="pill ${t[0]}">${esc(t[1])}</span></div>
+        <div class="foot"><span class="pill accent">근거 ${h.supports.length}</span><span class="pill ${h.contradicts.length ? "bad" : ""}">반례 ${h.contradicts.length}</span>
+        <span class="pill">${esc(h.domain || "-")}</span><span class="id">${esc(h.id)}</span></div>
+        <div>${h.supports.map(s => `<div class="ev sup"><i data-lucide="plus-circle"></i><div><small>${esc(day(s.occurred_at))}</small>${esc(s.text)}</div></div>`).join("")}
+        ${h.contradicts.map(s => `<div class="ev con"><i data-lucide="minus-circle"></i><div><small>${esc(day(s.occurred_at))}</small>${esc(s.text)}</div></div>`).join("")}</div>`;
+      const seg = document.createElement("div"); seg.className = "seg"; seg.style.alignSelf = "flex-start";
+      [["맞음", "ok"], ["아님", "no"], ["쓰지 마", "stop"]].forEach(([v, c]) => {
+        const b = document.createElement("button"); b.className = c; b.textContent = v;
+        b.addEventListener("click", async () => {
+          try { await api(`/api/hypotheses/${h.id}/feedback`, { method: "POST", headers: JSONH, body: JSON.stringify({ verdict: v }) });
+            toast(`"${v}"로 반영했습니다`); loadHyps(); loadStatus(); } catch (e) { toast("반영하지 못했습니다: " + e.message, "bad"); }
+        });
+        seg.appendChild(b);
       });
-      div.appendChild(b);
+      div.appendChild(seg); list.appendChild(div);
     });
-    list.appendChild(div);
-  });
+  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "불러오지 못했습니다", e.message)}</div>`; }
+  icons();
 }
-// 관계
+
+/* 관계 */
 async function loadRels() {
-  const data = await api("/api/relations");
   const box = $("rel-list");
-  if (!data.vocabulary.length) { box.textContent = "아직 관계가 없습니다."; return; }
-  let html = `<table class="vocab"><tr><th>서술</th><th>횟수</th><th>예시</th></tr>`;
-  data.vocabulary.forEach(v => {
-    const ex0 = v.examples[0] || {};
-    html += `<tr><td>${esc(v.phrase)}</td><td>${v.count}</td>` +
-      `<td style="font-size:12px">${esc(ex0.from || "")} → ${esc(ex0.to || "")}</td></tr>`;
+  try {
+    const data = await api("/api/relations");
+    if (!data.vocabulary.length) { box.innerHTML = empty("link-2", "아직 관계가 없습니다", "기록에서 대상 사이의 관계가 뽑히면 여기에 쌓입니다."); icons(); return; }
+    box.innerHTML = `<div class="tw"><table class="tbl"><tr><th>서술</th><th>횟수</th><th>예시</th></tr>${data.vocabulary.map(v => { const x = v.examples[0] || {};
+      return `<tr><td>${esc(v.phrase)}</td><td class="n">${v.count}</td><td class="muted">${esc(x.from || "")} → ${esc(x.to || "")}</td></tr>`; }).join("")}</table></div>`;
+  } catch (e) { box.innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+  icons();
+}
+
+/* 리포트 */
+function renderMd(md) {
+  const lines = (md || "").split("\n"); let html = "";
+  lines.forEach(l => {
+    if (!l.trim()) return;
+    if (l.startsWith("# ")) return;
+    if (l.startsWith("## ")) html += `<h3>${esc(l.slice(3))}</h3>`;
+    else if (l.startsWith("- ")) {
+      const m = l.slice(2).match(/^\[(\w+)\]\s*(.*?)(?:\s*\((근거[^)]*)\))?$/);
+      html += m ? `<div class="li"><span class="pill ${m[1] === "active" ? "good" : "warn"}">${esc(m[1])}</span><span>${esc(m[2])}</span><small>${esc(m[3] || "")}</small></div>` : `<div class="li">${esc(l.slice(2))}</div>`;
+    } else if (/^\d{4}-\d\d-\d\d/.test(l)) html += `<div class="range">${esc(l)}</div>`;
+    else html += `<div class="muted" style="margin-top:12px">${esc(l)}</div>`;
   });
-  box.innerHTML = html + "</table>";
+  return html || empty("clipboard-check", "이번 주 변화가 없습니다", "");
 }
-// 리포트
 async function loadReport() {
-  const data = await api("/api/report");
-  $("report-body").textContent = data.markdown || "(없음)";
+  $("report-body").innerHTML = skel(1);
+  try { $("report-body").innerHTML = renderMd((await api("/api/report")).markdown); } catch (e) { $("report-body").innerHTML = empty("wifi-off", "불러오지 못했습니다", e.message); }
+  icons();
 }
-$("m-nightly").addEventListener("click", async () => {
-  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
-    { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job: "nightly" }) }));
-  loadStatus();
-});
-$("m-weekly").addEventListener("click", async () => {
-  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
-    { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job: "weekly" }) }));
-  loadStatus();
-});
-$("m-promote").addEventListener("click", async () => {
-  $("m-out").textContent = JSON.stringify(await api("/api/maintain",
-    { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job: "promote" }) }));
-  loadStatus();
-});
-loadStatus();
+[["m-nightly", "nightly", "야간 통합"], ["m-weekly", "weekly", "주간 점검"], ["m-promote", "promote", "승격"]].forEach(([id, job, name]) =>
+  $(id).addEventListener("click", async () => {
+    try { const r = await api("/api/maintain", { method: "POST", headers: JSONH, body: JSON.stringify({ job }) });
+      $("m-out").textContent = JSON.stringify(r, null, 1); toast(name + "을 실행했습니다"); loadStatus(); loadReport();
+    } catch (e) { toast(name + " 실패: " + e.message, "bad"); }
+  }));
+
+hello(); loadStatus(); icons();
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (PAGES[h]) showTab(h); });
+const start = (location.hash || "").slice(1); if (PAGES[start]) showTab(start); else showTab("chat");
 </script>
 </body>
 </html>

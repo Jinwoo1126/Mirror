@@ -76,10 +76,11 @@ def _canon_key(key: str, classes: dict[str, str]) -> str:
     return key
 
 
-def to_scope(triples: list[tuple], classes: dict[str, str]) -> list[tuple]:
+def to_scope(triples: list[tuple], classes: dict[str, str],
+             rels: tuple = SCOPED_RELS) -> list[tuple]:
     out = []
     for rel, fk, fkey, tk, tkey in triples:
-        if rel in SCOPED_RELS:
+        if rel in rels:
             out.append((rel, fk, _canon_key(fkey, classes),
                         tk, _canon_key(tkey, classes)))
     return out
@@ -148,29 +149,42 @@ def score_scene(gold: list[tuple], pred: list[tuple]) -> dict:
 
 
 def score_file(path: str, extractor: ex.Extractor,
-               scoped: bool = False) -> dict:
+               scoped: bool = False, rels: tuple | None = None,
+               workers: int = 1) -> dict:
+    """rels를 주면 그 관계만 채점한다(예: 엔티티·맥락만 보는 ("OBSERVED_IN",)).
+    workers > 1이면 장면별 추출을 병렬로 돌린다(LLM 추출기용)."""
+    scoped = scoped or rels is not None
+    rels = rels or SCOPED_RELS
     classes = load_classes() if scoped else {}
+    with open(path, encoding="utf-8") as f:
+        records = [json.loads(l) for l in f if l.strip()]
+
+    def _extract(record):
+        obs_in = ex.ObservationInput(
+            source_id=record.get("source_id", ""), text=record.get("text", ""),
+            occurred_at=record.get("occurred_at", "unknown"))
+        try:
+            return obs_in, extractor.extract(obs_in), None
+        except (ex.ExtractionError, ex.NotConfigured) as e:
+            return obs_in, None, e
+
+    if workers > 1:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            extracted = list(pool.map(_extract, records))
+    else:
+        extracted = [_extract(r) for r in records]
     scenes = []
     totals = {"gold": 0, "predicted": 0, "exact": 0, "partial": 0,
               "missing": 0, "spurious": 0, "extract_failed": 0,
               "unscored_pred": 0}
     error_types: dict[str, int] = {}
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            record = json.loads(line)
-            obs_in = ex.ObservationInput(
-                source_id=record.get("source_id", ""),
-                text=record.get("text", ""),
-                occurred_at=record.get("occurred_at", "unknown"))
-            try:
-                result = extractor.extract(obs_in)
-            except (ex.ExtractionError, ex.NotConfigured) as e:
+    if True:
+        for record, (obs_in, result, err) in zip(records, extracted):
+            if err is not None:
                 totals["extract_failed"] += 1
                 scenes.append({"source_id": obs_in.source_id,
-                               "error": str(e)})
+                               "error": str(err)})
                 continue
             errors = ex.validate_extraction(result)
             if errors:
@@ -181,8 +195,9 @@ def score_file(path: str, extractor: ex.Extractor,
             gold_t, pred_t = gold_triples(record), triples_of(result)
             unscored = 0
             if scoped:
-                unscored = len(pred_t) - len(to_scope(pred_t, classes))
-                gold_t, pred_t = to_scope(gold_t, classes), to_scope(pred_t, classes)
+                unscored = len(pred_t) - len(to_scope(pred_t, classes, rels))
+                gold_t = to_scope(gold_t, classes, rels)
+                pred_t = to_scope(pred_t, classes, rels)
             scene = score_scene(gold_t, pred_t)
             scene["unscored_pred"] = unscored
             scene["source_id"] = obs_in.source_id
@@ -236,8 +251,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--protocol", action="store_true",
                         help="dev/tune/heldout 세트를 strict·scoped로 채점")
     parser.add_argument("--scoped", action="store_true")
-    parser.add_argument("--extractor", default="mock",
-                        choices=["mock", "spark", "Muse", "ollama"])
+    parser.add_argument("--extractor", default="spark",
+                        choices=["spark", "Muse", "ollama"])
     parser.add_argument("--model", default="")
     args = parser.parse_args(argv)
     kwargs = {"model": args.model} if args.model else {}

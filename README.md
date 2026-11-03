@@ -16,7 +16,7 @@ personal.ai식 채팅 우선 로컬 웹앱).
 ```
 mirror/
   schema.py store.py          온톨로지 스키마 + Kuzu 이중 시간 저장소
-  llm.py extract.py           LLM 호출 헬퍼 + 추출기(mock/spark/Muse/ollama)
+  llm.py extract.py           LLM 호출 헬퍼 + 추출기(spark/Muse/ollama)
   observe.py control.py       관찰 수집 + 조회·정정·중지·삭제·재허용
   retrieve.py                 관련 이해 조회 (+options decision 모드)
   hypotheses.py               승격·주간 점검·야간 통합
@@ -40,6 +40,9 @@ tests/                           pytest 커밋 테스트 (단위+통합)
 > 같은 형식의 JSONL을 직접 만들어 쓰면 된다. 채점 형식은 `eval/GUIDELINE.md`,
 > 측정 기록은 `eval/RESULTS.md` 참조.
 
+> 추출은 LLM 추출기만 쓴다. 규칙 기반 `MockExtractor`는 테스트 전용이고, LLM을 못 쓰면
+> 규칙으로 대신하지 않고 실패를 알린다. spark는 `muse` 로그인 또는 `META_API_KEY`가 필요하다.
+
 ## 설치
 
 ```sh
@@ -62,7 +65,7 @@ python -m mirror.ingest data/sample_observations.jsonl --db data/local/mirror.ku
 python -m mirror.ingest data/sample_observations.jsonl --dry-run
 
 # 2. 추출 정밀도 채점 (정답셋 기준, 건수 그대로 보고)
-python -m mirror.eval_precision eval/gold_observations.jsonl --extractor mock
+python -m mirror.eval_precision eval/gold_observations.jsonl --extractor spark
 
 # 3. MCP 서버 (Claude 등 호스트에 연결)
 MIRROR_DB=data/local/mirror.kuzu python -m mirror.server
@@ -97,7 +100,7 @@ python -m mirror.app
   저장', 자동 토글 지원). 생성 답변은 spark → Claude → ollama 순으로
   자동 감지하고, 없으면 검색 기반 로컬 답변 + 근거 인용으로 답한다.
 
-주요 환경 변수: `MIRROR_DB`, `MIRROR_EXTRACTOR`(mock/spark/Muse/ollama),
+주요 환경 변수: `MIRROR_DB`, `MIRROR_EXTRACTOR`(spark/Muse/ollama, 기본 spark),
 `MIRROR_ROUTER`(mock/llm), `MIRROR_NO_INDEX=1`(레거시 검색),
 `MIRROR_MODEL_DIR`, `ANTHROPIC_API_KEY`.
 
@@ -110,7 +113,7 @@ MCP 클라이언트 설정 예 (Claude Code):
       "command": "/path/to/mirror/.venv/bin/python",
       "args": ["-m", "mirror.server"],
       "cwd": "/path/to/mirror",
-      "env": {"MIRROR_DB": "data/local/mirror.kuzu", "MIRROR_EXTRACTOR": "mock"}
+      "env": {"MIRROR_DB": "data/local/mirror.kuzu", "MIRROR_EXTRACTOR": "spark", "META_API_KEY": "..."}
     }
   }
 }
