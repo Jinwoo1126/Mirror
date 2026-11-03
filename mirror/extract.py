@@ -71,11 +71,11 @@ Output JSON only, no prose. Shape:
 
 The top-level "kind" of a node is ALWAYS one of: Entity, Context, Preference,
 Criterion, Hypothesis, Style. The Korean sub-kinds (사람, 장소, 시간대, 상태 ...)
-go inside "attrs" as attrs.kind. Example for "아침에 카페에서 커피를 마셨다":
+go inside "attrs" as attrs.kind. Example for "I had coffee at a cafe in the morning":
 {"nodes": [{"kind": "Entity", "ref": "ent-0",
-            "attrs": {"kind": "장소", "name": "카페", "aliases": []}},
+            "attrs": {"kind": "장소", "name": "cafe", "aliases": []}},
            {"kind": "Context", "ref": "ctx-0",
-            "attrs": {"kind": "시간대", "value": "아침"}}],
+            "attrs": {"kind": "시간대", "value": "morning"}}],
  "edges": [{"rel": "OBSERVED_IN", "from_ref": "ent-0", "to_ref": "obs",
             "evidence_ref": "obs"},
            {"rel": "OBSERVED_IN", "from_ref": "ctx-0", "to_ref": "obs",
@@ -95,8 +95,8 @@ Edge rel values: OBSERVED_IN, SUPPORTS, CONTRADICTS, CONDITIONED_ON,
 ALTERNATIVE_TO, DERIVED_FROM, RELATED_TO.
 
 Dynamic relations (MiroFish-style entity triples) use rel RELATED_TO with a
-short Korean phrase, e.g. {"rel": "RELATED_TO", "from_ref": "ent-1",
-"to_ref": "ent-0", "evidence_ref": "obs", "phrase": "좋아한다"}.
+short verb phrase in the scene's language, e.g. {"rel": "RELATED_TO", "from_ref": "ent-1",
+"to_ref": "ent-0", "evidence_ref": "obs", "phrase": "likes"}.
 RELATED_TO connects Entity -> Entity or Entity -> Context only.
 
 Rules:
@@ -112,7 +112,10 @@ Rules:
 7. Do not invent people, places, or events not present in the scene.
 8. Prefer fewer, well-supported nodes over many speculative ones.
 9. RELATED_TO phrases must be short verb phrases grounded in the scene
-   (e.g. "단골이다", "아침에 이용한다"). No phrase without textual basis.
+   (e.g. "is a regular", "visits in the morning"). No phrase without textual basis.
+10. LANGUAGE: write every free-text value (names, Context values, hypothesis
+    statements, Style patterns, phrases) in the same language as the scene. Keep the
+    kind and domain values exactly as listed above; they are fixed labels.
 """
 
 
@@ -130,8 +133,9 @@ def build_user_prompt(obs: ObservationInput,
         f"observation_id: {obs.source_id}\noccurred_at: {obs.occurred_at}\n"
         f"scene: {obs.text}\n{known}"
         "Hypothesis statements must be short, general tendencies of the person "
-        "that other scenes could also support (e.g. \"피곤할 때는 익숙한 선택을 "
-        "한다\"), not a description of this one scene.\n"
+        "that other scenes could also support (e.g. \"When tired, picks the familiar "
+        "option\"), not a description of this one scene. Write it in the same "
+        "language as the scene.\n"
         'Extract nodes and edges as JSON. Remember: every edge needs "evidence_ref".'
     )
 
@@ -237,6 +241,9 @@ def parse_extraction_json(data: dict) -> ExtractionResult:
         attrs = n.get("attrs", {})
         if not isinstance(attrs, dict):
             raise ExtractionError(f"node {n.get('ref')}: attrs must be an object")
+        if str(n["kind"]) == schema.HYPOTHESIS and attrs.get("domain") in schema.SENSITIVE_DOMAINS:
+            # a model that picks a sensitive domain but forgets the policy gets the safe one
+            attrs = {**attrs, "use_policy": schema.POLICY_INTERNAL_ONLY}
         nodes.append(NodeSpec(kind=str(n["kind"]), ref=str(n["ref"]), attrs=attrs))
     for e in raw_edges:
         if not isinstance(e, dict) or not all(

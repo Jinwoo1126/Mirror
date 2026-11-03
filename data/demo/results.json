@@ -2,24 +2,24 @@
  "persona": "가상 인물 (data/demo/README.md)",
  "llm": {
   "counts": {
-   "Observation": 29,
-   "Entity": 36,
-   "Context": 21,
-   "Hypothesis": 9,
-   "Preference": 1,
-   "Style": 3,
+   "Observation": 49,
+   "Entity": 48,
+   "Context": 31,
+   "Hypothesis": 32,
+   "Preference": 4,
+   "Style": 1,
    "Criterion": 0
   },
   "growth": [
    {
     "n": 1,
-    "entities": 1,
+    "entities": 2,
     "contexts": 2,
     "hypotheses": 1
    },
    {
     "n": 2,
-    "entities": 3,
+    "entities": 4,
     "contexts": 3,
     "hypotheses": 2
    },
@@ -27,1119 +27,2050 @@
     "n": 3,
     "entities": 5,
     "contexts": 4,
-    "hypotheses": 2
+    "hypotheses": 3
    },
    {
     "n": 4,
     "entities": 7,
-    "contexts": 6,
-    "hypotheses": 2
+    "contexts": 5,
+    "hypotheses": 3
    },
    {
     "n": 5,
     "entities": 9,
-    "contexts": 9,
-    "hypotheses": 3
+    "contexts": 8,
+    "hypotheses": 4
    },
    {
     "n": 6,
     "entities": 11,
-    "contexts": 10,
-    "hypotheses": 4
+    "contexts": 9,
+    "hypotheses": 5
    },
    {
     "n": 7,
     "entities": 12,
-    "contexts": 11,
-    "hypotheses": 4
+    "contexts": 10,
+    "hypotheses": 6
    },
    {
     "n": 8,
     "entities": 14,
-    "contexts": 13,
-    "hypotheses": 5
+    "contexts": 11,
+    "hypotheses": 6
    },
    {
     "n": 9,
     "entities": 16,
-    "contexts": 14,
-    "hypotheses": 5
+    "contexts": 12,
+    "hypotheses": 7
    },
    {
     "n": 10,
     "entities": 17,
-    "contexts": 15,
-    "hypotheses": 6
+    "contexts": 14,
+    "hypotheses": 8
    },
    {
     "n": 11,
     "entities": 18,
     "contexts": 15,
-    "hypotheses": 6
+    "hypotheses": 9
    },
    {
     "n": 12,
     "entities": 19,
     "contexts": 15,
-    "hypotheses": 6
+    "hypotheses": 9
    },
    {
     "n": 13,
     "entities": 20,
-    "contexts": 16,
-    "hypotheses": 6
+    "contexts": 15,
+    "hypotheses": 10
    },
    {
     "n": 14,
     "entities": 21,
-    "contexts": 16,
-    "hypotheses": 6
+    "contexts": 15,
+    "hypotheses": 11
    },
    {
     "n": 15,
-    "entities": 22,
-    "contexts": 16,
-    "hypotheses": 6
+    "entities": 23,
+    "contexts": 15,
+    "hypotheses": 11
    },
    {
     "n": 16,
-    "entities": 23,
+    "entities": 25,
     "contexts": 17,
-    "hypotheses": 6
+    "hypotheses": 12
    },
    {
     "n": 17,
-    "entities": 23,
+    "entities": 26,
     "contexts": 18,
-    "hypotheses": 6
+    "hypotheses": 13
    },
    {
     "n": 18,
-    "entities": 25,
+    "entities": 27,
     "contexts": 19,
-    "hypotheses": 6
+    "hypotheses": 13
    },
    {
     "n": 19,
-    "entities": 26,
-    "contexts": 19,
-    "hypotheses": 7
+    "entities": 28,
+    "contexts": 20,
+    "hypotheses": 13
    },
    {
     "n": 20,
-    "entities": 27,
-    "contexts": 19,
-    "hypotheses": 8
+    "entities": 29,
+    "contexts": 21,
+    "hypotheses": 13
    },
    {
     "n": 21,
-    "entities": 29,
-    "contexts": 19,
-    "hypotheses": 8
+    "entities": 31,
+    "contexts": 21,
+    "hypotheses": 13
    },
    {
     "n": 22,
-    "entities": 30,
-    "contexts": 20,
-    "hypotheses": 8
+    "entities": 32,
+    "contexts": 22,
+    "hypotheses": 13
    },
    {
     "n": 23,
-    "entities": 31,
-    "contexts": 20,
-    "hypotheses": 8
+    "entities": 32,
+    "contexts": 23,
+    "hypotheses": 14
    },
    {
     "n": 24,
-    "entities": 32,
-    "contexts": 20,
-    "hypotheses": 8
+    "entities": 34,
+    "contexts": 24,
+    "hypotheses": 14
    },
    {
     "n": 25,
-    "entities": 33,
-    "contexts": 21,
-    "hypotheses": 9
+    "entities": 35,
+    "contexts": 26,
+    "hypotheses": 15
    },
    {
     "n": 26,
-    "entities": 34,
-    "contexts": 21,
-    "hypotheses": 9
+    "entities": 36,
+    "contexts": 27,
+    "hypotheses": 16
    },
    {
     "n": 27,
-    "entities": 35,
-    "contexts": 21,
-    "hypotheses": 9
+    "entities": 37,
+    "contexts": 27,
+    "hypotheses": 16
    },
    {
     "n": 28,
-    "entities": 35,
-    "contexts": 21,
-    "hypotheses": 9
+    "entities": 38,
+    "contexts": 27,
+    "hypotheses": 16
    },
    {
     "n": 29,
-    "entities": 36,
-    "contexts": 21,
-    "hypotheses": 9
+    "entities": 39,
+    "contexts": 28,
+    "hypotheses": 16
+   },
+   {
+    "n": 30,
+    "entities": 40,
+    "contexts": 28,
+    "hypotheses": 17
+   },
+   {
+    "n": 31,
+    "entities": 40,
+    "contexts": 28,
+    "hypotheses": 18
+   },
+   {
+    "n": 32,
+    "entities": 40,
+    "contexts": 29,
+    "hypotheses": 19
+   },
+   {
+    "n": 33,
+    "entities": 42,
+    "contexts": 29,
+    "hypotheses": 20
+   },
+   {
+    "n": 34,
+    "entities": 43,
+    "contexts": 29,
+    "hypotheses": 21
+   },
+   {
+    "n": 35,
+    "entities": 44,
+    "contexts": 29,
+    "hypotheses": 21
+   },
+   {
+    "n": 36,
+    "entities": 45,
+    "contexts": 29,
+    "hypotheses": 21
+   },
+   {
+    "n": 37,
+    "entities": 46,
+    "contexts": 29,
+    "hypotheses": 22
+   },
+   {
+    "n": 38,
+    "entities": 46,
+    "contexts": 30,
+    "hypotheses": 22
+   },
+   {
+    "n": 39,
+    "entities": 47,
+    "contexts": 30,
+    "hypotheses": 22
+   },
+   {
+    "n": 40,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 23
+   },
+   {
+    "n": 41,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 24
+   },
+   {
+    "n": 42,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 25
+   },
+   {
+    "n": 43,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 26
+   },
+   {
+    "n": 44,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 27
+   },
+   {
+    "n": 45,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 28
+   },
+   {
+    "n": 46,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 29
+   },
+   {
+    "n": 47,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 30
+   },
+   {
+    "n": 48,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 31
+   },
+   {
+    "n": 49,
+    "entities": 47,
+    "contexts": 31,
+    "hypotheses": 32
    }
   ],
   "observations": [
    {
-    "id": "obs-57607ac2",
+    "id": "obs-b7fca640",
     "source_id": "demo-01",
     "occurred_at": "2026-09-07T09:30:00+09:00",
-    "text": "주말 아침 개운하게 일어나서 블로그에 이번 주 DJ 선곡 과정을 정리했다. 항목을 번호로 나눠 쓰는 편이다.",
+    "text": "Sunday morning I woke up feeling fresh and wrote up this week's DJ set on my blog. I like to break the post into numbered items.",
     "entities": [
-     "블로그"
+     "blog",
+     "this week's DJ set"
     ],
     "contexts": [
-     "개운함",
-     "주말 아침"
+     "Sunday morning",
+     "feeling fresh"
     ],
     "hypotheses": [
-     "컨디션이 좋을 때 정리·기록을 한다"
+     "When feeling fresh, works on creative organizing tasks"
     ]
    },
    {
-    "id": "obs-cf300a8b",
+    "id": "obs-8fd38234",
     "source_id": "demo-02",
     "occurred_at": "2026-09-08T12:20:00+09:00",
-    "text": "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
+    "text": "For lunch I went to the burrito place across from the office and ordered my usual again.",
     "entities": [
-     "제육볶음",
-     "회사 앞 식당"
+     "burrito place across from the office",
+     "usual"
     ],
     "contexts": [
-     "점심"
+     "lunch"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When choosing food, picks the familiar option"
     ]
    },
    {
-    "id": "obs-151a5da3",
+    "id": "obs-80534725",
     "source_id": "demo-03",
     "occurred_at": "2026-09-08T22:30:00+09:00",
-    "text": "밤에 DJ 믹스를 작업했다. 반복이 강한 곡 위주로 이어 붙이니 흐름이 좋았다.",
+    "text": "Late tonight I worked on a DJ mix. Building it around heavily repetitive tracks made the flow feel right.",
     "entities": [
-     "DJ 믹스",
-     "반복이 강한 곡"
+     "DJ mix"
     ],
     "contexts": [
-     "밤"
+     "Late tonight"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When building a mix, prefers heavily repetitive tracks"
     ]
    },
    {
-    "id": "obs-f91db378",
+    "id": "obs-d00c7a96",
     "source_id": "demo-04",
     "occurred_at": "2026-09-09T19:40:00+09:00",
-    "text": "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
+    "text": "Stayed late at work and was wiped out, so I picked up the same chicken rice bowl from my regular shop that I always get.",
     "entities": [
-     "김밥",
-     "분식집"
+     "chicken rice bowl",
+     "my regular shop"
     ],
     "contexts": [
-     "야근으로 지침",
-     "저녁"
+     "wiped out after staying late at work"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When choosing food, picks the familiar option"
     ]
    },
    {
-    "id": "obs-66d546e1",
+    "id": "obs-159537ea",
     "source_id": "demo-05",
     "occurred_at": "2026-09-10T08:50:00+09:00",
-    "text": "비 오는 아침 카페에서 새로 나온 메뉴를 시켜 봤다. 조용한 자리라 집중이 잘 됐다.",
+    "text": "On a rainy morning I tried the new seasonal drink at a cafe. The quiet corner seat made it easy to focus.",
     "entities": [
-     "새로 나온 메뉴",
-     "카페"
+     "cafe",
+     "new seasonal drink"
     ],
     "contexts": [
-     "비",
-     "아침",
-     "조용함"
+     "morning",
+     "quiet",
+     "rainy"
     ],
     "hypotheses": [
-     "조용한 환경에서 집중이 잘 된다"
+     "When needing focus, chooses a quiet seat"
     ]
    },
    {
-    "id": "obs-ae5ff584",
+    "id": "obs-0853bc2a",
     "source_id": "demo-06",
     "occurred_at": "2026-09-10T15:00:00+09:00",
-    "text": "팀장님이 새 프로젝트를 맡아 보라고 했는데 일정이 빠듯해서 부담스러웠다.",
+    "text": "My manager asked me to take on a new project but the schedule looked too tight and it made me anxious.",
     "entities": [
-     "새 프로젝트",
-     "팀장님"
+     "manager",
+     "new project"
     ],
     "contexts": [
-     "일정이 빠듯해서 부담스러움"
+     "anxious"
     ],
     "hypotheses": [
-     "일정이 빠듯하면 부담을 느낀다"
+     "When schedule looks tight, feels anxious"
     ]
    },
    {
-    "id": "obs-398072d2",
+    "id": "obs-99e68225",
     "source_id": "demo-07",
     "occurred_at": "2026-09-11T21:10:00+09:00",
-    "text": "투두 앱에 내일 할 일 세 개만 적었다. 피곤한 날은 많이 적으면 손이 안 간다.",
+    "text": "I put only three items on tomorrow's to-do list. When I am tired a long list just makes me avoid it.",
     "entities": [
-     "투두 앱"
+     "tomorrow's to-do list"
     ],
     "contexts": [
-     "피곤한 날"
+     "tired"
     ],
     "hypotheses": [
-     "일정이 빠듯하면 부담을 느낀다"
+     "When tired, keeps to-do list short"
     ]
    },
    {
-    "id": "obs-ee2e4c46",
+    "id": "obs-584e62e2",
     "source_id": "demo-08",
     "occurred_at": "2026-09-12T20:00:00+09:00",
-    "text": "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
+    "text": "I went with my friend Jay to a ramen place neither of us had tried. Trying somewhere new was exciting.",
     "entities": [
-     "이자카야",
-     "친구 J"
+     "Jay",
+     "ramen place"
     ],
     "contexts": [
-     "설렘",
-     "처음 방문"
+     "with my friend Jay"
     ],
-    "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
-    ]
-   },
-   {
-    "id": "obs-d3ae998c",
-    "source_id": "demo-09",
-    "occurred_at": "2026-09-13T14:00:00+09:00",
-    "text": "주말에 도서관에서 업무 메모를 짧게 정리했다. 결론부터 쓰고 근거는 두 줄로 줄였다.",
-    "entities": [
-     "도서관",
-     "업무 메모"
-    ],
-    "contexts": [
-     "주말"
-    ],
-    "hypotheses": [
-     "컨디션이 좋을 때 정리·기록을 한다"
-    ]
-   },
-   {
-    "id": "obs-4c0977a2",
-    "source_id": "demo-10",
-    "occurred_at": "2026-09-13T23:20:00+09:00",
-    "text": "밤에 DJ 세트를 연습했다. 비 오는 날은 차분한 곡을 많이 고른다.",
-    "entities": [
-     "DJ 세트 연습"
-    ],
-    "contexts": [
-     "밤",
-     "비 오는 날"
-    ],
-    "hypotheses": [
-     "날씨에 따라 선택을 조절한다"
-    ]
-   },
-   {
-    "id": "obs-be8d2fc4",
-    "source_id": "demo-11",
-    "occurred_at": "2026-09-14T10:00:00+09:00",
-    "text": "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
-    "entities": [
-     "한강 공원"
-    ],
-    "contexts": [
-     "개운함",
-     "아침"
-    ],
-    "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
-    ]
-   },
-   {
-    "id": "obs-7db7c8d7",
-    "source_id": "demo-12",
-    "occurred_at": "2026-09-15T12:30:00+09:00",
-    "text": "점심에 평소 가는 식당에서 또 제육볶음을 먹었다.",
-    "entities": [
-     "제육볶음",
-     "평소 가는 식당"
-    ],
-    "contexts": [
-     "점심"
-    ],
-    "hypotheses": [
-     "익숙한 선택을 반복한다"
-    ]
-   },
-   {
-    "id": "obs-22a3b49b",
-    "source_id": "demo-13",
-    "occurred_at": "2026-09-16T21:30:00+09:00",
-    "text": "피곤했지만 새로 생긴 헬스장 체험권으로 한 번 가 봤다.",
-    "entities": [
-     "헬스장"
-    ],
-    "contexts": [
-     "피곤함"
-    ],
-    "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
-    ]
-   },
-   {
-    "id": "obs-08363827",
-    "source_id": "demo-14",
-    "occurred_at": "2026-09-18T22:00:00+09:00",
-    "text": "블로그 글 초안을 쓰다가 문장이 길어져서 두 문장으로 나눴다. 정보 정리 형태가 편하다.",
-    "entities": [
-     "블로그 글 초안"
-    ],
-    "contexts": [],
     "hypotheses": []
    },
    {
-    "id": "obs-da8f661a",
+    "id": "obs-1577938f",
+    "source_id": "demo-09",
+    "occurred_at": "2026-09-13T14:00:00+09:00",
+    "text": "On Saturday at the library I wrote a short work memo. I put the conclusion first and kept the reasoning to two lines.",
+    "entities": [
+     "library",
+     "short work memo"
+    ],
+    "contexts": [
+     "Saturday"
+    ],
+    "hypotheses": [
+     "When writing, puts the conclusion first"
+    ]
+   },
+   {
+    "id": "obs-f3ae0b35",
+    "source_id": "demo-10",
+    "occurred_at": "2026-09-13T23:20:00+09:00",
+    "text": "Practiced my DJ set tonight. When it rains I pick calmer tracks.",
+    "entities": [
+     "calmer tracks"
+    ],
+    "contexts": [
+     "rains",
+     "tonight"
+    ],
+    "hypotheses": [
+     "When it rains, picks calmer tracks"
+    ]
+   },
+   {
+    "id": "obs-cff768db",
+    "source_id": "demo-11",
+    "occurred_at": "2026-09-14T10:00:00+09:00",
+    "text": "Felt fresh this morning, so I ran in the park. It was my first ever 10 km.",
+    "entities": [
+     "park"
+    ],
+    "contexts": [
+     "fresh",
+     "morning"
+    ],
+    "hypotheses": [
+     "When feeling fresh, goes for a run"
+    ]
+   },
+   {
+    "id": "obs-9b100fd5",
+    "source_id": "demo-12",
+    "occurred_at": "2026-09-15T12:30:00+09:00",
+    "text": "Lunch again at the burrito place I always go to.",
+    "entities": [
+     "the burrito place I always go to"
+    ],
+    "contexts": [
+     "lunch"
+    ],
+    "hypotheses": [
+     "When choosing food, picks the familiar option"
+    ]
+   },
+   {
+    "id": "obs-8a552341",
+    "source_id": "demo-13",
+    "occurred_at": "2026-09-16T21:30:00+09:00",
+    "text": "I was tired but tried a new gym with a free trial pass anyway.",
+    "entities": [
+     "new gym"
+    ],
+    "contexts": [
+     "tired"
+    ],
+    "hypotheses": [
+     "When tired, still tries new things"
+    ]
+   },
+   {
+    "id": "obs-fe91f398",
+    "source_id": "demo-14",
+    "occurred_at": "2026-09-18T22:00:00+09:00",
+    "text": "While drafting a blog post my sentences got long, so I split them in two. I find an informational format easiest to write.",
+    "entities": [
+     "blog post"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When writing, keeps sentences short"
+    ]
+   },
+   {
+    "id": "obs-6aca5414",
     "source_id": "demo-15",
     "occurred_at": "2026-09-19T20:30:00+09:00",
-    "text": "친구 J가 DJ 선곡을 듣고 반복이 강한 곡이 좋다고 했다.",
+    "text": "Jay listened to my DJ set and said he loved the heavily repetitive tracks.",
     "entities": [
-     "J"
+     "Jay",
+     "heavily repetitive tracks",
+     "my DJ set"
     ],
     "contexts": [],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When building a mix, prefers heavily repetitive tracks"
     ]
    },
    {
-    "id": "obs-2ad76390",
+    "id": "obs-930db71f",
     "source_id": "demo-16",
     "occurred_at": "2026-09-20T09:20:00+09:00",
-    "text": "맑은 아침에 개운해서 새 카페 두 곳을 돌았다.",
+    "text": "A bright clear morning and I felt great, so I visited two new cafes.",
     "entities": [
-     "새 카페"
+     "I",
+     "two new cafes"
     ],
     "contexts": [
-     "개운함",
-     "맑음",
-     "아침"
+     "bright clear",
+     "felt great",
+     "morning"
     ],
     "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
+     "When feeling great, tries new places"
     ]
    },
    {
-    "id": "obs-44fad5e8",
+    "id": "obs-c7eb6d8c",
     "source_id": "demo-17",
     "occurred_at": "2026-09-21T21:00:00+09:00",
-    "text": "일요일 저녁 투두 앱으로 이번 주 계획을 세웠다. 늘 하는 방식이다.",
+    "text": "On Sunday evening I planned the week in my to-do app, the same way I always do.",
     "entities": [
-     "투두 앱"
+     "to-do app"
     ],
     "contexts": [
-     "일요일 저녁"
+     "Sunday evening"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When planning the week, follows a fixed routine"
     ]
    },
    {
-    "id": "obs-96a229a2",
+    "id": "obs-03d3d2fa",
     "source_id": "demo-18",
     "occurred_at": "2026-09-22T12:15:00+09:00",
-    "text": "지쳐서 점심은 편의점에서 항상 사는 삼각김밥으로 때웠다.",
+    "text": "I was exhausted so lunch was the same convenience-store sandwich I always buy.",
     "entities": [
-     "삼각김밥",
-     "편의점"
+     "convenience-store sandwich"
     ],
     "contexts": [
-     "점심",
-     "지침"
+     "exhausted"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When choosing food, picks the familiar option"
     ]
    },
    {
-    "id": "obs-47bf88eb",
+    "id": "obs-f4837633",
     "source_id": "demo-19",
     "occurred_at": "2026-09-23T18:40:00+09:00",
-    "text": "팀장님 피드백을 받고 메일 답장을 짧게 썼다. 인사, 요점, 요청 순으로 썼다.",
+    "text": "After feedback from my manager I replied by email and kept it short: a greeting, the key point, then my request.",
     "entities": [
-     "메일",
-     "팀장님"
+     "email",
+     "manager"
     ],
-    "contexts": [],
+    "contexts": [
+     "after feedback"
+    ],
     "hypotheses": [
-     "피드백을 받으면 간결하게 정리한다"
+     "When writing, keeps sentences short"
     ]
    },
    {
-    "id": "obs-59501bf6",
+    "id": "obs-0549b0fe",
     "source_id": "demo-20",
     "occurred_at": "2026-09-24T22:40:00+09:00",
-    "text": "야근 후 피곤해서 밤에 DJ 작업은 쉬고 일찍 잤다.",
+    "text": "After a late night at work I was too tired for DJ practice, so I went to bed early.",
     "entities": [
-     "DJ 작업"
+     "DJ practice"
     ],
     "contexts": [
-     "밤",
-     "피곤함"
+     "too tired after a late night at work"
     ],
     "hypotheses": [
-     "피곤할 때는 작업을 쉬고 휴식을 우선한다"
+     "When tired, keeps to-do list short"
     ]
    },
    {
-    "id": "obs-d80debfa",
+    "id": "obs-c1e18ab4",
     "source_id": "demo-21",
     "occurred_at": "2026-09-25T12:40:00+09:00",
-    "text": "점심에 처음 가는 베트남 쌀국수집에 갔다. 팀 동료가 추천했다.",
+    "text": "At lunch I tried a Vietnamese noodle shop for the first time because a teammate recommended it.",
     "entities": [
-     "베트남 쌀국수집",
-     "팀 동료"
+     "Vietnamese noodle shop",
+     "teammate"
     ],
     "contexts": [
-     "점심"
+     "lunch"
     ],
-    "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
-    ]
+    "hypotheses": []
    },
    {
-    "id": "obs-71f716c1",
+    "id": "obs-899fc7c9",
     "source_id": "demo-22",
     "occurred_at": "2026-09-26T23:10:00+09:00",
-    "text": "비 오는 밤 차분한 곡으로 DJ 믹스를 마무리했다.",
+    "text": "On a rainy night I finished a mix with calm tracks.",
     "entities": [
-     "DJ 믹스",
-     "차분한 곡"
+     "mix"
     ],
     "contexts": [
-     "밤",
-     "비 오는 날씨"
+     "night",
+     "rainy"
     ],
     "hypotheses": [
-     "날씨에 따라 선택을 조절한다"
+     "When it rains, picks calmer tracks"
     ]
    },
    {
-    "id": "obs-c6bdba5b",
+    "id": "obs-c3c38371",
     "source_id": "demo-23",
     "occurred_at": "2026-09-27T10:30:00+09:00",
-    "text": "주말 아침 블로그 글을 번호 목록으로 올렸다. 평소처럼 정보 위주로 썼다.",
+    "text": "On Saturday morning I published my blog post as a numbered list, as usual, focused on information.",
     "entities": [
-     "블로그 글"
+     "blog post"
     ],
     "contexts": [
-     "주말 아침"
+     "Saturday morning"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When writing, prefers structured formats"
     ]
    },
    {
-    "id": "obs-985576ab",
+    "id": "obs-293afb77",
     "source_id": "demo-24",
     "occurred_at": "2026-09-28T19:00:00+09:00",
-    "text": "일요일 저녁 피곤해서 단골 치킨집에 배달을 시켰다. 늘 시키는 메뉴다.",
+    "text": "Tired on a Sunday evening, I ordered delivery from my usual fried chicken place, the same order as always.",
     "entities": [
-     "단골 치킨집"
+     "fried chicken, the same order as always",
+     "usual fried chicken place"
     ],
     "contexts": [
-     "일요일 저녁",
-     "피곤함"
+     "Sunday evening",
+     "Tired"
     ],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When choosing food, picks the familiar option"
     ]
    },
    {
-    "id": "obs-a7d72e08",
+    "id": "obs-1470fda8",
     "source_id": "demo-25",
     "occurred_at": "2026-09-29T19:30:00+09:00",
-    "text": "월말이라 예산이 빠듯해서 저녁은 집에서 해 먹었다.",
+    "text": "It is the end of the month and my budget is tight, so I cooked dinner at home.",
     "entities": [
-     "집"
+     "home"
     ],
     "contexts": [
-     "빠듯함"
+     "budget is tight",
+     "end of the month"
     ],
     "hypotheses": [
-     "예산이 빠듯하면 집에서 해결한다"
+     "When budget is tight, cooks at home"
     ]
    },
    {
-    "id": "obs-96a0e241",
+    "id": "obs-cad542c4",
     "source_id": "demo-26",
     "occurred_at": "2026-09-30T08:40:00+09:00",
-    "text": "개운한 아침 출근길에 새로운 플레이리스트를 들었다.",
+    "text": "A fresh morning on my commute, so I listened to a brand new playlist.",
     "entities": [
-     "새로운 플레이리스트"
+     "brand new playlist"
     ],
     "contexts": [
-     "개운함",
-     "아침"
+     "fresh",
+     "morning commute"
     ],
     "hypotheses": [
-     "새로운 장소·경험을 즐긴다"
+     "When feeling fresh, tries new things"
     ]
    },
    {
-    "id": "obs-b21462ea",
+    "id": "obs-a99e0152",
     "source_id": "demo-27",
     "occurred_at": "2026-10-01T12:20:00+09:00",
-    "text": "점심은 회사 근처 식당에서 평소처럼 먹었다.",
+    "text": "Lunch was at my usual spot near the office, as usual.",
     "entities": [
-     "회사 근처 식당"
-    ],
-    "contexts": [
-     "점심"
-    ],
-    "hypotheses": [
-     "익숙한 선택을 반복한다"
-    ]
-   },
-   {
-    "id": "obs-03537ac7",
-    "source_id": "demo-28",
-    "occurred_at": "2026-10-02T21:20:00+09:00",
-    "text": "투두 앱에 할 일을 세 개만 적었다. 피곤한 날 습관이다.",
-    "entities": [
-     "투두 앱"
-    ],
-    "contexts": [
-     "피곤함"
-    ],
-    "hypotheses": [
-     "피곤할 때는 작업을 쉬고 휴식을 우선한다"
-    ]
-   },
-   {
-    "id": "obs-bb18031d",
-    "source_id": "demo-29",
-    "occurred_at": "2026-10-03T20:40:00+09:00",
-    "text": "친구 J와 이번에도 단골 이자카야에 갔다.",
-    "entities": [
-     "단골 이자카야",
-     "친구 J"
+     "usual spot near the office"
     ],
     "contexts": [],
     "hypotheses": [
-     "익숙한 선택을 반복한다"
+     "When choosing food, picks the familiar option"
+    ]
+   },
+   {
+    "id": "obs-79640f3a",
+    "source_id": "demo-28",
+    "occurred_at": "2026-10-02T21:20:00+09:00",
+    "text": "I wrote only three things on my to-do list. It is my habit on tired days.",
+    "entities": [
+     "to-do list"
+    ],
+    "contexts": [
+     "tired"
+    ],
+    "hypotheses": [
+     "When tired, keeps to-do list short"
+    ]
+   },
+   {
+    "id": "obs-f25f1949",
+    "source_id": "demo-29",
+    "occurred_at": "2026-10-03T20:40:00+09:00",
+    "text": "Went to our regular izakaya with Jay again.",
+    "entities": [
+     "Jay",
+     "regular izakaya"
+    ],
+    "contexts": [
+     "with Jay"
+    ],
+    "hypotheses": [
+     "When choosing food, picks the familiar option"
+    ]
+   },
+   {
+    "id": "obs-7019ba7e",
+    "source_id": "demo-30",
+    "occurred_at": "2026-10-06T15:30:00+09:00",
+    "text": "In code review I blocked a pull request because it had no tests, even though the change itself was small.",
+    "entities": [
+     "pull request"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When reviewing code, requires tests"
+    ]
+   },
+   {
+    "id": "obs-03271964",
+    "source_id": "demo-31",
+    "occurred_at": "2026-10-07T11:00:00+09:00",
+    "text": "I asked a teammate to split a huge pull request into smaller ones. I review small changes much faster.",
+    "entities": [
+     "pull request",
+     "teammate"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When reviewing code, prefers small changes"
+    ]
+   },
+   {
+    "id": "obs-d0b59dcc",
+    "source_id": "demo-32",
+    "occurred_at": "2026-10-08T17:20:00+09:00",
+    "text": "The deadline moved up a week. I cut scope instead of cutting quality and told the team early.",
+    "entities": [],
+    "contexts": [
+     "deadline moved up a week"
+    ],
+    "hypotheses": [
+     "When schedule is tight, cuts scope instead of quality"
+    ]
+   },
+   {
+    "id": "obs-798f9ca8",
+    "source_id": "demo-33",
+    "occurred_at": "2026-10-09T10:15:00+09:00",
+    "text": "When learning the new framework I wanted a working example before reading the rules, so I built a tiny project first.",
+    "entities": [
+     "new framework",
+     "tiny project"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When learning, prefers a working example first"
+    ]
+   },
+   {
+    "id": "obs-e15be0f3",
+    "source_id": "demo-34",
+    "occurred_at": "2026-10-10T20:00:00+09:00",
+    "text": "I wanted a new keyboard but waited a week and compared three options before buying anything.",
+    "entities": [
+     "new keyboard"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When buying, compares options carefully before deciding"
+    ]
+   },
+   {
+    "id": "obs-ee24b85b",
+    "source_id": "demo-35",
+    "occurred_at": "2026-10-11T09:00:00+09:00",
+    "text": "On the trip to Lisbon I skipped the tourist spots and walked through neighborhoods all day.",
+    "entities": [
+     "Lisbon"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When feeling great, tries new places"
+    ]
+   },
+   {
+    "id": "obs-a9968293",
+    "source_id": "demo-36",
+    "occurred_at": "2026-10-12T22:00:00+09:00",
+    "text": "I asked an AI assistant for a summary and told it to keep answers short and stop asking me clarifying questions.",
+    "entities": [
+     "AI assistant"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When writing, keeps sentences short"
+    ]
+   },
+   {
+    "id": "obs-6e7435c1",
+    "source_id": "demo-37",
+    "occurred_at": "2026-10-13T14:30:00+09:00",
+    "text": "Asked the AI to include sources whenever it states a fact, since I double-check everything.",
+    "entities": [
+     "AI"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When receiving information, double-checks facts"
+    ]
+   },
+   {
+    "id": "obs-6912fe8e",
+    "source_id": "demo-38",
+    "occurred_at": "2026-10-14T16:00:00+09:00",
+    "text": "A one on one with my manager got tense, so I asked for the feedback in writing to think it over.",
+    "entities": [
+     "manager"
+    ],
+    "contexts": [
+     "tense"
+    ],
+    "hypotheses": [
+     "When receiving information, double-checks facts"
+    ]
+   },
+   {
+    "id": "obs-a46219b2",
+    "source_id": "demo-39",
+    "occurred_at": "2026-10-15T13:00:00+09:00",
+    "text": "I decided quickly on the vendor, then revisited the choice two days later with fresh eyes.",
+    "entities": [
+     "vendor"
+    ],
+    "contexts": [],
+    "hypotheses": [
+     "When receiving information, double-checks facts"
+    ]
+   },
+   {
+    "id": "obs-13e651e9",
+    "source_id": "demo-40",
+    "occurred_at": "2026-10-16T19:30:00+09:00",
+    "text": "When I am tired I pick the familiar option, and when I feel energetic I try something new.",
+    "entities": [],
+    "contexts": [
+     "energetic",
+     "tired"
+    ],
+    "hypotheses": [
+     "When feeling fresh, tries new things",
+     "When tired, picks the familiar option"
+    ]
+   },
+   {
+    "id": "obs-c539e990",
+    "source_id": "declared:232851ada3",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I am a company planner who DJs on weekends.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I am a company planner who DJs on weekends."
+    ]
+   },
+   {
+    "id": "obs-4f0e6439",
+    "source_id": "declared:59fffa1420",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I eat the same lunch near the office most days.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I eat the same lunch near the office most days."
+    ]
+   },
+   {
+    "id": "obs-21af5037",
+    "source_id": "declared:3b29991f22",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I write blog posts as numbered lists.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I write blog posts as numbered lists."
+    ]
+   },
+   {
+    "id": "obs-114fb898",
+    "source_id": "declared:faa4206d04",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "When I am stressed, I stop and rest instead of pushing.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "When I am stressed, I stop and rest instead of pushing."
+    ]
+   },
+   {
+    "id": "obs-dea36f5a",
+    "source_id": "declared:12c9420dcb",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I usually choose the familiar option when I am tired.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I usually choose the familiar option when I am tired."
+    ]
+   },
+   {
+    "id": "obs-8ff3b5fd",
+    "source_id": "declared:3e8b819905",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I decide quickly and revisit later.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I decide quickly and revisit later."
+    ]
+   },
+   {
+    "id": "obs-f8b3dfe6",
+    "source_id": "declared:0ef553dc1b",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I like to walk in the park when I am stuck.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I like to walk in the park when I am stuck."
+    ]
+   },
+   {
+    "id": "obs-3bdf99c3",
+    "source_id": "declared:e323c36b77",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I watch a movie to reset after a hard week.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I watch a movie to reset after a hard week."
+    ]
+   },
+   {
+    "id": "obs-1e3e05c2",
+    "source_id": "declared:7c95431ecf",
+    "occurred_at": "2026-11-03T06:14:11+00:00",
+    "text": "I never skip the quiet corner seat in a cafe.",
+    "entities": [],
+    "contexts": [],
+    "hypotheses": [
+     "I never skip the quiet corner seat in a cafe."
     ]
    }
   ],
   "hypotheses": [
    {
-    "statement": "익숙한 선택을 반복한다",
+    "statement": "When choosing food, picks the familiar option",
     "status": "candidate",
     "domain": "취향·경험",
-    "supports": 11,
+    "supports": 7,
     "contradicts": 2,
     "evidence": [
-     "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
-     "밤에 DJ 믹스를 작업했다. 반복이 강한 곡 위주로 이어 붙이니 흐름이 좋았다.",
-     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다."
+     "For lunch I went to the burrito place across from the office and ordered my usual again.",
+     "Stayed late at work and was wiped out, so I picked up the same chicken rice bowl from my regular shop that I always get.",
+     "Lunch again at the burrito place I always go to."
     ]
    },
    {
-    "statement": "새로운 장소·경험을 즐긴다",
+    "statement": "When tired, keeps to-do list short",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 3,
+    "contradicts": 0,
+    "evidence": [
+     "I put only three items on tomorrow's to-do list. When I am tired a long list just makes me avoid it.",
+     "After a late night at work I was too tired for DJ practice, so I went to bed early.",
+     "I wrote only three things on my to-do list. It is my habit on tired days."
+    ]
+   },
+   {
+    "statement": "When writing, keeps sentences short",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 3,
+    "contradicts": 0,
+    "evidence": [
+     "While drafting a blog post my sentences got long, so I split them in two. I find an informational format easiest to write.",
+     "After feedback from my manager I replied by email and kept it short: a greeting, the key point, then my request.",
+     "I asked an AI assistant for a summary and told it to keep answers short and stop asking me clarifying questions."
+    ]
+   },
+   {
+    "statement": "When receiving information, double-checks facts",
+    "status": "active",
+    "domain": "가치·판단",
+    "supports": 3,
+    "contradicts": 0,
+    "evidence": [
+     "Asked the AI to include sources whenever it states a fact, since I double-check everything.",
+     "A one on one with my manager got tense, so I asked for the feedback in writing to think it over.",
+     "I decided quickly on the vendor, then revisited the choice two days later with fresh eyes."
+    ]
+   },
+   {
+    "statement": "When building a mix, prefers heavily repetitive tracks",
     "status": "active",
     "domain": "취향·경험",
-    "supports": 6,
-    "contradicts": 0,
-    "evidence": [
-     "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
-     "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
-     "피곤했지만 새로 생긴 헬스장 체험권으로 한 번 가 봤다."
-    ]
-   },
-   {
-    "statement": "컨디션이 좋을 때 정리·기록을 한다",
-    "status": "active",
-    "domain": "동기·실행",
     "supports": 2,
     "contradicts": 0,
     "evidence": [
-     "주말 아침 개운하게 일어나서 블로그에 이번 주 DJ 선곡 과정을 정리했다. 항목을 번호로 나눠 쓰는 편이다.",
-     "주말에 도서관에서 업무 메모를 짧게 정리했다. 결론부터 쓰고 근거는 두 줄로 줄였다."
+     "Late tonight I worked on a DJ mix. Building it around heavily repetitive tracks made the flow feel right.",
+     "Jay listened to my DJ set and said he loved the heavily repetitive tracks."
     ]
    },
    {
-    "statement": "일정이 빠듯하면 부담을 느낀다",
-    "status": "active",
-    "domain": "동기·실행",
-    "supports": 2,
-    "contradicts": 0,
-    "evidence": [
-     "팀장님이 새 프로젝트를 맡아 보라고 했는데 일정이 빠듯해서 부담스러웠다.",
-     "투두 앱에 내일 할 일 세 개만 적었다. 피곤한 날은 많이 적으면 손이 안 간다."
-    ]
-   },
-   {
-    "statement": "날씨에 따라 선택을 조절한다",
+    "statement": "When it rains, picks calmer tracks",
     "status": "active",
     "domain": "취향·경험",
     "supports": 2,
     "contradicts": 0,
     "evidence": [
-     "밤에 DJ 세트를 연습했다. 비 오는 날은 차분한 곡을 많이 고른다.",
-     "비 오는 밤 차분한 곡으로 DJ 믹스를 마무리했다."
+     "Practiced my DJ set tonight. When it rains I pick calmer tracks.",
+     "On a rainy night I finished a mix with calm tracks."
     ]
    },
    {
-    "statement": "피곤할 때는 작업을 쉬고 휴식을 우선한다",
+    "statement": "When feeling great, tries new places",
     "status": "active",
-    "domain": "동기·실행",
+    "domain": "취향·경험",
     "supports": 2,
     "contradicts": 0,
     "evidence": [
-     "야근 후 피곤해서 밤에 DJ 작업은 쉬고 일찍 잤다.",
-     "투두 앱에 할 일을 세 개만 적었다. 피곤한 날 습관이다."
+     "A bright clear morning and I felt great, so I visited two new cafes.",
+     "On the trip to Lisbon I skipped the tourist spots and walked through neighborhoods all day."
     ]
    },
    {
-    "statement": "조용한 환경에서 집중이 잘 된다",
+    "statement": "When feeling fresh, tries new things",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence": [
+     "A fresh morning on my commute, so I listened to a brand new playlist.",
+     "When I am tired I pick the familiar option, and when I feel energetic I try something new."
+    ]
+   },
+   {
+    "statement": "When feeling fresh, works on creative organizing tasks",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
     "evidence": [
-     "비 오는 아침 카페에서 새로 나온 메뉴를 시켜 봤다. 조용한 자리라 집중이 잘 됐다."
+     "Sunday morning I woke up feeling fresh and wrote up this week's DJ set on my blog. I like to break the post into numbered items."
     ]
    },
    {
-    "statement": "피드백을 받으면 간결하게 정리한다",
+    "statement": "When needing focus, chooses a quiet seat",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
     "evidence": [
-     "팀장님 피드백을 받고 메일 답장을 짧게 썼다. 인사, 요점, 요청 순으로 썼다."
+     "On a rainy morning I tried the new seasonal drink at a cafe. The quiet corner seat made it easy to focus."
     ]
    },
    {
-    "statement": "예산이 빠듯하면 집에서 해결한다",
+    "statement": "When schedule looks tight, feels anxious",
+    "status": "candidate",
+    "domain": "자기이해·반복 주제",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "My manager asked me to take on a new project but the schedule looked too tight and it made me anxious."
+    ]
+   },
+   {
+    "statement": "When writing, puts the conclusion first",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
     "evidence": [
-     "월말이라 예산이 빠듯해서 저녁은 집에서 해 먹었다."
+     "On Saturday at the library I wrote a short work memo. I put the conclusion first and kept the reasoning to two lines."
+    ]
+   },
+   {
+    "statement": "When feeling fresh, goes for a run",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "Felt fresh this morning, so I ran in the park. It was my first ever 10 km."
+    ]
+   },
+   {
+    "statement": "When tired, still tries new things",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 1,
+    "evidence": [
+     "I was tired but tried a new gym with a free trial pass anyway."
+    ]
+   },
+   {
+    "statement": "When planning the week, follows a fixed routine",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "On Sunday evening I planned the week in my to-do app, the same way I always do."
+    ]
+   },
+   {
+    "statement": "When writing, prefers structured formats",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "On Saturday morning I published my blog post as a numbered list, as usual, focused on information."
+    ]
+   },
+   {
+    "statement": "When budget is tight, cooks at home",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "It is the end of the month and my budget is tight, so I cooked dinner at home."
+    ]
+   },
+   {
+    "statement": "When reviewing code, requires tests",
+    "status": "candidate",
+    "domain": "가치·판단",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "In code review I blocked a pull request because it had no tests, even though the change itself was small."
+    ]
+   },
+   {
+    "statement": "When reviewing code, prefers small changes",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I asked a teammate to split a huge pull request into smaller ones. I review small changes much faster."
+    ]
+   },
+   {
+    "statement": "When schedule is tight, cuts scope instead of quality",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "The deadline moved up a week. I cut scope instead of cutting quality and told the team early."
+    ]
+   },
+   {
+    "statement": "When learning, prefers a working example first",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "When learning the new framework I wanted a working example before reading the rules, so I built a tiny project first."
+    ]
+   },
+   {
+    "statement": "When buying, compares options carefully before deciding",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I wanted a new keyboard but waited a week and compared three options before buying anything."
+    ]
+   },
+   {
+    "statement": "When tired, picks the familiar option",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "When I am tired I pick the familiar option, and when I feel energetic I try something new."
+    ]
+   },
+   {
+    "statement": "I am a company planner who DJs on weekends.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I am a company planner who DJs on weekends."
+    ]
+   },
+   {
+    "statement": "I eat the same lunch near the office most days.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I eat the same lunch near the office most days."
+    ]
+   },
+   {
+    "statement": "I write blog posts as numbered lists.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I write blog posts as numbered lists."
+    ]
+   },
+   {
+    "statement": "When I am stressed, I stop and rest instead of pushing.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "When I am stressed, I stop and rest instead of pushing."
+    ]
+   },
+   {
+    "statement": "I usually choose the familiar option when I am tired.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I usually choose the familiar option when I am tired."
+    ]
+   },
+   {
+    "statement": "I decide quickly and revisit later.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I decide quickly and revisit later."
+    ]
+   },
+   {
+    "statement": "I like to walk in the park when I am stuck.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I like to walk in the park when I am stuck."
+    ]
+   },
+   {
+    "statement": "I watch a movie to reset after a hard week.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I watch a movie to reset after a hard week."
+    ]
+   },
+   {
+    "statement": "I never skip the quiet corner seat in a cafe.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence": [
+     "I never skip the quiet corner seat in a cafe."
     ]
    }
   ],
   "promoted": {
-   "promoted": [],
-   "evaluated": 4
+   "promoted": [
+    "hyp-42713265",
+    "hyp-c8f4d8a2",
+    "hyp-dd6d1973",
+    "hyp-21dc679f",
+    "hyp-fc0f2ea2",
+    "hyp-3a9df025",
+    "hyp-79b58363"
+   ],
+   "evaluated": 23
   },
   "nightly": {
    "merged_entities": [],
    "stale_candidates": [],
-   "linked_alternatives": 0
+   "linked_alternatives": 2
   }
  },
  "profile": {
-  "observations": 29,
+  "observations": 49,
   "period": {
    "from": "2026-09-07T09:30:00+09:00",
-   "to": "2026-10-03T20:40:00+09:00"
+   "to": "2026-11-03T06:14:11+00:00"
   },
   "tendencies": [
    {
-    "id": "hyp-f7a3b57d",
-    "statement": "익숙한 선택을 반복한다",
+    "id": "hyp-a54b5272",
+    "statement": "When choosing food, picks the familiar option",
     "status": "candidate",
     "domain": "취향·경험",
-    "supports": 11,
+    "supports": 7,
     "contradicts": 2,
-    "evidence_label": "반복 관찰 (근거 11건)",
+    "evidence_label": "Repeated (7 evidence)",
     "latest_support": "2026-10-03T20:40:00+09:00"
    },
    {
-    "id": "hyp-447aaa24",
-    "statement": "새로운 장소·경험을 즐긴다",
+    "id": "hyp-79b58363",
+    "statement": "When receiving information, double-checks facts",
     "status": "active",
-    "domain": "취향·경험",
-    "supports": 6,
+    "domain": "가치·판단",
+    "supports": 3,
     "contradicts": 0,
-    "evidence_label": "반복 관찰 (근거 6건)",
-    "latest_support": "2026-09-30T08:40:00+09:00"
+    "evidence_label": "Repeated (3 evidence)",
+    "latest_support": "2026-10-15T13:00:00+09:00"
    },
    {
-    "id": "hyp-255f862a",
-    "statement": "날씨에 따라 선택을 조절한다",
-    "status": "active",
-    "domain": "취향·경험",
-    "supports": 2,
-    "contradicts": 0,
-    "evidence_label": "반복 관찰 (근거 2건)",
-    "latest_support": "2026-09-26T23:10:00+09:00"
-   },
-   {
-    "id": "hyp-1e0c2831",
-    "statement": "일정이 빠듯하면 부담을 느낀다",
+    "id": "hyp-c8f4d8a2",
+    "statement": "When tired, keeps to-do list short",
     "status": "active",
     "domain": "동기·실행",
-    "supports": 2,
+    "supports": 3,
     "contradicts": 0,
-    "evidence_label": "반복 관찰 (근거 2건)",
-    "latest_support": "2026-09-11T21:10:00+09:00"
-   },
-   {
-    "id": "hyp-b02d898f",
-    "statement": "컨디션이 좋을 때 정리·기록을 한다",
-    "status": "active",
-    "domain": "동기·실행",
-    "supports": 2,
-    "contradicts": 0,
-    "evidence_label": "반복 관찰 (근거 2건)",
-    "latest_support": "2026-09-13T14:00:00+09:00"
-   },
-   {
-    "id": "hyp-9c8f3c04",
-    "statement": "피곤할 때는 작업을 쉬고 휴식을 우선한다",
-    "status": "active",
-    "domain": "동기·실행",
-    "supports": 2,
-    "contradicts": 0,
-    "evidence_label": "반복 관찰 (근거 2건)",
+    "evidence_label": "Repeated (3 evidence)",
     "latest_support": "2026-10-02T21:20:00+09:00"
    },
    {
-    "id": "hyp-a5969705",
-    "statement": "예산이 빠듯하면 집에서 해결한다",
+    "id": "hyp-21dc679f",
+    "statement": "When writing, keeps sentences short",
+    "status": "active",
+    "domain": "동기·실행",
+    "supports": 3,
+    "contradicts": 0,
+    "evidence_label": "Repeated (3 evidence)",
+    "latest_support": "2026-10-12T22:00:00+09:00"
+   },
+   {
+    "id": "hyp-42713265",
+    "statement": "When building a mix, prefers heavily repetitive tracks",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "Repeated (2 evidence)",
+    "latest_support": "2026-09-19T20:30:00+09:00"
+   },
+   {
+    "id": "hyp-3a9df025",
+    "statement": "When feeling fresh, tries new things",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "Repeated (2 evidence)",
+    "latest_support": "2026-10-16T19:30:00+09:00"
+   },
+   {
+    "id": "hyp-fc0f2ea2",
+    "statement": "When feeling great, tries new places",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "Repeated (2 evidence)",
+    "latest_support": "2026-10-11T09:00:00+09:00"
+   },
+   {
+    "id": "hyp-dd6d1973",
+    "statement": "When it rains, picks calmer tracks",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 2,
+    "contradicts": 0,
+    "evidence_label": "Repeated (2 evidence)",
+    "latest_support": "2026-09-26T23:10:00+09:00"
+   },
+   {
+    "id": "hyp-ba7b8e5e",
+    "statement": "I am a company planner who DJs on weekends.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-635fab2d",
+    "statement": "I decide quickly and revisit later.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-2f2d08f7",
+    "statement": "I eat the same lunch near the office most days.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-7b3fa64a",
+    "statement": "I like to walk in the park when I am stuck.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-6c8590e3",
+    "statement": "I never skip the quiet corner seat in a cafe.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-0b9b05d6",
+    "statement": "I usually choose the familiar option when I am tired.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-8018c7ca",
+    "statement": "I watch a movie to reset after a hard week.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-a70acc84",
+    "statement": "I write blog posts as numbered lists.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-e658c075",
+    "statement": "When I am stressed, I stop and rest instead of pushing.",
+    "status": "active",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-11-03T06:14:11+00:00"
+   },
+   {
+    "id": "hyp-87f0dc87",
+    "statement": "When budget is tight, cooks at home",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
-    "evidence_label": "후보 (근거 1건)",
+    "evidence_label": "Candidate (1 evidence)",
     "latest_support": "2026-09-29T19:30:00+09:00"
    },
    {
-    "id": "hyp-bbeb3283",
-    "statement": "조용한 환경에서 집중이 잘 된다",
+    "id": "hyp-752a77fa",
+    "statement": "When buying, compares options carefully before deciding",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
-    "evidence_label": "후보 (근거 1건)",
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-10T20:00:00+09:00"
+   },
+   {
+    "id": "hyp-7c6d98af",
+    "statement": "When feeling fresh, goes for a run",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-14T10:00:00+09:00"
+   },
+   {
+    "id": "hyp-7c76e7ca",
+    "statement": "When feeling fresh, works on creative organizing tasks",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-07T09:30:00+09:00"
+   },
+   {
+    "id": "hyp-798c8bde",
+    "statement": "When learning, prefers a working example first",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-09T10:15:00+09:00"
+   },
+   {
+    "id": "hyp-31f3184b",
+    "statement": "When needing focus, chooses a quiet seat",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
     "latest_support": "2026-09-10T08:50:00+09:00"
    },
    {
-    "id": "hyp-1c665633",
-    "statement": "피드백을 받으면 간결하게 정리한다",
+    "id": "hyp-e9b95ae1",
+    "statement": "When planning the week, follows a fixed routine",
     "status": "candidate",
     "domain": "동기·실행",
     "supports": 1,
     "contradicts": 0,
-    "evidence_label": "후보 (근거 1건)",
-    "latest_support": "2026-09-23T18:40:00+09:00"
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-21T21:00:00+09:00"
+   },
+   {
+    "id": "hyp-96984c75",
+    "statement": "When reviewing code, prefers small changes",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-07T11:00:00+09:00"
+   },
+   {
+    "id": "hyp-3c8a249b",
+    "statement": "When reviewing code, requires tests",
+    "status": "candidate",
+    "domain": "가치·판단",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-06T15:30:00+09:00"
+   },
+   {
+    "id": "hyp-2c021233",
+    "statement": "When schedule is tight, cuts scope instead of quality",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-08T17:20:00+09:00"
+   },
+   {
+    "id": "hyp-00193be6",
+    "statement": "When schedule looks tight, feels anxious",
+    "status": "candidate",
+    "domain": "자기이해·반복 주제",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-10T15:00:00+09:00"
+   },
+   {
+    "id": "hyp-1a9f8680",
+    "statement": "When tired, picks the familiar option",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-10-16T19:30:00+09:00"
+   },
+   {
+    "id": "hyp-b5732bdf",
+    "statement": "When tired, still tries new things",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 1,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-16T21:30:00+09:00"
+   },
+   {
+    "id": "hyp-36671884",
+    "statement": "When writing, prefers structured formats",
+    "status": "candidate",
+    "domain": "취향·경험",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-27T10:30:00+09:00"
+   },
+   {
+    "id": "hyp-db9d5bce",
+    "statement": "When writing, puts the conclusion first",
+    "status": "candidate",
+    "domain": "동기·실행",
+    "supports": 1,
+    "contradicts": 0,
+    "evidence_label": "Candidate (1 evidence)",
+    "latest_support": "2026-09-13T14:00:00+09:00"
    }
   ],
   "entities": {
-   "프로젝트": [
-    {
-     "name": "DJ 믹스",
-     "count": 2
-    },
-    {
-     "name": "DJ 세트 연습",
-     "count": 1
-    },
-    {
-     "name": "DJ 작업",
-     "count": 1
-    },
-    {
-     "name": "새 프로젝트",
-     "count": 1
-    }
-   ],
    "장소": [
     {
-     "name": "단골 이자카야",
+     "name": "Lisbon",
      "count": 1
     },
     {
-     "name": "단골 치킨집",
+     "name": "Vietnamese noodle shop",
      "count": 1
     },
     {
-     "name": "도서관",
+     "name": "burrito place across from the office",
      "count": 1
     },
     {
-     "name": "베트남 쌀국수집",
+     "name": "cafe",
      "count": 1
     },
     {
-     "name": "분식집",
+     "name": "home",
      "count": 1
     },
     {
-     "name": "새 카페",
+     "name": "library",
      "count": 1
     },
     {
-     "name": "이자카야",
+     "name": "my regular shop",
      "count": 1
     },
     {
-     "name": "집",
+     "name": "new gym",
      "count": 1
     },
     {
-     "name": "카페",
+     "name": "park",
      "count": 1
     },
     {
-     "name": "편의점",
+     "name": "ramen place",
      "count": 1
     },
     {
-     "name": "평소 가는 식당",
+     "name": "regular izakaya",
      "count": 1
     },
     {
-     "name": "한강 공원",
+     "name": "the burrito place I always go to",
      "count": 1
     },
     {
-     "name": "헬스장",
+     "name": "two new cafes",
      "count": 1
     },
     {
-     "name": "회사 근처 식당",
+     "name": "usual fried chicken place",
      "count": 1
     },
     {
-     "name": "회사 앞 식당",
-     "count": 1
-    }
-   ],
-   "곡": [
-    {
-     "name": "반복이 강한 곡",
-     "count": 1
-    },
-    {
-     "name": "새로운 플레이리스트",
-     "count": 1
-    },
-    {
-     "name": "차분한 곡",
+     "name": "usual spot near the office",
      "count": 1
     }
    ],
    "기타": [
     {
-     "name": "블로그 글",
+     "name": "pull request",
+     "count": 2
+    },
+    {
+     "name": "DJ practice",
      "count": 1
     },
     {
-     "name": "블로그 글 초안",
+     "name": "blog post",
      "count": 1
     },
     {
-     "name": "업무 메모",
+     "name": "brand new playlist",
+     "count": 1
+    },
+    {
+     "name": "my DJ set",
+     "count": 1
+    },
+    {
+     "name": "short work memo",
+     "count": 1
+    },
+    {
+     "name": "to-do list",
+     "count": 1
+    },
+    {
+     "name": "tomorrow's to-do list",
+     "count": 1
+    },
+    {
+     "name": "vendor",
      "count": 1
     }
    ],
    "도구": [
     {
-     "name": "투두 앱",
-     "count": 3
-    },
-    {
-     "name": "메일",
+     "name": "AI",
      "count": 1
     },
     {
-     "name": "블로그",
-     "count": 1
-    }
-   ],
-   "음식": [
-    {
-     "name": "제육볶음",
-     "count": 2
-    },
-    {
-     "name": "김밥",
+     "name": "AI assistant",
      "count": 1
     },
     {
-     "name": "삼각김밥",
+     "name": "blog",
      "count": 1
     },
     {
-     "name": "새로 나온 메뉴",
+     "name": "email",
+     "count": 1
+    },
+    {
+     "name": "new framework",
+     "count": 1
+    },
+    {
+     "name": "new keyboard",
+     "count": 1
+    },
+    {
+     "name": "to-do app",
      "count": 1
     }
    ],
    "사람": [
     {
-     "name": "친구 J",
+     "name": "Jay",
+     "count": 3
+    },
+    {
+     "name": "manager",
+     "count": 3
+    },
+    {
+     "name": "teammate",
      "count": 2
     },
     {
-     "name": "팀장님",
-     "count": 2
-    },
+     "name": "I",
+     "count": 1
+    }
+   ],
+   "음식": [
     {
-     "name": "J",
+     "name": "chicken rice bowl",
      "count": 1
     },
     {
-     "name": "팀 동료",
+     "name": "convenience-store sandwich",
+     "count": 1
+    },
+    {
+     "name": "fried chicken, the same order as always",
+     "count": 1
+    },
+    {
+     "name": "new seasonal drink",
+     "count": 1
+    },
+    {
+     "name": "usual",
+     "count": 1
+    }
+   ],
+   "프로젝트": [
+    {
+     "name": "DJ mix",
+     "count": 1
+    },
+    {
+     "name": "blog post",
+     "count": 1
+    },
+    {
+     "name": "mix",
+     "count": 1
+    },
+    {
+     "name": "new project",
+     "count": 1
+    },
+    {
+     "name": "this week's DJ set",
+     "count": 1
+    },
+    {
+     "name": "tiny project",
+     "count": 1
+    }
+   ],
+   "곡": [
+    {
+     "name": "calmer tracks",
+     "count": 1
+    },
+    {
+     "name": "heavily repetitive tracks",
      "count": 1
     }
    ]
   },
   "situations": {
-   "예산": [
+   "날씨": [
     {
-     "value": "빠듯함",
+     "value": "rainy",
+     "count": 2
+    },
+    {
+     "value": "bright clear",
+     "count": 1
+    },
+    {
+     "value": "rains",
      "count": 1
     }
    ],
    "상태": [
     {
-     "value": "개운함",
+     "value": "tired",
      "count": 4
     },
     {
-     "value": "피곤함",
-     "count": 4
+     "value": "fresh",
+     "count": 2
     },
     {
-     "value": "설렘",
+     "value": "Tired",
      "count": 1
     },
     {
-     "value": "야근으로 지침",
+     "value": "after feedback",
      "count": 1
     },
     {
-     "value": "일정이 빠듯해서 부담스러움",
+     "value": "anxious",
      "count": 1
     },
     {
-     "value": "조용함",
+     "value": "deadline moved up a week",
      "count": 1
     },
     {
-     "value": "지침",
+     "value": "energetic",
      "count": 1
     },
     {
-     "value": "피곤한 날",
+     "value": "exhausted",
+     "count": 1
+    },
+    {
+     "value": "feeling fresh",
+     "count": 1
+    },
+    {
+     "value": "felt great",
+     "count": 1
+    },
+    {
+     "value": "quiet",
+     "count": 1
+    },
+    {
+     "value": "tense",
+     "count": 1
+    },
+    {
+     "value": "too tired after a late night at work",
+     "count": 1
+    },
+    {
+     "value": "wiped out after staying late at work",
      "count": 1
     }
    ],
    "시간대": [
     {
-     "value": "점심",
-     "count": 5
+     "value": "lunch",
+     "count": 3
     },
     {
-     "value": "밤",
-     "count": 4
+     "value": "morning",
+     "count": 3
     },
     {
-     "value": "아침",
-     "count": 4
-    },
-    {
-     "value": "일요일 저녁",
+     "value": "Sunday evening",
      "count": 2
     },
     {
-     "value": "주말 아침",
-     "count": 2
-    },
-    {
-     "value": "저녁",
+     "value": "Late tonight",
      "count": 1
     },
     {
-     "value": "주말",
+     "value": "Saturday",
+     "count": 1
+    },
+    {
+     "value": "Saturday morning",
+     "count": 1
+    },
+    {
+     "value": "Sunday morning",
+     "count": 1
+    },
+    {
+     "value": "end of the month",
+     "count": 1
+    },
+    {
+     "value": "morning commute",
+     "count": 1
+    },
+    {
+     "value": "night",
+     "count": 1
+    },
+    {
+     "value": "tonight",
      "count": 1
     }
    ],
-   "기타": [
+   "예산": [
     {
-     "value": "처음 방문",
+     "value": "budget is tight",
      "count": 1
     }
    ],
-   "날씨": [
+   "동행": [
     {
-     "value": "맑음",
+     "value": "with Jay",
      "count": 1
     },
     {
-     "value": "비",
-     "count": 1
-    },
-    {
-     "value": "비 오는 날",
-     "count": 1
-    },
-    {
-     "value": "비 오는 날씨",
+     "value": "with my friend Jay",
      "count": 1
     }
    ]
   },
   "preferences": [
    {
-    "target": "반복이 강한 곡",
+    "target": "numbered items",
     "direction": "+",
-    "basis": "좋다고 했다"
+    "basis": "likes to break the post into numbered items"
+   },
+   {
+    "target": "calmer tracks",
+    "direction": "+",
+    "basis": "picks calmer tracks when it rains"
+   },
+   {
+    "target": "informational format",
+    "direction": "+",
+    "basis": "easiest to write"
+   },
+   {
+    "target": "short answers",
+    "direction": "+",
+    "basis": "told it to keep answers short and stop asking clarifying questions"
    }
   ],
   "criteria": [],
   "writing": {
    "styles": [
     {
-     "pattern": "항목을 번호로 나눠 쓴다",
-     "intent": "정리·기록",
-     "examples": 0
-    },
-    {
-     "pattern": "결론부터 쓰고 근거는 두 줄로 줄인다",
-     "intent": "짧게 정리하기",
-     "examples": 0
-    },
-    {
-     "pattern": "긴 문장을 두 문장으로 나눈다",
-     "intent": "정보 정리 형태를 편하게 만든다",
+     "pattern": "breaks posts into numbered items",
+     "intent": "organize clearly",
      "examples": 0
     }
    ],
    "stats": {
-    "observations": 29,
-    "sentences": 44,
-    "avg_sentence_chars": 23.6,
-    "longest_sentence_chars": 41,
-    "avg_observation_chars": 36.3,
+    "observations": 49,
+    "sentences": 61,
+    "avg_sentence_chars": 65.0,
+    "longest_sentence_chars": 120,
+    "avg_observation_chars": 81.2,
     "endings": [
      {
-      "name": "평어(-다)",
-      "count": 44,
+      "name": "Other",
+      "count": 61,
       "ratio": 1.0
      }
     ]
@@ -1150,345 +2081,163 @@
  "scenarios": [
   {
    "id": "doc_draft",
-   "name": "문서 생성",
+   "name": "Write a document",
    "inputs": {
-    "topic": "이번 달 DJ 선곡 과정",
-    "kind": "블로그 글",
-    "points": "반복이 강한 곡 위주로 고른 이유\n비 오는 밤에는 차분한 곡"
+    "topic": "How I put together this month's DJ sets",
+    "kind": "Blog post",
+    "points": "Why I lean on repetitive tracks\nCalmer tracks on rainy nights"
    },
    "scenario": "doc_draft",
    "mode": "spark",
-   "text": "주말 아침 개운하게 정리했다(obs-57607ac2).\n항목을 번호로 나눴다(obs-57607ac2).\n이번 달 DJ 선곡 과정을 정리했다.\n1 반복이 강한 곡 위주로 골랐다.\n이유는 [직접 채우기: 반복 위주 선곡 이유]다.\n2 비 오는 밤에 들을 곡을 골랐다.\n차분한 곡 위주로만 골랐다.\n곡명은 [직접 채우기: 비 오는 밤 곡명]이다.\n선곡 과정은 [직접 채우기: 선곡 과정]이다.\n정리는 또 번호로 나눴다(obs-57607ac2).",
+   "text": "1 I put together this month's sets for weekend gigs [hyp-ba7b8e5e]\n2 I lean on repetitive tracks in mixes [hyp-42713265]\n3 [fill in: why repetitive tracks and rainy night calmer picks] [hyp-a70acc84]",
    "citations": [
-    "obs-03537ac7",
-    "obs-22a3b49b",
-    "obs-2ad76390",
-    "obs-398072d2",
-    "obs-4c0977a2",
-    "obs-57607ac2",
-    "obs-59501bf6",
-    "obs-71f716c1",
-    "obs-96a0e241",
-    "obs-ae5ff584",
-    "obs-be8d2fc4",
-    "obs-d3ae998c",
-    "obs-d80debfa",
-    "obs-ee2e4c46"
+    "obs-0549b0fe",
+    "obs-21af5037",
+    "obs-6aca5414",
+    "obs-79640f3a",
+    "obs-80534725",
+    "obs-99e68225",
+    "obs-a9968293",
+    "obs-c539e990",
+    "obs-dea36f5a",
+    "obs-f4837633",
+    "obs-fe91f398"
    ],
    "note": ""
   },
   {
    "id": "music_recommend",
-   "name": "음악 추천",
+   "name": "Pick music",
    "inputs": {
-    "situation": "비 오는 밤에 믹스 작업을 할 때",
+    "situation": "Mixing late on a rainy night",
     "candidates": "Nuvole Bianche\nStrobe\nOpus\nAround the World",
     "avoid": ""
    },
    "scenario": "music_recommend",
    "mode": "spark",
-   "text": "비 오는 밤 믹스 작업용 추천:\n\n- Strobe: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Opus: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Around the World: 반복이 강한 선호에 맞아 믹스 흐름 유지에 적합하다.\n- Nuvole Bianche: 비 오는 밤 차분한 곡으로 마무리한 기록이 있어 마무리용으로 적합하다 (obs-71f716c1).",
+   "text": "1. Nuvole Bianche — calmer piano fit for rain [hyp-dd6d1973]\n2. Opus — calm build suitable for late-night mixing [hyp-dd6d1973]\n3. Strobe — calm long progression for late mix [hyp-dd6d1973]\n4. Around the World — heavily repetitive for mix building [hyp-42713265]",
    "citations": [
-    "obs-03537ac7",
-    "obs-22a3b49b",
-    "obs-2ad76390",
-    "obs-398072d2",
-    "obs-4c0977a2",
-    "obs-57607ac2",
-    "obs-59501bf6",
-    "obs-71f716c1",
-    "obs-96a0e241",
-    "obs-ae5ff584",
-    "obs-be8d2fc4",
-    "obs-d3ae998c",
-    "obs-d80debfa",
-    "obs-ee2e4c46"
+    "obs-0549b0fe",
+    "obs-1e3e05c2",
+    "obs-6aca5414",
+    "obs-79640f3a",
+    "obs-80534725",
+    "obs-899fc7c9",
+    "obs-99e68225",
+    "obs-c539e990",
+    "obs-dea36f5a",
+    "obs-f3ae0b35"
    ],
    "note": ""
   },
   {
    "id": "day_plan",
-   "name": "하루 계획",
+   "name": "Plan my day",
    "inputs": {
-    "state": "피곤함",
-    "tasks": "블로그 글 마무리\n팀장님 메일 답장\nDJ 세트 연습\n운동\n장보기"
+    "state": "Tired",
+    "tasks": "Finish the blog post\nReply to my manager\nPractice the DJ set\nWorkout\nGrocery shopping"
    },
    "scenario": "day_plan",
    "mode": "spark",
-   "text": "피곤한 날 기준으로 오늘은 비우고 쉬는 쪽으로 정리했다.\n\n**오늘의 원칙**\n- 피곤할 때는 휴식 우선 (hyp-9c8f3c04)\n- 일정이 빽빽하면 부담이 커질 수 있음 (hyp-1e0c2831)\n\n**정리안**\n\n1. 휴식: 먼저 확보\n   - 낮에 짧은 낮잠 / 눕기 시간을 일정에 넣기\n\n2. 가볍게 해도 되는 것\n   - 팀장님 메일 답장: 짧게 한 번만 처리하고 끝내기\n   - 장보기: 꼭 필요한 것만, 가능하면 온라인·근처로 최소화\n\n3. 밤·컨디션 봐서 조절\n   - DJ 세트 연습: 밤에 짧게만 (obs-4c0977a2). 비 오는 날은 차분한 곡 위주라는 기록이 있다 (obs-4c0977a2). 오늘 비가 오는지는 확인하고 골라보자.\n\n4. 내일로 미루기\n   - 블로그 글 마무리: 컨디션 좋을 때 정리·기록을 한다는 기록이 있어서 (hyp-b02d898f), 피곤한 오늘은 무리하지 않기\n   - 운동: 피곤할 때는 쉬는 쪽이 낫다 (hyp-9c8f3c04). 가벼운 스트레칭 정도로 대체",
+   "text": "Short list for today [hyp-c8f4d8a2].\n\nKeep it to 2 items. Rest after.\n\n1. Reply to manager.\n2. Finish the blog post. Use a numbered list [hyp-a70acc84].\n\nDefer for later:\n- Practice the DJ set [hyp-ba7b8e5e].\n- Workout.\n- Grocery shopping. Choose the familiar option [hyp-0b9b05d6].\n\nKeep sentences short [hyp-21dc679f].",
    "citations": [
-    "obs-03537ac7",
-    "obs-22a3b49b",
-    "obs-2ad76390",
-    "obs-398072d2",
-    "obs-4c0977a2",
-    "obs-57607ac2",
-    "obs-59501bf6",
-    "obs-71f716c1",
-    "obs-96a0e241",
-    "obs-ae5ff584",
-    "obs-be8d2fc4",
-    "obs-d3ae998c",
-    "obs-d80debfa",
-    "obs-ee2e4c46"
+    "obs-0549b0fe",
+    "obs-114fb898",
+    "obs-21af5037",
+    "obs-79640f3a",
+    "obs-99e68225",
+    "obs-a9968293",
+    "obs-c539e990",
+    "obs-dea36f5a",
+    "obs-f4837633",
+    "obs-fe91f398"
    ],
    "note": ""
   },
   {
    "id": "choice_help",
-   "name": "선택 도우미",
+   "name": "Help me choose",
    "inputs": {
-    "request": "피곤한 날 저녁 주문",
-    "options": "단골 치킨집\n새로 생긴 쌀국수집"
+    "request": "Dinner order on a tired night",
+    "options": "My usual fried chicken place\nThe new noodle shop"
    },
    "scenario": "choice_help",
    "mode": "spark",
-   "text": "피곤한 날 저녁은 휴식을 우선하세요.\n\n익숙한 단골 치킨집에 늘 시키는 메뉴로 배달이 맞습니다. [obs-985576ab]\n\n피곤한 날은 일을 줄이는 습관이 있다는 점도 참고했습니다. [obs-03537ac7, obs-398072d2]",
+   "text": "Order your usual. \n\nYou choose familiar when tired. Decide fast. Keep it short tonight. \n\nUsed: hyp-0b9b05d6, hyp-c8f4d8a2, hyp-635fab2d",
    "citations": [
-    "obs-03537ac7",
-    "obs-22a3b49b",
-    "obs-2ad76390",
-    "obs-398072d2",
-    "obs-44fad5e8",
-    "obs-4c0977a2",
-    "obs-57607ac2",
-    "obs-59501bf6",
-    "obs-71f716c1",
-    "obs-96a0e241",
-    "obs-985576ab",
-    "obs-ae5ff584",
-    "obs-bb18031d",
-    "obs-be8d2fc4",
-    "obs-d3ae998c",
-    "obs-d80debfa",
-    "obs-ee2e4c46"
+    "obs-0549b0fe",
+    "obs-114fb898",
+    "obs-1e3e05c2",
+    "obs-21af5037",
+    "obs-3bdf99c3",
+    "obs-4f0e6439",
+    "obs-79640f3a",
+    "obs-8ff3b5fd",
+    "obs-99e68225",
+    "obs-a9968293",
+    "obs-c539e990",
+    "obs-dea36f5a",
+    "obs-f4837633",
+    "obs-fe91f398"
+   ],
+   "note": ""
+  },
+  {
+   "id": "code_review",
+   "name": "Review code my way",
+   "inputs": {
+    "subject": "A pull request that refactors the billing module"
+   },
+   "scenario": "code_review",
+   "mode": "spark",
+   "text": "1. Recheck old vs new billing outputs match. [hyp-79b58363]\n2. Double-check rates and sources used. [hyp-79b58363]\n3. Verify edge cases with facts. [hyp-79b58363]\n\nOther patterns cover music, rain, tiredness. Not relevant here, so not used.",
+   "citations": [
+    "obs-0549b0fe",
+    "obs-21af5037",
+    "obs-6912fe8e",
+    "obs-6aca5414",
+    "obs-6e7435c1",
+    "obs-79640f3a",
+    "obs-80534725",
+    "obs-899fc7c9",
+    "obs-8ff3b5fd",
+    "obs-99e68225",
+    "obs-a46219b2",
+    "obs-a9968293",
+    "obs-dea36f5a",
+    "obs-f3ae0b35",
+    "obs-f4837633",
+    "obs-fe91f398"
+   ],
+   "note": ""
+  },
+  {
+   "id": "deadline_pressure",
+   "name": "Under pressure",
+   "inputs": {
+    "situation": "The release moved up by a week",
+    "deadline": "Friday noon"
+   },
+   "scenario": "deadline_pressure",
+   "mode": "spark",
+   "text": "None of the patterns below are about tight schedules, so I can't suggest what to cut, keep, or delay from them.",
+   "citations": [
+    "obs-0549b0fe",
+    "obs-114fb898",
+    "obs-21af5037",
+    "obs-3bdf99c3",
+    "obs-6aca5414",
+    "obs-79640f3a",
+    "obs-80534725",
+    "obs-899fc7c9",
+    "obs-8ff3b5fd",
+    "obs-99e68225",
+    "obs-a9968293",
+    "obs-f3ae0b35",
+    "obs-f4837633",
+    "obs-fe91f398"
    ],
    "note": ""
   }
- ],
- "mock": {
-  "counts": {
-   "Observation": 29,
-   "Entity": 14,
-   "Context": 9,
-   "Hypothesis": 3,
-   "Preference": 0,
-   "Style": 1,
-   "Criterion": 0
-  },
-  "growth": [
-   {
-    "n": 1,
-    "entities": 2,
-    "contexts": 2,
-    "hypotheses": 0
-   },
-   {
-    "n": 2,
-    "entities": 4,
-    "contexts": 3,
-    "hypotheses": 1
-   },
-   {
-    "n": 3,
-    "entities": 5,
-    "contexts": 4,
-    "hypotheses": 1
-   },
-   {
-    "n": 4,
-    "entities": 5,
-    "contexts": 6,
-    "hypotheses": 2
-   },
-   {
-    "n": 5,
-    "entities": 6,
-    "contexts": 7,
-    "hypotheses": 2
-   },
-   {
-    "n": 6,
-    "entities": 7,
-    "contexts": 7,
-    "hypotheses": 2
-   },
-   {
-    "n": 7,
-    "entities": 8,
-    "contexts": 7,
-    "hypotheses": 2
-   },
-   {
-    "n": 8,
-    "entities": 9,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 9,
-    "entities": 10,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 10,
-    "entities": 10,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 11,
-    "entities": 11,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 12,
-    "entities": 11,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 13,
-    "entities": 12,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 14,
-    "entities": 12,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 15,
-    "entities": 12,
-    "contexts": 7,
-    "hypotheses": 3
-   },
-   {
-    "n": 16,
-    "entities": 12,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 17,
-    "entities": 12,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 18,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 19,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 20,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 21,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 22,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 23,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 24,
-    "entities": 13,
-    "contexts": 8,
-    "hypotheses": 3
-   },
-   {
-    "n": 25,
-    "entities": 14,
-    "contexts": 9,
-    "hypotheses": 3
-   },
-   {
-    "n": 26,
-    "entities": 14,
-    "contexts": 9,
-    "hypotheses": 3
-   },
-   {
-    "n": 27,
-    "entities": 14,
-    "contexts": 9,
-    "hypotheses": 3
-   },
-   {
-    "n": 28,
-    "entities": 14,
-    "contexts": 9,
-    "hypotheses": 3
-   },
-   {
-    "n": 29,
-    "entities": 14,
-    "contexts": 9,
-    "hypotheses": 3
-   }
-  ],
-  "hypotheses": [
-   {
-    "statement": "익숙한 선택에서 안정감을 느낀다",
-    "status": "active",
-    "domain": "취향·경험",
-    "supports": 10,
-    "contradicts": 0,
-    "evidence": [
-     "점심은 회사 앞 식당에서 평소 먹던 제육볶음을 또 시켰다.",
-     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
-     "점심에 평소 가는 식당에서 또 제육볶음을 먹었다."
-    ]
-   },
-   {
-    "statement": "새로운 경험을 탐색하려 한다",
-    "status": "active",
-    "domain": "취향·경험",
-    "supports": 5,
-    "contradicts": 0,
-    "evidence": [
-     "친구 J와 처음 가 보는 이자카야에 갔다. 새로운 곳이라 설렜다.",
-     "개운한 아침에 한강 공원에서 달리기를 했다. 처음으로 10km를 뛰었다.",
-     "맑은 아침에 개운해서 새 카페 두 곳을 돌았다."
-    ]
-   },
-   {
-    "statement": "피곤할 때는 고르는 수고를 회피한다",
-    "status": "active",
-    "domain": "취향·경험",
-    "supports": 4,
-    "contradicts": 0,
-    "evidence": [
-     "야근으로 지쳐서 저녁은 단골 분식집에서 늘 먹는 김밥으로 해결했다.",
-     "지쳐서 점심은 편의점에서 항상 사는 삼각김밥으로 때웠다.",
-     "일요일 저녁 피곤해서 단골 치킨집에 배달을 시켰다. 늘 시키는 메뉴다."
-    ]
-   }
-  ]
- }
+ ]
 }

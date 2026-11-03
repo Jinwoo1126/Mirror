@@ -11,13 +11,14 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from starlette.applications import Starlette
-from starlette.responses import HTMLResponse, JSONResponse
+from starlette.responses import FileResponse, HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 from . import assistant as assistant_mod
@@ -320,6 +321,18 @@ async def api_scenario_run(request):
         return _json(out)
 
 
+_STATIC_OK = re.compile(r"^avatar\.(png|webp|jpg|jpeg|json)$")
+
+
+async def static_file(request):
+    """Only the optional avatar image and its anchor file are served."""
+    name = request.path_params["name"]
+    path = STATIC_DIR / name
+    if not _STATIC_OK.match(name) or not path.is_file():
+        return _json({"error": "not found"}, 404)
+    return FileResponse(path)
+
+
 async def api_map(request):
     with _lock:
         return _json(const_mod.build_map(get_store()))
@@ -428,6 +441,7 @@ routes = [
     Route("/api/profile", api_profile),
     Route("/api/retrieve", api_retrieve, methods=["POST"]),
     Route("/api/map", api_map),
+    Route("/static/{name}", static_file),
     Route("/api/declare", api_declare, methods=["POST"]),
     Route("/api/scenarios/match", api_scenarios_match, methods=["POST"]),
     Route("/api/scenarios", api_scenarios),

@@ -242,6 +242,14 @@ textarea { resize: vertical; min-height: 44px; }
 #sky .star:focus-visible circle { stroke: #fff; stroke-width: 2; } #sky .star.pick circle:not(.decl) { stroke: #fff; stroke-width: calc(2px * var(--u, 1)); }
 #sky .link { stroke: rgba(170,190,255,.35); stroke-width: calc(1.2px * var(--u, 1)); } #sky .link.hubl { stroke-dasharray: 3 4; opacity: .7; }
 #sky .decl { fill: none; stroke: #ffd36e; stroke-width: calc(1.6px * var(--u, 1)); }
+#sky .av-limb { fill: none; stroke: rgba(127,162,255,.5); stroke-linecap: round; stroke-linejoin: round; } #sky .av-limb.f { fill: none; stroke-width: 3; stroke: url(#avRim); }
+#sky .av-skin { stroke: #162052; stroke-linecap: round; stroke-linejoin: round; fill: none; } #sky .av-skin.f, #sky ellipse.av-skin, #sky circle.av-skin, #sky rect.av-skin { fill: url(#avFill); stroke: rgba(127,162,255,.35); stroke-width: 1.5; }
+#sky polyline.av-skin { stroke: #1a2766; opacity: .92; } #sky .av-scan { fill: none; stroke: url(#scan); stroke-linecap: round; } #sky .av-scan.f { fill: url(#scan); stroke: none; }
+#sky .av-visor { fill: rgba(110,210,255,.2); stroke: #8fe0ff; stroke-width: 2; } #sky .av-shine { fill: none; stroke: rgba(255,255,255,.55); stroke-width: 3; stroke-linecap: round; }
+#sky .av-eye { fill: #aef0ff; filter: url(#glow); } #sky .av-halo { fill: none; stroke: #ffd36e; stroke-width: 3; opacity: .85; filter: url(#glow); }
+#sky .av-core { fill: rgba(255,120,170,.16); stroke: #ff8fb8; stroke-width: 2; } #sky .av-core.b { fill: rgba(255,150,190,.38); stroke-width: 1.5; }
+#sky .av-seam { fill: none; stroke: rgba(150,180,255,.3); stroke-width: 1.5; stroke-linecap: round; }
+#sky .av-pad { fill: rgba(80,160,255,.08); stroke: rgba(120,200,255,.7); stroke-width: 2.5; filter: url(#glow); } #sky .av-pad.b { stroke: rgba(160,140,255,.55); stroke-width: 1.5; fill: none; }
 .skyback { position: absolute; top: 12px; left: 12px; background: rgba(16,24,52,.85); color: #dbe4ff; border-color: #2a3a6c; }
 .skybar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 6px; padding: 10px 12px; overflow-x: auto; scrollbar-width: none;
   background: linear-gradient(0deg, rgba(5,9,20,.92), rgba(5,9,20,0)); }
@@ -499,7 +507,7 @@ const BONES = [["neck", "shL"], ["neck", "shR"], ["shL", "elL"], ["elL", "haL"],
   ["shR", "waist"], ["waist", "hipL"], ["waist", "hipR"], ["hipL", "knL"], ["knL", "ftL"], ["hipR", "knR"], ["knR", "ftR"]];
 const HEAD = { x: 500, y: 200, r: 88 };
 const ABOUT_PROMPTS = ["I am ", "When I choose between options, I usually ", "I eat ", "I listen to ", "I write ", "When I am stressed, I ", "I like to go ", "I never "];
-const SKY = { map: null, sel: null, star: null, view: null, anim: 0 };
+const SKY = { map: null, sel: null, star: null, view: null, anim: 0, avatar: null };
 const hsl = (h, l = 64, a = 1) => `hsla(${h}, 85%, ${l}%, ${a})`;
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
 const clip = (t, n) => t.length > n ? t.slice(0, n - 1) + "…" : t;
@@ -531,17 +539,29 @@ function starPos(region, i) {
   const rad = 66 + 27 * Math.sqrt(i);
   return [h.x + Math.cos(a) * rad, h.y + Math.sin(a) * rad];
 }
+function avatarSvg() {
+  const J = JOINTS, pl = pts => pts.map(p => p.join(",")).join(" ");
+  const limb = (pts, w) => `<polyline class="av-limb" points="${pl(pts)}" stroke-width="${w + 7}"/><polyline class="av-skin" points="${pl(pts)}" stroke-width="${w}"/><polyline class="av-scan" points="${pl(pts)}" stroke-width="${w}"/>`;
+  const TORSO = "M414 334 Q500 306 586 334 Q580 452 548 568 Q500 588 452 568 Q420 452 414 334 Z";
+  let o = `<ellipse class="av-pad" cx="500" cy="892" rx="170" ry="26"/><ellipse class="av-pad b" cx="500" cy="892" rx="118" ry="17"/><ellipse class="av-pad b" cx="500" cy="892" rx="66" ry="9"/>`;
+  o += limb([J.shL, J.elL, J.haL], 30) + limb([J.shR, J.elR, J.haR], 30) + limb([J.hipL, J.knL, J.ftL], 44) + limb([J.hipR, J.knR, J.ftR], 44);
+  o += `<ellipse class="av-skin" cx="${J.ftL[0] - 4}" cy="${J.ftL[1] + 14}" rx="30" ry="13"/><ellipse class="av-skin" cx="${J.ftR[0] + 4}" cy="${J.ftR[1] + 14}" rx="30" ry="13"/>`;
+  o += `<circle class="av-skin" cx="${J.haL[0]}" cy="${J.haL[1] + 10}" r="24"/><circle class="av-skin" cx="${J.haR[0]}" cy="${J.haR[1] + 10}" r="24"/>`;
+  o += `<rect class="av-skin" x="480" y="284" width="40" height="34" rx="12"/>`;
+  o += `<path class="av-limb f" d="${TORSO}"/><path class="av-skin f" d="${TORSO}"/><path class="av-scan f" d="${TORSO}"/>`;
+  o += `<circle class="av-skin f" cx="${HEAD.x}" cy="${HEAD.y}" r="${HEAD.r}"/><circle class="av-limb f" cx="${HEAD.x}" cy="${HEAD.y}" r="${HEAD.r}"/><circle class="av-scan f" cx="${HEAD.x}" cy="${HEAD.y}" r="${HEAD.r}"/>`;
+  o += `<rect class="av-visor" x="424" y="174" width="152" height="52" rx="26"/><path class="av-shine" d="M446 188 Q500 176 548 188"/><circle class="av-eye" cx="474" cy="200" r="5"/><circle class="av-eye" cx="526" cy="200" r="5"/>`;
+  o += `<ellipse class="av-halo" cx="500" cy="92" rx="64" ry="12"/>`;
+  o += `<circle class="av-core" cx="500" cy="400" r="30"/><circle class="av-core b" cx="500" cy="400" r="18"/>`;
+  o += `<path class="av-seam" d="M500 308 L500 372 M500 428 L500 566 M448 470 Q500 492 552 470"/>`;
+  return o;
+}
 function renderSky() {
-  const rand = rng(7); let svg = `<defs><filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  const rand = rng(7); let svg = `<defs><linearGradient id="avFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f8cff" stop-opacity=".42"/><stop offset=".55" stop-color="#8a6bff" stop-opacity=".26"/><stop offset="1" stop-color="#4fd0ff" stop-opacity=".2"/></linearGradient><linearGradient id="avRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fb4ff"/><stop offset="1" stop-color="#7be3ff"/></linearGradient><pattern id="scan" width="10" height="6" patternUnits="userSpaceOnUse"><line x1="0" y1="3" x2="10" y2="3" stroke="rgba(170,200,255,.16)" stroke-width="1"/></pattern><filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
   for (let i = 0; i < 150; i++) svg += `<circle class="bgstar${i % 9 === 0 ? " tw" : ""}" cx="${(rand() * 1300 - 150).toFixed(0)}" cy="${(rand() * 1100 - 60).toFixed(0)}" r="${(rand() * 1.4 + .4).toFixed(2)}" style="animation-delay:${(rand() * 4).toFixed(1)}s"/>`;
   const dim = SKY.sel ? " dim" : "";
-  svg += `<g class="body${dim}">`;
-  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.2832, b = (i + 1) / 12 * 6.2832;
-    svg += `<line class="bone" x1="${HEAD.x + Math.cos(a) * HEAD.r}" y1="${HEAD.y + Math.sin(a) * HEAD.r}" x2="${HEAD.x + Math.cos(b) * HEAD.r}" y2="${HEAD.y + Math.sin(b) * HEAD.r}"/><circle class="joint" cx="${HEAD.x + Math.cos(a) * HEAD.r}" cy="${HEAD.y + Math.sin(a) * HEAD.r}" r="2.6"/>`; }
-  svg += `<line class="bone" x1="500" y1="288" x2="500" y2="300"/>`;
-  BONES.forEach(([a, b]) => { const p = JOINTS[a], q = JOINTS[b]; svg += `<line class="bone" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"/>`; });
-  Object.values(JOINTS).forEach(p => svg += `<circle class="joint" cx="${p[0]}" cy="${p[1]}" r="3.2"/>`);
-  svg += `<line class="bone" x1="432" y1="862" x2="568" y2="862"/></g>`;
+  const A = SKY.avatar;
+  svg += `<g class="body${dim}">${A ? `<image href="/static/${esc(A.image)}" x="${A.x}" y="${A.y}" width="${A.w}" height="${A.h}" preserveAspectRatio="xMidYMid meet"/>` : avatarSvg()}</g>`;
   SKY.map.regions.forEach(r => {
     const h = BODY[r.id], total = r.total, rad = total ? Math.min(30, 12 + 4.5 * Math.log2(1 + total)) : 8;
     const on = SKY.sel === r.id, off = SKY.sel && !on;
@@ -618,7 +638,18 @@ function renderAbout() {
   });
   icons();
 }
+async function loadAvatar() {
+  if (SKY.avatar !== null) return;
+  SKY.avatar = false;
+  try {
+    const r = await fetch("/static/avatar.json");
+    if (!r.ok) return;
+    const a = await r.json();
+    if (a && a.image) { SKY.avatar = a; Object.entries(a.anchors || {}).forEach(([k, v]) => { if (BODY[k]) Object.assign(BODY[k], v); }); }
+  } catch (e) {}
+}
 async function loadProfile(keep) {
+  await loadAvatar();
   try {
     SKY.map = await api("/api/map");
     if (!keep) { SKY.sel = null; SKY.star = null; }

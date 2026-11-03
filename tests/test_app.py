@@ -112,3 +112,15 @@ def test_product_default_extractor_is_llm_not_rules(monkeypatch):
     monkeypatch.delenv("MIRROR_EXTRACTOR", raising=False)
     monkeypatch.setattr(app_mod, "_extractor", None)
     assert app_mod.get_extractor().name == "spark"
+
+
+def test_static_serves_only_the_avatar_files(client, tmp_path, monkeypatch):
+    from mirror import app as app_mod
+
+    (tmp_path / "avatar.json").write_text('{"image": "avatar.png"}')
+    (tmp_path / "secret.txt").write_text("nope")
+    monkeypatch.setattr(app_mod, "STATIC_DIR", tmp_path)
+    assert client.get("/static/avatar.json").json()["image"] == "avatar.png"
+    assert client.get("/static/secret.txt").status_code == 404
+    assert client.get("/static/avatar.png").status_code == 404      # allowed name, no file
+    assert client.get("/static/..%2Fapp.py").status_code == 404

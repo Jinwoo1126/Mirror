@@ -23,15 +23,17 @@ from . import search as search_mod
 from .store import MirrorStore
 
 SCENARIO_RUNS = [
-    ("doc_draft", {"topic": "이번 달 DJ 선곡 과정", "kind": "블로그 글",
-                   "points": "반복이 강한 곡 위주로 고른 이유\n비 오는 밤에는 차분한 곡"}),
-    ("music_recommend", {"situation": "비 오는 밤에 믹스 작업을 할 때",
+    ("doc_draft", {"topic": "How I put together this month's DJ sets", "kind": "Blog post",
+                   "points": "Why I lean on repetitive tracks\nCalmer tracks on rainy nights"}),
+    ("music_recommend", {"situation": "Mixing late on a rainy night",
                          "candidates": "Nuvole Bianche\nStrobe\nOpus\nAround the World",
                          "avoid": ""}),
-    ("day_plan", {"state": "피곤함",
-                  "tasks": "블로그 글 마무리\n팀장님 메일 답장\nDJ 세트 연습\n운동\n장보기"}),
-    ("choice_help", {"request": "피곤한 날 저녁 주문",
-                     "options": "단골 치킨집\n새로 생긴 쌀국수집"}),
+    ("day_plan", {"state": "Tired",
+                  "tasks": "Finish the blog post\nReply to my manager\nPractice the DJ set\nWorkout\nGrocery shopping"}),
+    ("choice_help", {"request": "Dinner order on a tired night",
+                     "options": "My usual fried chicken place\nThe new noodle shop"}),
+    ("code_review", {"subject": "A pull request that refactors the billing module"}),
+    ("deadline_pressure", {"situation": "The release moved up by a week", "deadline": "Friday noon"}),
 ]
 
 

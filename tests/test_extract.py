@@ -207,3 +207,26 @@ def test_user_prompt_lists_known_hypotheses_for_reuse():
     withk = ex.build_user_prompt(obs, ["피곤할 때는 익숙한 선택을 한다"])
     assert "reuse its statement EXACTLY" in withk
     assert "- 피곤할 때는 익숙한 선택을 한다" in withk
+
+
+def test_extraction_prompt_has_no_korean_examples_and_asks_for_scene_language():
+    import re
+    sample_part = ex.EXTRACTION_SYSTEM_PROMPT.split("Node kinds and required attrs:")[0]
+    examples = re.findall(r'"(?:name|value|phrase)": "([^"]*)"', ex.EXTRACTION_SYSTEM_PROMPT)
+    assert not any(re.search("[가-힣]", e) for e in examples)
+    assert "same language as the scene" in ex.EXTRACTION_SYSTEM_PROMPT
+    user = ex.build_user_prompt(ex.ObservationInput(source_id="t", text="x", occurred_at="u"))
+    assert not re.search("[가-힣]", user)
+    assert "same language as the scene" in user
+
+
+def test_sensitive_domain_is_forced_to_internal_only_instead_of_rejected():
+    data = {"nodes": [{"kind": "Hypothesis", "ref": "hyp-0", "attrs": {
+        "statement": "Wants short answers", "domain": "자기이해·반복 주제",
+        "use_policy": "apply_silently", "status": "candidate"}}], "edges": []}
+    r = ex.parse_extraction_json(data)
+    assert r.nodes[0].attrs["use_policy"] == "internal_only"
+    assert ex.validate_extraction(r) == []
+    plain = ex.parse_extraction_json({"nodes": [{"kind": "Hypothesis", "ref": "h", "attrs": {
+        "statement": "x", "domain": "취향·경험", "use_policy": "apply_silently"}}], "edges": []})
+    assert plain.nodes[0].attrs["use_policy"] == "apply_silently"

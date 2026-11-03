@@ -44,6 +44,7 @@ tests/                           pytest 커밋 테스트 (단위+통합)
 > 규칙으로 대신하지 않고 실패를 알린다. spark는 `muse` 로그인 또는 `META_API_KEY`가 필요하다.
 
 > Connecting other AI services (gateway, remote MCP, hooks): see `docs/CONNECT.md`.
+> Using your own character image for the body map: see `docs/AVATAR.md`.
 
 ## 설치
 
