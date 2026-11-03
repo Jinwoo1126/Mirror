@@ -15,6 +15,12 @@ MODEL_API_KEY=... python -m mirror.avatar_gen --generate --n 2      # writes ava
 python -m mirror.avatar_gen --input avatar-candidates/avatar2.png    # installs the one you pick
 ```
 
+The built-in prompt draws a person, not a robot, and ties each body part to something they
+wear or hold: a lightbulb beanie (brain), round glasses (eyes), headphones (ears), a smile
+(mouth), a glowing heart badge (heart), a notebook and pen (hands) and glowing sneakers
+(feet). `PARTS` in `mirror/avatar_gen.py` says where each hub sits on that picture; for a
+different picture pass `--parts '{"brain": [0.5, 0.07], ...}'` (fractions of the image).
+
 The generated image and `avatar.json` are git-ignored, because the terms for publishing
 generated images were not checked. Everyone who clones the repo sees the built-in avatar
 until they generate their own.

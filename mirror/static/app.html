@@ -241,7 +241,7 @@ textarea { resize: vertical; min-height: 44px; }
 #sky .sl { font-size: calc(12.5px * var(--u, 1)); } #sky .star { cursor: pointer; outline: none; }
 #sky .star:focus-visible circle { stroke: #fff; stroke-width: 2; } #sky .star.pick circle:not(.decl) { stroke: #fff; stroke-width: calc(2px * var(--u, 1)); }
 #sky .link { stroke: rgba(170,190,255,.35); stroke-width: calc(1.2px * var(--u, 1)); } #sky .link.hubl { stroke-dasharray: 3 4; opacity: .7; }
-#sky .decl { fill: none; stroke: #ffd36e; stroke-width: calc(1.6px * var(--u, 1)); }
+#sky .leader { stroke: rgba(190,205,255,.55); stroke-width: calc(1.2px * var(--u, 1)); stroke-dasharray: 3 3; } #sky .decl { fill: none; stroke: #ffd36e; stroke-width: calc(1.6px * var(--u, 1)); }
 #sky .av-limb { fill: none; stroke: rgba(127,162,255,.5); stroke-linecap: round; stroke-linejoin: round; } #sky .av-limb.f { fill: none; stroke-width: 3; stroke: url(#avRim); }
 #sky .av-skin { stroke: #162052; stroke-linecap: round; stroke-linejoin: round; fill: none; } #sky .av-skin.f, #sky ellipse.av-skin, #sky circle.av-skin, #sky rect.av-skin { fill: url(#avFill); stroke: rgba(127,162,255,.35); stroke-width: 1.5; }
 #sky polyline.av-skin { stroke: #1a2766; opacity: .92; } #sky .av-scan { fill: none; stroke: url(#scan); stroke-linecap: round; } #sky .av-scan.f { fill: url(#scan); stroke: none; }
@@ -520,8 +520,9 @@ function applyView(v) {
   $("sky").style.setProperty("--u", (v.w / w).toFixed(4));
   SKY.view = v;
 }
+function setView(v) { SKY.target = v; applyView(v); }
 function fly(target) {
-  cancelAnimationFrame(SKY.anim);
+  cancelAnimationFrame(SKY.anim); SKY.target = target;
   const from = SKY.view || target;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { applyView(target); return; }
   const t0 = performance.now(), dur = 750;
@@ -562,13 +563,26 @@ function renderSky() {
   const dim = SKY.sel ? " dim" : "";
   const A = SKY.avatar;
   svg += `<g class="body${dim}">${A ? `<ellipse class="av-pad" cx="500" cy="${A.y + A.h - 8}" rx="190" ry="28"/><ellipse class="av-pad b" cx="500" cy="${A.y + A.h - 8}" rx="130" ry="18"/><ellipse class="av-pad b" cx="500" cy="${A.y + A.h - 8}" rx="70" ry="10"/><image href="/static/${esc(A.image)}" x="${A.x}" y="${A.y}" width="${A.w}" height="${A.h}" preserveAspectRatio="xMidYMid meet"/>` : avatarSvg()}</g>`;
+  const k = SKY.target ? SKY.target.w / skySize().w : 1.2;
+  const LABEL = { brain: [1, 0], eyes: [-1, -14], ears: [1, -14], mouth: [-1, 26], heart: [1, 12, 2.1], hands: [-1, 0, 1.2], feet: [1, 0] };
   SKY.map.regions.forEach(r => {
-    const h = BODY[r.id], total = r.total, rad = total ? Math.min(30, 12 + 4.5 * Math.log2(1 + total)) : 8;
+    const h = BODY[r.id], total = r.total, img = !!SKY.avatar;
+    const rad = img ? (total ? Math.min(15, 7 + 2 * Math.log2(1 + total)) : 5) : (total ? Math.min(30, 12 + 4.5 * Math.log2(1 + total)) : 8);
     const on = SKY.sel === r.id, off = SKY.sel && !on;
-    svg += `<g class="hub${on ? " on" : ""}${off ? " off" : ""}${total ? "" : " empty"}" data-r="${r.id}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${r.stars.length} stars">
-      <circle r="${off ? rad * 1.2 : rad * 2.3}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue, 60, off ? .05 : .13)}"/><circle r="${rad}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue)}" filter="url(#glow)"/>
-      ${off ? "" : `<text class="hl" x="${h.x}" y="${h.y + rad + 20 * (SKY.view ? SKY.view.w / skySize().w : 1.2)}" text-anchor="middle">${esc(r.name)}</text>
-      <text class="hs" x="${h.x}" y="${h.y + rad + 36 * (SKY.view ? SKY.view.w / skySize().w : 1.2)}" text-anchor="middle">${r.stars.length ? r.stars.length + " stars" : "empty"}</text>`}</g>`;
+    const cls = `hub${on ? " on" : ""}${off ? " off" : ""}${total ? "" : " empty"}`;
+    const count = r.stars.length ? r.stars.length + " stars" : "empty";
+    let label;
+    if (img) {
+      const [side, dy, far] = LABEL[r.id] || [1, 0], lx = h.x + side * (rad + 58 * k * (far || 1)), ly = h.y + dy * k, anchor = side > 0 ? "start" : "end";
+      label = off ? "" : `<line class="leader" x1="${h.x + side * rad}" y1="${h.y}" x2="${lx - side * 5 * k}" y2="${ly - 4 * k}"/>
+        <text class="hl" x="${lx}" y="${ly}" text-anchor="${anchor}">${esc(r.name)}</text><text class="hs" x="${lx}" y="${ly + 15 * k}" text-anchor="${anchor}">${count}</text>`;
+    } else {
+      label = off ? "" : `<text class="hl" x="${h.x}" y="${h.y + rad + 20 * k}" text-anchor="middle">${esc(r.name)}</text><text class="hs" x="${h.x}" y="${h.y + rad + 36 * k}" text-anchor="middle">${count}</text>`;
+    }
+    svg += `<g class="${cls}" data-r="${r.id}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${r.stars.length} stars">
+      <circle r="${Math.max(26 * k, rad * 2)}" cx="${h.x}" cy="${h.y}" fill="transparent"/>
+      <circle r="${off ? rad * 1.2 : rad * (img ? 1.9 : 2.3)}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue, 60, off ? .05 : .16)}"/>
+      <circle r="${rad}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue)}" filter="url(#glow)"/>${label}</g>`;
   });
   if (SKY.sel) {
     const r = regionOf(SKY.sel), h = BODY[r.id], list = r.stars.slice(0, 14);
@@ -653,14 +667,14 @@ async function loadProfile(keep) {
   try {
     SKY.map = await api("/api/map");
     if (!keep) { SKY.sel = null; SKY.star = null; }
-    renderPerson(); renderAbout(); applyView(keep && SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview());
+    renderPerson(); renderAbout(); setView(keep && SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview());
     $("sky-back").hidden = !SKY.sel; renderSky(); renderBar(); renderDetail();
   } catch (e) { $("person").innerHTML = `<div class="card">${empty("wifi-off", "Could not load", e.message)}</div>`; }
   icons();
 }
 $("sky-back").addEventListener("click", backToBody);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && SKY.sel && $("profile").classList.contains("active")) backToBody(); });
-window.addEventListener("resize", () => { if (SKY.map && $("profile").classList.contains("active")) { applyView(SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview()); renderSky(); } });
+window.addEventListener("resize", () => { if (SKY.map && $("profile").classList.contains("active")) { setView(SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview()); renderSky(); } });
 
 /* Scenarios */
 let SCEN = [], scenCur = null;

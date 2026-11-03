@@ -25,20 +25,26 @@ from PIL import Image
 ENDPOINT = "https://api.meta.ai/v1/images/generations"
 MODEL = "muse-image-1.0"
 PROMPT = (
-    "Full-body front view of a stylized metaverse avatar character standing in a neutral "
-    "pose with arms slightly away from the body, glossy translucent holographic material "
-    "in deep indigo and violet with soft cyan neon rim light, rounded friendly proportions, "
-    "smooth glossy visor face with two small glowing eyes, a subtle glowing core on the "
-    "chest, clean polished 3D render look, centered with the entire body visible from head "
-    "to feet and a small margin around it, on a perfectly flat solid pure green (#00FF00) "
-    "background, no floor, no shadow, no text")
+    "Full-body front view of a friendly stylized 3D avatar of a young person, gender-neutral, "
+    "in the polished style of a modern social metaverse app, standing in a relaxed pose, "
+    "rounded friendly proportions, smooth skin, expressive happy face with a small smile, "
+    "soft cyan and violet neon rim light. Wearing a cozy indigo hoodie with a small glowing "
+    "pink heart badge on the chest, big over-ear headphones, round glasses, a beanie with a "
+    "tiny glowing lightbulb on top, and white sneakers with a cyan glow. The left hand holds "
+    "an open notebook and a pen, the right hand holds a steaming coffee cup. Both hands "
+    "clearly visible and slightly away from the body. Centered, the entire body visible from "
+    "head to feet with a small margin, on a perfectly flat solid pure green (#00FF00) "
+    "background, no green clothing, no floor, no shadow, no text")
 
-# Where the map is drawn (a 1000 x 1000 space) and where each part sits on a front-view
-# character, as fractions of the image (u across, v down).
+# Where the map is drawn (a 1000 x 1000 space) and where each part sits on the picture,
+# as fractions of the image (u across, v down).
 RECT = {"x": 275, "y": 40, "w": 450, "h": 900}
-PARTS = {"brain": (0.50, 0.095), "eyes": (0.40, 0.2325), "ears": (0.77, 0.215),
-         "mouth": (0.50, 0.325), "heart": (0.50, 0.4525), "hands": (0.15, 0.64),
-         "feet": (0.50, 0.95)}
+# Each part is tied to something the character wears or holds: lightbulb beanie (brain),
+# glasses (eyes), headphones (ears), smile (mouth), heart badge (heart), notebook and pen
+# (hands), sneakers (feet). Change these when you use a different picture.
+PARTS = {"brain": (0.50, 0.075), "eyes": (0.42, 0.235), "ears": (0.725, 0.24),
+         "mouth": (0.51, 0.286), "heart": (0.59, 0.3975), "hands": (0.23, 0.495),
+         "feet": (0.50, 0.895)}
 
 
 def generate(n: int = 1, prompt: str = PROMPT, size: str = "1024x2048") -> list[bytes]:
@@ -84,6 +90,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--n", type=int, default=2)
     ap.add_argument("--input", help="a green-background image to cut out and install")
     ap.add_argument("--candidates", default="avatar-candidates")
+    ap.add_argument("--parts", help='JSON like {"brain": [0.5, 0.07], ...} (fractions of the image)')
     ap.add_argument("--out", default=str(Path(__file__).parent / "static"))
     args = ap.parse_args(argv)
     if args.generate:
@@ -92,6 +99,8 @@ def main(argv: list[str] | None = None) -> None:
         for i, png in enumerate(generate(args.n), 1):
             (d / f"avatar{i}.png").write_bytes(png)
             print("saved", d / f"avatar{i}.png")
+    if args.parts:
+        PARTS.update({k: tuple(v) for k, v in json.loads(args.parts).items()})
     if args.input:
         print("installed", install(Path(args.input), Path(args.out)))
     if not args.generate and not args.input:
