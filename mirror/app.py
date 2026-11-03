@@ -21,6 +21,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 from . import assistant as assistant_mod
+from . import constellation as const_mod
 from . import control as control_mod
 from . import extract as ex
 from . import hypotheses as hyp_mod
@@ -319,6 +320,26 @@ async def api_scenario_run(request):
         return _json(out)
 
 
+async def api_map(request):
+    with _lock:
+        return _json(const_mod.build_map(get_store()))
+
+
+async def api_declare(request):
+    body = await request.json()
+    with _lock:
+        res = const_mod.declare(get_store(), body.get("statement", ""),
+                                bool(body.get("private")))
+        if res.get("ok") and not res.get("duplicate") and get_index() is not None:
+            get_index().refresh(get_store())
+    return _json(res, 200 if res.get("ok") else 400)
+
+
+async def api_scenarios_match(request):
+    body = await request.json()
+    return _json({"matches": scen_mod.match_scenarios(body.get("text", ""))})
+
+
 async def api_retrieve(request):
     """Related understanding for outside callers (the edge server).
 
@@ -330,11 +351,21 @@ async def api_retrieve(request):
     if not q:
         return _json({"error": "empty request"}, 400)
     budget = max(1, min(int(body.get("budget", 6)), 20))
+    matched = scen_mod.match_scenarios(q)
     with _lock:
-        out = retrieve_mod.retrieve(get_store(), q, [], None, budget,
-                                    index=get_index())
+        store = get_store()
+        out = retrieve_mod.retrieve(store, q, [], None, budget, index=get_index())
+        raw = list(out.get("items", []))
+        seen = {it["id"] for it in raw}
+        for m in matched[:2]:   # also look up what matters for the situation the text triggers
+            extra = retrieve_mod.retrieve(store, f"{m['topic']} {q}", [], None, 4,
+                                          index=get_index())
+            for it in extra.get("items", []):
+                if it["id"] not in seen:
+                    seen.add(it["id"])
+                    raw.append(it)
     items = []
-    for it in out.get("items", []):
+    for it in raw:
         if it["kind"] == schema.HYPOTHESIS:
             if it.get("use_policy") == "internal_only":
                 continue
@@ -346,7 +377,8 @@ async def api_retrieve(request):
                           "evidence_ids": it.get("supports", [])})
         elif body.get("include_memories"):
             items.append(it)
-    return _json({"items": items, "revision": out.get("revision")})
+    return _json({"items": items, "scenarios": [{"id": m["id"], "name": m["name"]} for m in matched],
+                  "revision": out.get("revision")})
 
 
 async def api_relations(request):
@@ -395,6 +427,9 @@ routes = [
     Route("/api/relations", api_relations),
     Route("/api/profile", api_profile),
     Route("/api/retrieve", api_retrieve, methods=["POST"]),
+    Route("/api/map", api_map),
+    Route("/api/declare", api_declare, methods=["POST"]),
+    Route("/api/scenarios/match", api_scenarios_match, methods=["POST"]),
     Route("/api/scenarios", api_scenarios),
     Route("/api/scenarios/{scenario_id}/run", api_scenario_run, methods=["POST"]),
     Route("/api/decide", api_decide, methods=["POST"]),

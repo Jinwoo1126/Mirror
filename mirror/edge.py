@@ -35,7 +35,8 @@ INSTRUCTIONS = (
     "Mirror keeps what it has learned about the user from past conversations. "
     "At the start of a task that depends on the user's preferences or habits, call "
     "mirror_context with a short description of the task and use what comes back "
-    "quietly. Never reveal it unprompted and never make claims about the user's "
+    "quietly. The reply also names the situations the request matches (for example code "
+    "review or deadline pressure); mirror_scenario can run one of them in full. Never reveal it unprompted and never make claims about the user's "
     "personality. When the user states a decision, a preference or a correction, call "
     "mirror_remember with their own words. If the user says a remembered point is "
     "wrong, call mirror_feedback."
@@ -84,19 +85,23 @@ def last_user_text(messages: list) -> str:
     return ""
 
 
-def context_message(items: list[dict]) -> str:
+def context_message(items: list[dict], scenarios: list[dict] | None = None) -> str:
     lines = [
         "Background about the user, from Mirror's memory of their past conversations. "
         "Use it only when it is relevant, do not mention it unprompted, and never "
         "make claims about the user's personality or type."]
+    if scenarios:
+        lines.append("Situation this looks like: "
+                     + ", ".join(s["name"] for s in scenarios) + ".")
     for it in items:
         lines.append(f"- {it['statement']} ({it.get('evidence', 0)} evidence, "
                      f"{it.get('status', 'candidate')})")
     return "\n".join(lines)
 
 
-def with_context(messages: list, items: list[dict]) -> list:
-    return [{"role": "system", "content": context_message(items)}] + list(messages)
+def with_context(messages: list, items: list[dict],
+                 scenarios: list[dict] | None = None) -> list:
+    return [{"role": "system", "content": context_message(items, scenarios)}] + list(messages)
 
 
 class BearerAuth:
@@ -126,13 +131,16 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
     backend = backend or httpx.AsyncClient(base_url=cfg.backend, timeout=120)
     upstream = upstream or httpx.AsyncClient(timeout=None)
 
-    async def fetch_context(text: str) -> list[dict]:
+    async def fetch_context(text: str) -> tuple[list[dict], list[dict]]:
         try:
             r = await backend.post("/api/retrieve", json={
                 "request": text, "budget": cfg.context_budget})
-            return r.json().get("items", []) if r.status_code == 200 else []
+            if r.status_code != 200:
+                return [], []
+            data = r.json()
+            return data.get("items", []), data.get("scenarios", [])
         except Exception:
-            return []     # Mirror being down must never break the user's request
+            return [], []     # Mirror being down must never break the user's request
 
     async def remember(text: str) -> dict:
         r = await backend.post("/api/memories", json={"text": text})
@@ -150,8 +158,14 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
     @mcp.tool()
     async def mirror_context(request: str, budget: int = 6) -> dict:
         """What Mirror has learned about the user that is relevant to this task."""
-        items = await fetch_context(request)
-        return {"items": items[:max(1, min(budget, 20))]}
+        items, scenarios = await fetch_context(request)
+        return {"items": items[:max(1, min(budget, 20))], "scenarios": scenarios}
+
+    @mcp.tool()
+    async def mirror_scenario(scenario_id: str, inputs: dict) -> dict:
+        """Run one scenario in full (for example code_review or deadline_pressure)."""
+        r = await backend.post(f"/api/scenarios/{scenario_id}/run", json={"inputs": inputs})
+        return r.json()
 
     @mcp.tool()
     async def mirror_remember(text: str) -> dict:
@@ -178,9 +192,9 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         text = last_user_text(body.get("messages", []))
         items = []
         if cfg.inject and not skip and text:
-            items = await fetch_context(text)
+            items, scenarios = await fetch_context(text)
             if items:
-                body["messages"] = with_context(body["messages"], items)
+                body["messages"] = with_context(body["messages"], items, scenarios)
         headers = {"authorization": f"Bearer {cfg.upstream_key}",
                    "content-type": "application/json"}
         out_headers = {"x-mirror-injected": str(len(items))}

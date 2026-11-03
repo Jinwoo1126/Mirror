@@ -9,6 +9,7 @@ invents track titles or body text. The memories it used come back as ids.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -47,6 +48,11 @@ class Scenario:
     summary: str
     fields: list[Field]
     needs_llm: str                # tells the person what a local result means
+    triggers: list[str] = field(default_factory=list)  # regexes: when a hook should fire
+    topic: str = ""               # what to look up in memory for this situation
+    instruction: str = ""         # generation instructions (lens scenarios)
+    local_hint: str = ""          # what to tell the person when nothing relevant is known
+    lens: bool = False            # True: generic "what applies here" scenario
 
 
 def _lines(value: str) -> list[str]:
@@ -104,7 +110,8 @@ SCENARIOS: dict[str, Scenario] = {s.id: s for s in (
          Field("kind", "Type", "select", options=DOC_KINDS),
          Field("points", "Points to include", "textarea", "One per line")],
         "Writing the full text needs an LLM connection. For now you get an outline, "
-        "a style guide and the memories you can draw on."),
+        "a style guide and the memories you can draw on.",
+        triggers=[r"write (a|an|the) ", r"blog post", r"\bmemo\b", r"first draft", r"초안"]),
     Scenario(
         "music_recommend", "Pick music",
         "Choose tracks that fit the moment, based on what Mirror knows about you.",
@@ -114,13 +121,15 @@ SCENARIOS: dict[str, Scenario] = {s.id: s for s in (
                "One per line. If you add some, Mirror ranks them for you"),
          Field("avoid", "Anything to avoid", "text")],
         "Finding new tracks needs an LLM connection. With candidates, they are ranked "
-        "from your memories. Without, you only get the criteria."),
+        "from your memories. Without, you only get the criteria.",
+        triggers=[r"playlist", r"\bmusic\b", r"\btracks?\b", r"\bsongs?\b", r"음악", r"선곡"]),
     Scenario(
         "day_plan", "Plan my day",
         "Sort today's tasks to fit your state and what Mirror has learned.",
         [Field("state", "How do you feel", "select", options=["Normal", "Tired", "Fresh"]),
          Field("tasks", "Tasks", "textarea", "One per line", required=True)],
-        "Planned by rules. With an LLM connected, it also explains the time split."),
+        "Planned by rules. With an LLM connected, it also explains the time split.",
+        triggers=[r"plan my day", r"to-?do", r"today'?s tasks", r"할 일"]),
     Scenario(
         "choice_help", "Help me choose",
         "Weigh menus, places or movies against your own history.",
@@ -128,12 +137,132 @@ SCENARIOS: dict[str, Scenario] = {s.id: s for s in (
                required=True),
          Field("options", "Options", "textarea", "Two or more, one per line",
                required=True)],
-        "Shows predictions from different viewpoints side by side. You decide."),
+        "Shows predictions from different viewpoints side by side. You decide.",
+        triggers=[r"which (one|option)", r"choose between", r"\bor\b.*\?"]),
 )}
+
+
+def _lens(id, name, summary, fields, triggers, topic, instruction, hint):
+    return Scenario(
+        id, name, summary, fields,
+        "Writing the guidance needs an LLM connection. For now you get the patterns "
+        "Mirror found that matter here.",
+        triggers=triggers, topic=topic, instruction=instruction, local_hint=hint, lens=True)
+
+
+_F = Field
+for _s in (
+    _lens("code_review", "Review code my way",
+          "A review checklist ordered by what you actually care about.",
+          [_F("subject", "What are you reviewing", "text",
+              "e.g. A pull request that refactors the billing module", required=True),
+           _F("notes", "Anything specific", "textarea", "Optional")],
+          [r"code review", r"pull request", r"\bPR\b", r"\bdiff\b", r"refactor", r"리뷰"],
+          "code review feedback strictness tests naming refactoring",
+          "Write a short review checklist for this change, ordered by what this person "
+          "tends to care about. Base their priorities only on the patterns below.",
+          "Tell Mirror your review habits, for example: I block pull requests without tests."),
+    _lens("writing_tone", "Match my tone",
+          "Rewrite or draft a message the way you would write it.",
+          [_F("message", "Your draft or what to say", "textarea",
+              "Paste a draft or describe the message", required=True),
+           _F("audience", "Who is it for", "select",
+              options=["Colleague", "Manager", "Friend", "Customer"])],
+          [r"\bemail\b", r"\breply\b", r"\bdraft\b", r"rewrite", r"\btone\b", r"메일", r"답장"],
+          "tone writing email message formal casual short direct",
+          "Rewrite the draft in this person's tone for the audience. Follow the tone "
+          "patterns below and keep the meaning unchanged.",
+          "Tell Mirror how you like to write, for example: I keep emails to three sentences."),
+    _lens("decision_recap", "Recall similar decisions",
+          "What you usually choose in situations like this one.",
+          [_F("decision", "The decision in front of you", "text",
+              "e.g. Whether to take the new project", required=True)],
+          [r"should i", r"\bdecide\b", r"choose between", r"\bpick\b", r"\bvs\b", r"고민"],
+          "decision choice pick usually default avoid prefer",
+          "Describe what this person usually chooses in similar situations and why, "
+          "using only the patterns below. Do not make the decision for them.",
+          "Tell Mirror how you decide, for example: I pick the familiar option when tired."),
+    _lens("deadline_pressure", "Under pressure",
+          "What you cut and what you protect when time is short.",
+          [_F("situation", "What is happening", "textarea", required=True),
+           _F("deadline", "Deadline", "text", "e.g. Friday noon")],
+          [r"deadline", r"behind schedule", r"crunch", r"overdue", r"tight schedule", r"빠듯", r"마감"],
+          "deadline pressure schedule tight cut skip prioritize stress",
+          "Suggest what to cut, keep and delay, based on how this person has handled "
+          "tight schedules before. Use only the patterns below.",
+          "Tell Mirror what you do when time is short."),
+    _lens("learning_style", "Explain it my way",
+          "How to explain something so it sticks for you.",
+          [_F("topic", "What do you want to learn", "text", required=True),
+           _F("level", "Your level", "select",
+              options=["Beginner", "Some experience", "Expert"])],
+          [r"\bexplain\b", r"teach me", r"how does", r"tutorial", r"walk me through", r"설명"],
+          "learning explanation examples depth order step",
+          "Outline how to explain the topic to this person: the order, the depth and "
+          "the kind of examples, based only on the patterns below.",
+          "Tell Mirror how you learn best, for example: I want the example before the rule."),
+    _lens("ai_instructions", "Brief an AI for me",
+          "Instructions that make an AI answer the way you like.",
+          [_F("task", "What will the AI do for you", "text", required=True)],
+          [r"system prompt", r"prompt for", r"instructions for", r"ask the ai", r"custom instructions"],
+          "AI assistant answers length questions style prefer concise",
+          "Write instructions for an AI assistant that make its answers fit this person, "
+          "using only the patterns below as evidence of their preferences.",
+          "Tell Mirror what annoys you in AI answers, for example: too long, too many questions."),
+    _lens("collaboration", "Work with someone",
+          "How you tend to handle a teammate, manager or stakeholder.",
+          [_F("who", "Who", "text", "e.g. My manager", required=True),
+           _F("situation", "What is happening", "textarea", required=True)],
+          [r"my manager", r"teammate", r"colleague", r"stakeholder", r"\b1:1\b", r"feedback from", r"팀장", r"동료"],
+          "teammate manager feedback communication conflict meeting",
+          "Suggest how to approach this situation based on how this person has handled "
+          "similar ones. Describe behavior only and never label the person or the other party.",
+          "Tell Mirror how you handle feedback and disagreement."),
+    _lens("shopping", "Buy something",
+          "How you usually decide on a purchase.",
+          [_F("item", "What are you buying", "text", required=True),
+           _F("budget", "Budget", "text")],
+          [r"\bbuy\b", r"purchase", r"worth it", r"\bbudget\b", r"\bprice\b", r"구매", r"예산"],
+          "buy purchase price budget compare brand spend",
+          "Summarize how this person usually decides on purchases and what to weigh "
+          "here, using only the patterns below.",
+          "Tell Mirror how you buy things, for example: I wait a week before big purchases."),
+    _lens("energy_routine", "Fit my energy",
+          "Schedule things around how much energy you have.",
+          [_F("task", "What do you need to fit in", "textarea", required=True),
+           _F("energy", "Your energy", "select", options=["Low", "Normal", "High"])],
+          [r"\btired\b", r"exhausted", r"\benergy\b", r"\bsleep\b", r"workout", r"피곤", r"지쳐"],
+          "tired energy rest sleep workout routine slow",
+          "Suggest how to arrange this around the person's energy, using only the "
+          "patterns below about how they act when tired or fresh.",
+          "Tell Mirror what you do when you are tired."),
+    _lens("travel_plan", "Plan a trip",
+          "A trip shaped by how you actually like to travel.",
+          [_F("destination", "Where", "text", required=True),
+           _F("days", "How many days", "text")],
+          [r"\btrip\b", r"\btravel\b", r"itinerary", r"\bflight\b", r"\bhotel\b", r"여행"],
+          "travel trip places walk food pace budget new",
+          "Shape a trip plan around this person's habits with places, food and pace, "
+          "using only the patterns below.",
+          "Tell Mirror how you like to travel."),
+):
+    SCENARIOS[_s.id] = _s
+
 
 
 def list_scenarios() -> list[dict]:
     return [schema.to_jsonable(s) for s in SCENARIOS.values()]
+
+
+def match_scenarios(text: str, limit: int = 3) -> list[dict]:
+    """Which scenarios a piece of text triggers, best first. This is what a hook calls."""
+    hits = []
+    for sc in SCENARIOS.values():
+        n = sum(1 for t in sc.triggers if re.search(t, text or "", re.IGNORECASE))
+        if n:
+            hits.append({"id": sc.id, "name": sc.name, "score": n, "topic": sc.topic})
+    hits.sort(key=lambda h: -h["score"])
+    return hits[:limit]
 
 
 # -- running -------------------------------------------------------------------
@@ -286,13 +415,36 @@ def _choice(store, index, prof, inputs, generate, router):
     return mode, text, out["retrieval"]
 
 
+def _lens_run(store, index, prof, inputs, generate, sc):
+    _require(inputs, *[f.key for f in sc.fields if f.required])
+    given = [(f.label, str(inputs.get(f.key, "")).strip()) for f in sc.fields
+             if str(inputs.get(f.key, "")).strip()]
+    items = _context(store, index, sc.topic + " " + " ".join(v for _, v in given), budget=8)
+    patterns = [i for i in items if i["kind"] == schema.HYPOTHESIS]
+    prompt = (sc.instruction + "\n" + "\n".join(f"{k}: {v}" for k, v in given)
+              + f"\nPatterns about this person:\n{_items_block(items)}\n{RULES}\n"
+              "If none of the patterns are relevant, say so briefly instead of guessing.")
+    mode, text = generate(prompt)
+    if mode != "local" and text:
+        return mode, text, items
+    lines = [sc.name, ""] + [f"{k}: {v}" for k, v in given] + [""]
+    if patterns:
+        lines.append("Patterns that matter here (from what Mirror knows about you)")
+        lines += [f"- {p['statement']} ({len(p['supports'])} evidence)" for p in patterns]
+    else:
+        lines += ["Mirror has no patterns relevant to this yet.", sc.local_hint]
+    return "local", "\n".join(lines), items
+
+
 def run_scenario(store: MirrorStore, router, index, scenario_id: str,
                  inputs: dict, generate: Generate) -> dict:
     scenario = SCENARIOS.get(scenario_id)
     if scenario is None:
         raise ScenarioError(f"Unknown scenario: {scenario_id}")
     prof = profile_mod.build_profile(store)
-    if scenario_id == "choice_help":
+    if scenario.lens:
+        mode, text, items = _lens_run(store, index, prof, inputs, generate, scenario)
+    elif scenario_id == "choice_help":
         mode, text, items = _choice(store, index, prof, inputs, generate, router)
     else:
         fn = {"doc_draft": _doc, "music_recommend": _music,

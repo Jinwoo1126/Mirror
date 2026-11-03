@@ -69,6 +69,7 @@ Add `http://<edge-host>:8100/mcp` as a streamable-HTTP MCP server with the heade
 - `mirror_context(request, budget)`: what Mirror knows that is relevant to a task
 - `mirror_remember(text)`: remember something the user said
 - `mirror_feedback(hypothesis_id, verdict)`: `correct`, `wrong` or `dont_use`
+- `mirror_scenario(scenario_id, inputs)`: run one scenario in full
 
 The server sends instructions telling the AI to call `mirror_context` at the start of a
 task and `mirror_remember` when the user states a decision or correction. Whether the AI
@@ -87,3 +88,33 @@ and treat the token like a password.
   without Mirror, plus the injected context.
 - Capture and `mirror_remember`: the text goes to Mirror's LLM extractor.
 - Nothing is sent to a third party that you did not configure.
+
+## Scenarios a hook can fire
+
+Every scenario has trigger patterns. When a request matches, `mirror_context` and the
+gateway also look up what matters for that situation and name it in the context
+("Situation this looks like: Review code my way"). `POST /api/scenarios/match` with
+`{"text": "..."}` returns the matches, which is what a client hook calls.
+
+| Scenario id | Fires on requests about |
+|---|---|
+| `code_review` | code review, pull requests, diffs, refactors |
+| `writing_tone` | emails, replies, drafts, rewrites, tone |
+| `decision_recap` | "should I", deciding, picking, "vs" |
+| `deadline_pressure` | deadlines, crunch, tight schedules |
+| `learning_style` | "explain", "teach me", tutorials |
+| `ai_instructions` | system prompts, custom instructions |
+| `collaboration` | managers, teammates, stakeholders, 1:1s |
+| `shopping` | buying, budget, price |
+| `energy_routine` | tired, energy, sleep, workouts |
+| `travel_plan` | trips, itineraries, flights, hotels |
+| `doc_draft`, `music_recommend`, `day_plan`, `choice_help` | writing, music, planning, choosing |
+
+## The body map
+
+`GET /api/map` returns every pattern, thing and style sorted into a body region (brain,
+ears, eyes, mouth, hands, heart, feet). Regions are chosen by keyword rules in English
+and Korean. A pattern's own wording decides first; only when it has no clue does a clear
+majority of its evidence decide; otherwise it goes to the brain. `POST /api/declare`
+adds something the person says about themselves. Add `"private": true` to keep it out of
+anything sent to other AI services.

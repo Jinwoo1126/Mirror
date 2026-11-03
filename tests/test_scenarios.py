@@ -24,9 +24,10 @@ def _run(store, sid, inputs, gen=_local):
     return sc.run_scenario(store, router_mod.MockRouter(), None, sid, inputs, gen)
 
 
-def test_list_has_four_scenarios():
+def test_list_includes_the_original_four_and_the_hookable_ones():
     ids = {s["id"] for s in sc.list_scenarios()}
-    assert ids == {"doc_draft", "music_recommend", "day_plan", "choice_help"}
+    assert {"doc_draft", "music_recommend", "day_plan", "choice_help"} <= ids
+    assert {"code_review", "deadline_pressure", "travel_plan"} <= ids
 
 
 def test_doc_draft_local_gives_outline_not_prose(seeded):

@@ -36,6 +36,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.6 var(--f-ui);
   -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; }
@@ -192,7 +193,7 @@ textarea { resize: vertical; min-height: 44px; }
 .pbanner b { display: block; }
 
 /* Scenarios */
-.scs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; margin-bottom: 16px; }
+.scs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; margin-bottom: 16px; }
 .sc { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); transition: border-color .15s, transform .1s; }
 .sc:hover { border-color: var(--accent-line); transform: translateY(-1px); }
 .sc.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -222,6 +223,41 @@ textarea { resize: vertical; min-height: 44px; }
 .rep .range { color: var(--ink-3); font: 500 12.5px var(--f-mono); }
 .out { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); font-family: var(--f-mono); white-space: pre-wrap; word-break: break-all; }
 
+
+/* You: person card and body map */
+.person { margin-bottom: 14px; } .ph { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; } .ph .pt { font-size: 16px; }
+.avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.skywrap { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid #1c2748; box-shadow: var(--shadow);
+  background: radial-gradient(ellipse at 50% 30%, #14214a 0%, #0a1126 55%, #050914 100%); }
+#sky { display: block; width: 100%; height: clamp(440px, 72vh, 760px); touch-action: manipulation; }
+#sky .bgstar { fill: #aebbe6; opacity: .55; } #sky .bgstar.tw { animation: twinkle 3.6s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .15; } 50% { opacity: .9; } }
+#sky .bone { stroke: rgba(150,170,255,.32); stroke-width: 1.4; } #sky .joint { fill: #8da2ff; opacity: .6; } #sky .body { transition: opacity .5s; } #sky .body.dim { opacity: .22; }
+#sky .hub { cursor: pointer; outline: none; transition: opacity .4s; } #sky .hub.off { opacity: .28; } #sky .hub.empty { opacity: .45; }
+#sky .hub:hover circle:nth-child(2), #sky .hub:focus-visible circle:nth-child(2) { filter: url(#glow) brightness(1.3); }
+#sky .hub:focus-visible circle:first-child { stroke: #fff; stroke-width: 2; }
+#sky text { fill: #dbe4ff; font-family: var(--f-ui); paint-order: stroke; stroke: rgba(5,9,20,.8); stroke-width: calc(3px * var(--u, 1)); stroke-linejoin: round; }
+#sky .hl { font-size: calc(14px * var(--u, 1)); font-weight: 700; } #sky .hs { font-size: calc(11.5px * var(--u, 1)); fill: #9fb0e8; }
+#sky .sl { font-size: calc(12.5px * var(--u, 1)); } #sky .star { cursor: pointer; outline: none; }
+#sky .star:focus-visible circle { stroke: #fff; stroke-width: 2; } #sky .star.pick circle:not(.decl) { stroke: #fff; stroke-width: calc(2px * var(--u, 1)); }
+#sky .link { stroke: rgba(170,190,255,.35); stroke-width: calc(1.2px * var(--u, 1)); } #sky .link.hubl { stroke-dasharray: 3 4; opacity: .7; }
+#sky .decl { fill: none; stroke: #ffd36e; stroke-width: calc(1.6px * var(--u, 1)); }
+.skyback { position: absolute; top: 12px; left: 12px; background: rgba(16,24,52,.85); color: #dbe4ff; border-color: #2a3a6c; }
+.skybar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 6px; padding: 10px 12px; overflow-x: auto; scrollbar-width: none;
+  background: linear-gradient(0deg, rgba(5,9,20,.92), rgba(5,9,20,0)); }
+.rb { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid #2a3a6c; background: rgba(16,24,52,.8); color: #dbe4ff; font-size: 12.5px; font-weight: 600; }
+.rb i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; } .rb b { font-weight: 600; opacity: .65; font-size: 11.5px; }
+.rb.on { background: #dbe4ff; color: #0a1126; border-color: #dbe4ff; }
+#sky-detail { margin-top: 12px; } #sky-detail h3 { margin: 0 0 6px; }
+.rhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; } .rdot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.sdetail { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; } .sttitle { font-weight: 600; font-size: 15.5px; margin-bottom: 8px; }
+.slist { display: flex; flex-direction: column; } .srow { display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-top: 1px solid var(--line-2); background: none; padding: 9px 4px; font-size: 14px; }
+.srow:first-child { border-top: 0; } .srow:hover, .srow.on { background: var(--accent-soft); } .srow span:nth-child(2) { flex: 1; } .gold { font-style: normal; font-size: 11px; font-weight: 700; color: var(--warn); }
+.chip.pr { cursor: pointer; } .chip.pr:hover { border-color: var(--accent); color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { #sky .bgstar.tw { animation: none; opacity: .6; } }
+
+.hk { font-style: normal; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.hook { display: flex; gap: 10px; font-size: 13px; color: var(--ink-2); background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; } .hook code { display: block; margin-top: 4px; font: 500 12px var(--f-mono); color: var(--ink); word-break: break-all; } .hook .lucide { color: var(--accent); margin-top: 2px; }
 /* Toasts */
 #toast { position: fixed; left: 50%; bottom: calc(24px + var(--nav-h) + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 28px rgba(0,0,0,.25); animation: rise .2s ease both; }
@@ -252,8 +288,7 @@ textarea { resize: vertical; min-height: 44px; }
   <button class="tab active" data-tab="chat"><i data-lucide="message-circle"></i>Chat</button>
   <button class="tab" data-tab="scen"><i data-lucide="sparkles"></i>Scenarios</button>
   <div class="grp">You</div>
-  <button class="tab" data-tab="profile"><i data-lucide="user-round"></i>Profile</button>
-  <button class="tab" data-tab="mem"><i data-lucide="library"></i>Memory</button>
+  <button class="tab" data-tab="profile"><i data-lucide="user-round"></i>You</button>
   <button class="tab" data-tab="hyps"><i data-lucide="lightbulb"></i>Hypotheses</button>
   <div class="grp">Structure</div>
   <button class="tab" data-tab="graph"><i data-lucide="share-2"></i>Graph</button>
@@ -280,7 +315,16 @@ textarea { resize: vertical; min-height: 44px; }
   </div>
 </section>
 
-<section id="profile"><div id="profile-body"></div></section>
+<section id="profile">
+  <div class="person" id="person"></div>
+  <div class="skywrap" id="skywrap">
+    <svg id="sky" role="img" aria-label="Body map of what Mirror knows about you"></svg>
+    <button class="btn ghost sm skyback" id="sky-back" hidden><i data-lucide="arrow-left"></i>Whole body</button>
+    <div class="skybar" id="sky-bar"></div>
+  </div>
+  <div class="card" id="sky-detail"></div>
+  <div class="card" id="about"></div>
+</section>
 
 <section id="scen">
   <div class="scs" id="scen-pick"></div>
@@ -288,16 +332,6 @@ textarea { resize: vertical; min-height: 44px; }
   <div id="scen-out"></div>
 </section>
 
-<section id="mem">
-  <div class="card" style="margin-bottom:14px">
-    <div class="field" style="margin-bottom:10px"><label for="mem-add">New memory</label>
-      <textarea id="mem-add" rows="2" placeholder="Write what happened in a sentence or two"></textarea></div>
-    <button class="btn primary" id="mem-add-btn"><i data-lucide="plus"></i>Add memory</button>
-  </div>
-  <div class="toolbar"><div class="search"><i data-lucide="search"></i><input class="input" id="mem-q" type="text" placeholder="Search memories"></div>
-    <button class="btn ghost" id="mem-search">Search</button></div>
-  <div id="mem-list"></div>
-</section>
 
 <section id="graph">
   <div class="graphwrap"><div id="cy"></div><div class="legend" id="legend"></div></div>
@@ -356,8 +390,7 @@ const day = s => (s || "").slice(0, 10);
 const PAGES = {
   chat: ["Chat", "Answers from your memories and shows the evidence it used."],
   scen: ["Scenarios", "Everyday tasks like writing, music, planning and choosing, helped by what Mirror knows about you."],
-  profile: ["Your profile", "Only what can be counted from saved memories. It never labels your personality or type."],
-  mem: ["Memory", "Everything saved so far. Deleting one also removes what was learned from it."],
+  profile: ["You", "A map of what Mirror knows, by part of the body. Tap a part to fly in. Nothing here labels your personality."],
   hyps: ["Hypotheses", "Patterns that repeat across your memories, with evidence. Tell Mirror when one is wrong."],
   graph: ["Graph", "How memories, things, situations and hypotheses connect."],
   rel: ["Relation vocabulary", "Relationship phrases collected from your memories."],
@@ -368,7 +401,7 @@ function showTab(name) {
   document.querySelectorAll("main section").forEach(x => x.classList.toggle("active", x.id === name));
   $("ptitle").textContent = PAGES[name][0]; $("psub").textContent = PAGES[name][1];
   $("psub").style.display = PAGES[name][1] ? "" : "none";
-  ({ profile: loadProfile, scen: loadScen, mem: () => loadMems($("mem-q").value), graph: loadGraph,
+  ({ profile: loadProfile, scen: loadScen, graph: loadGraph,
      hyps: loadHyps, rel: loadRels, report: loadReport }[name] || (() => {}))();
   document.querySelector(".main").scrollTo({ top: 0 });
   try { history.replaceState(null, "", "#" + name); } catch (e) {}
@@ -455,46 +488,159 @@ $("chat-in").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shif
 $("chat-send").addEventListener("click", sendChat);
 $("opts-toggle").addEventListener("click", () => { const on = $("opts-box").classList.toggle("on"); $("opts-toggle").classList.toggle("on", on); if (on) $("chat-opts").focus(); });
 
-/* Profile */
-const chipsOf = (items, key) => `<div class="chips">${items.map(e => `<span class="chip">${esc(e[key])}<i>${e.count}</i></span>`).join("")}</div>`;
-const groupsOf = (obj, key) => Object.keys(obj).length
-  ? Object.keys(obj).map(k => `<div class="kind">${esc(k)}</div>${chipsOf(obj[k], key)}`).join("") : '<span class="muted">Nothing yet.</span>';
-async function loadProfile() {
-  const box = $("profile-body"); box.innerHTML = skel(3);
-  try {
-    const p = await api("/api/profile");
-    const w = p.writing.stats, wr = p.writing;
-    const meter = n => `<span class="meter">${[1, 2, 3, 4].map(i => `<b class="${i <= n ? "on" : ""}"></b>`).join("")}</span>`;
-    const tend = p.tendencies.length ? p.tendencies.map(t => `<div class="tend"><div class="st">${esc(t.statement)}</div>
-      <div class="mt">${meter(Math.min(t.supports, 4))}<span class="pill ${t.supports > 1 ? "good" : "warn"}">${esc(t.evidence_label)}</span>
-      <span class="muted">${t.contradicts} counter-examples · ${esc(tr("domain", t.domain))}</span></div></div>`).join("") : '<span class="muted">Nothing yet.</span>';
-    const endings = (w.endings || []).map(e => `<div class="bar"><span>${esc(e.name)}</span><span class="t"><div style="width:${Math.round(e.ratio * 100)}%"></div></span><span>${e.count} sentences</span></div>`).join("");
-    const styles = wr.styles.length ? `<div class="chips" style="margin-bottom:12px">${wr.styles.map(s => `<span class="chip">${esc(s.pattern)}<i>${esc(s.intent)}</i></span>`).join("")}</div>` : "";
-    const prefs = p.preferences.length ? `<div class="chips">${p.preferences.map(x => `<span class="chip">${esc(x.target)}<i>${x.direction === "+" ? "likes" : "dislikes"}</i></span>`).join("")}</div>` : '<span class="muted">Nothing yet.</span>';
-    const crit = p.criteria.length ? p.criteria.map(x => `<div class="tend"><div class="st">${esc(x.statement)}</div><div class="muted">${esc(x.applies_to)}</div></div>`).join("") : '<span class="muted">Nothing yet.</span>';
-    box.innerHTML = `<div class="pbanner"><i data-lucide="info"></i><div><b>${p.observations} memories · ${esc(day(p.period.from))} ~ ${esc(day(p.period.to))}</b>
-      The fewer memories there are, the closer these are to guesses. One piece of evidence is shown as a candidate.</div></div>
-      <div class="stack">
-      <div class="card"><h3>What repeats in your memories</h3>${tend}</div>
-      <div class="grid2"><div class="card"><h3>Things that come up often</h3>${groupsOf(p.entities, "name")}</div>
-      <div class="card"><h3>Situations they appear in</h3>${groupsOf(p.situations, "value")}</div></div>
-      <div class="grid2"><div class="card"><h3>Preferences</h3>${prefs}</div><div class="card"><h3>Decision criteria</h3>${crit}</div></div>
-      <div class="card"><h3>Writing style</h3>${styles}
-      ${w.sentences ? `<div class="muted" style="margin-bottom:8px">${w.sentences} sentences · avg ${w.avg_sentence_chars} chars · longest ${w.longest_sentence_chars} chars</div>${endings}` : ""}
-      <div class="muted" style="margin-top:10px">Counted from ${w.observations} memories. To help with writing, add more of your own writing.</div></div></div>`;
-  } catch (e) { box.innerHTML = empty("wifi-off", "Could not load", e.message); }
+/* You: a person card and a body-map constellation you fly around in */
+const BODY = {
+  brain: { x: 500, y: 112, hue: 262 }, ears: { x: 592, y: 198, hue: 200 }, eyes: { x: 408, y: 198, hue: 172 },
+  mouth: { x: 500, y: 268, hue: 14 }, heart: { x: 500, y: 400, hue: 346 }, hands: { x: 316, y: 566, hue: 44 }, feet: { x: 500, y: 884, hue: 140 },
+};
+const JOINTS = { neck: [500, 300], shL: [410, 346], shR: [590, 346], elL: [356, 458], elR: [644, 458], haL: [316, 566], haR: [684, 566],
+  waist: [500, 540], hipL: [455, 604], hipR: [545, 604], knL: [446, 736], knR: [554, 736], ftL: [432, 862], ftR: [568, 862] };
+const BONES = [["neck", "shL"], ["neck", "shR"], ["shL", "elL"], ["elL", "haL"], ["shR", "elR"], ["elR", "haR"], ["neck", "waist"], ["shL", "waist"],
+  ["shR", "waist"], ["waist", "hipL"], ["waist", "hipR"], ["hipL", "knL"], ["knL", "ftL"], ["hipR", "knR"], ["knR", "ftR"]];
+const HEAD = { x: 500, y: 200, r: 88 };
+const ABOUT_PROMPTS = ["I am ", "When I choose between options, I usually ", "I eat ", "I listen to ", "I write ", "When I am stressed, I ", "I like to go ", "I never "];
+const SKY = { map: null, sel: null, star: null, view: null, anim: 0 };
+const hsl = (h, l = 64, a = 1) => `hsla(${h}, 85%, ${l}%, ${a})`;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+const clip = (t, n) => t.length > n ? t.slice(0, n - 1) + "…" : t;
+
+function skySize() { const r = $("sky").getBoundingClientRect(); return { w: r.width || 800, h: r.height || 560 }; }
+function overview() { const { w, h } = skySize(); return { cx: 500, cy: 530, w: Math.max(900, 1100 * (w / h)) }; }
+function applyView(v) {
+  const { w, h } = skySize(); const vh = v.w * (h / w);
+  $("sky").setAttribute("viewBox", `${v.cx - v.w / 2} ${v.cy - vh / 2} ${v.w} ${vh}`);
+  $("sky").style.setProperty("--u", (v.w / w).toFixed(4));
+  SKY.view = v;
+}
+function fly(target) {
+  cancelAnimationFrame(SKY.anim);
+  const from = SKY.view || target;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { applyView(target); return; }
+  const t0 = performance.now(), dur = 750;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const step = now => {
+    const k = ease(Math.min(1, (now - t0) / dur));
+    applyView({ cx: from.cx + (target.cx - from.cx) * k, cy: from.cy + (target.cy - from.cy) * k, w: from.w + (target.w - from.w) * k });
+    if (k < 1) SKY.anim = requestAnimationFrame(step);
+  };
+  SKY.anim = requestAnimationFrame(step);
+}
+function regionOf(id) { return SKY.map.regions.find(r => r.id === id); }
+function starPos(region, i) {
+  const h = BODY[region.id]; const a = i * 2.399963 + (region.id.charCodeAt(0) % 7);
+  const rad = 66 + 27 * Math.sqrt(i);
+  return [h.x + Math.cos(a) * rad, h.y + Math.sin(a) * rad];
+}
+function renderSky() {
+  const rand = rng(7); let svg = `<defs><filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  for (let i = 0; i < 150; i++) svg += `<circle class="bgstar${i % 9 === 0 ? " tw" : ""}" cx="${(rand() * 1300 - 150).toFixed(0)}" cy="${(rand() * 1100 - 60).toFixed(0)}" r="${(rand() * 1.4 + .4).toFixed(2)}" style="animation-delay:${(rand() * 4).toFixed(1)}s"/>`;
+  const dim = SKY.sel ? " dim" : "";
+  svg += `<g class="body${dim}">`;
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.2832, b = (i + 1) / 12 * 6.2832;
+    svg += `<line class="bone" x1="${HEAD.x + Math.cos(a) * HEAD.r}" y1="${HEAD.y + Math.sin(a) * HEAD.r}" x2="${HEAD.x + Math.cos(b) * HEAD.r}" y2="${HEAD.y + Math.sin(b) * HEAD.r}"/><circle class="joint" cx="${HEAD.x + Math.cos(a) * HEAD.r}" cy="${HEAD.y + Math.sin(a) * HEAD.r}" r="2.6"/>`; }
+  svg += `<line class="bone" x1="500" y1="288" x2="500" y2="300"/>`;
+  BONES.forEach(([a, b]) => { const p = JOINTS[a], q = JOINTS[b]; svg += `<line class="bone" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"/>`; });
+  Object.values(JOINTS).forEach(p => svg += `<circle class="joint" cx="${p[0]}" cy="${p[1]}" r="3.2"/>`);
+  svg += `<line class="bone" x1="432" y1="862" x2="568" y2="862"/></g>`;
+  SKY.map.regions.forEach(r => {
+    const h = BODY[r.id], total = r.total, rad = total ? Math.min(30, 12 + 4.5 * Math.log2(1 + total)) : 8;
+    const on = SKY.sel === r.id, off = SKY.sel && !on;
+    svg += `<g class="hub${on ? " on" : ""}${off ? " off" : ""}${total ? "" : " empty"}" data-r="${r.id}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${r.stars.length} stars">
+      <circle r="${off ? rad * 1.2 : rad * 2.3}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue, 60, off ? .05 : .13)}"/><circle r="${rad}" cx="${h.x}" cy="${h.y}" fill="${hsl(h.hue)}" filter="url(#glow)"/>
+      ${off ? "" : `<text class="hl" x="${h.x}" y="${h.y + rad + 20 * (SKY.view ? SKY.view.w / skySize().w : 1.2)}" text-anchor="middle">${esc(r.name)}</text>
+      <text class="hs" x="${h.x}" y="${h.y + rad + 36 * (SKY.view ? SKY.view.w / skySize().w : 1.2)}" text-anchor="middle">${r.stars.length ? r.stars.length + " stars" : "empty"}</text>`}</g>`;
+  });
+  if (SKY.sel) {
+    const r = regionOf(SKY.sel), h = BODY[r.id], list = r.stars.slice(0, 14);
+    svg += `<g class="kids">`;
+    const pts = [[h.x, h.y], ...list.map((_, i) => starPos(r, i))];
+    list.forEach((st, i) => { const [x, y] = pts[i + 1]; let best = 0, bd = Infinity;
+      for (let j = 0; j <= i; j++) { const d = (pts[j][0] - x) ** 2 + (pts[j][1] - y) ** 2; if (d < bd) { bd = d; best = j; } }
+      svg += `<line class="link" x1="${pts[best][0]}" y1="${pts[best][1]}" x2="${x}" y2="${y}"/>`; });
+    list.forEach((st, i) => { const [x, y] = starPos(r, i), sr = Math.min(12, 4 + 2.2 * Math.log2(1 + st.weight)), left = x < h.x, pick = SKY.star && SKY.star.id === st.id;
+      svg += `<g class="star${pick ? " pick" : ""}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(st.label)}">
+        ${st.declared ? `<circle cx="${x}" cy="${y}" r="${sr + 5}" class="decl"/>` : ""}<circle cx="${x}" cy="${y}" r="${sr}" fill="${hsl(h.hue, st.status === "candidate" ? 52 : 70)}" filter="url(#glow)" opacity="${st.status === "candidate" ? .8 : 1}"/>
+        <text class="sl" x="${x + (left ? -(sr + 6) : sr + 6)}" y="${y + 4}" text-anchor="${left ? "end" : "start"}">${esc(clip(st.label, 26))}</text></g>`; });
+    svg += `</g>`;
+  }
+  $("sky").innerHTML = svg;
+  $("sky").querySelectorAll(".hub").forEach(g => { const go = () => selectRegion(g.dataset.r); g.addEventListener("click", go); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+  $("sky").querySelectorAll(".star").forEach(g => { const go = () => { SKY.star = regionOf(SKY.sel).stars[+g.dataset.i]; renderSky(); renderDetail(); }; g.addEventListener("click", go); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+}
+function selectRegion(id) {
+  SKY.sel = id; SKY.star = null; $("sky-back").hidden = false;
+  const h = BODY[id]; fly({ cx: h.x, cy: h.y + 24, w: 580 }); renderSky(); renderBar(); renderDetail();
+}
+function backToBody() { SKY.sel = null; SKY.star = null; $("sky-back").hidden = true; fly(overview()); renderSky(); renderBar(); renderDetail(); }
+function renderBar() {
+  $("sky-bar").innerHTML = SKY.map.regions.map(r => `<button class="rb${SKY.sel === r.id ? " on" : ""}" data-r="${r.id}" aria-pressed="${SKY.sel === r.id}"><i style="background:${hsl(BODY[r.id].hue)}"></i>${esc(r.name)}<b>${r.stars.length}</b></button>`).join("");
+  $("sky-bar").querySelectorAll(".rb").forEach(b => b.addEventListener("click", () => selectRegion(b.dataset.r)));
+}
+function evMeter(n) { return `<span class="meter">${[1, 2, 3, 4].map(i => `<b class="${i <= n ? "on" : ""}"></b>`).join("")}</span>`; }
+function renderDetail() {
+  const box = $("sky-detail");
+  if (!SKY.sel) {
+    box.innerHTML = `<h3>The map</h3><div class="muted">Each star is something Mirror learned. Brighter stars have more evidence. A gold ring means you told Mirror yourself. Tap a part of the body, or pick one below.</div>`;
+    return;
+  }
+  const r = regionOf(SKY.sel), st = SKY.star, hue = BODY[r.id].hue;
+  let html = `<div class="rhead"><span class="rdot" style="background:${hsl(hue)}"></span><div><b>${esc(r.name)}</b><span class="muted"> · ${esc(r.verb)}</span></div></div>`;
+  if (st) {
+    html += `<div class="sdetail"><div class="sttitle">${esc(st.label)}</div><div class="foot">${st.declared ? '<span class="pill warn">You said this</span>' : ""}
+      <span class="pill ${st.status === "active" ? "good" : st.status === "candidate" ? "warn" : ""}">${st.status === "active" ? "Promoted" : st.status === "candidate" ? "Candidate" : esc(st.sub || st.kind)}</span>
+      ${st.evidence ? `<span class="pill accent">${st.evidence} evidence</span>` : ""}${st.counter ? `<span class="pill bad">${st.counter} counter-examples</span>` : ""}</div>
+      ${(st.evidence_texts || []).map(e => `<div class="ev sup"><i data-lucide="plus-circle"></i><div><small>${esc(e.date)}</small>${esc(e.text)}</div></div>`).join("")}</div>`;
+  }
+  html += r.stars.length ? `<div class="slist">${r.stars.map((x, i) => `<button class="srow${st && st.id === x.id ? " on" : ""}" data-i="${i}">${evMeter(Math.min(x.weight, 4))}<span>${esc(x.label)}</span>${x.declared ? '<i class="gold">you</i>' : ""}</button>`).join("")}</div>`
+    : `<div class="muted" style="margin-top:8px">No stars in this part yet. They appear as Mirror learns, or you can tell it below.</div>`;
+  box.innerHTML = html; icons();
+  box.querySelectorAll(".srow").forEach(b => b.addEventListener("click", () => { SKY.star = r.stars[+b.dataset.i]; renderSky(); renderDetail(); }));
+}
+function renderPerson() {
+  const p = SKY.map.person;
+  const who = p.declared.length ? `<div class="chips">${p.declared.map(d => `<span class="chip">${esc(d.label)}</span>`).join("")}</div>` : `<div class="muted">Nothing yet. Tell Mirror who you are below.</div>`;
+  const ch = p.chooses.length ? p.chooses.map(c => `<div class="tend"><div class="st">${esc(c.label)}</div><div class="mt">${evMeter(Math.min(c.weight, 4))}<span class="pill ${c.status === "active" ? "good" : "warn"}">${c.status === "active" ? "Promoted" : "Candidate"}</span><span class="muted">${c.evidence} evidence</span></div></div>`).join("") : `<div class="muted">No choice patterns yet.</div>`;
+  $("person").innerHTML = `<div class="ph"><div class="avatar">You</div><div><b class="pt">What Mirror knows about you</b><div class="muted">${p.patterns} patterns · ${p.memories} memories${p.declared.length ? " · " + p.declared.length + " things you said" : ""}</div></div></div>
+    <div class="grid2"><div class="card"><h3>Who you are</h3>${who}</div><div class="card"><h3>How you choose</h3>${ch}</div></div>`;
+}
+function renderAbout() {
+  $("about").innerHTML = `<h3>Tell Mirror about you</h3><div class="field" style="margin-bottom:10px"><label for="about-text">Say it in your own words</label>
+    <textarea id="about-text" rows="2" placeholder="e.g. I usually pick the quiet option when I am tired"></textarea></div>
+    <div class="chips" style="margin-bottom:12px">${ABOUT_PROMPTS.map(t => `<span class="chip pr" data-t="${esc(t)}">${esc(t.trim())}…</span>`).join("")}</div>
+    <div class="toolbar" style="margin-bottom:0"><label class="switch"><input type="checkbox" id="about-private"> Keep private (never shared with other AI services)</label>
+    <button class="btn primary" id="about-add"><i data-lucide="plus"></i>Add</button></div>`;
+  $("about").querySelectorAll(".pr").forEach(c => c.addEventListener("click", () => { const t = $("about-text"); t.value = c.dataset.t; t.focus(); }));
+  $("about-add").addEventListener("click", async () => {
+    const statement = $("about-text").value.trim(); if (!statement) return;
+    try { const r = await api("/api/declare", { method: "POST", headers: JSONH, body: JSON.stringify({ statement, private: $("about-private").checked }) });
+      toast(r.duplicate ? "Mirror already has that" : "Added to your map"); $("about-text").value = ""; await loadProfile(true); loadStatus();
+    } catch (e) { toast("Could not add: " + e.message, "bad"); }
+  });
   icons();
 }
+async function loadProfile(keep) {
+  try {
+    SKY.map = await api("/api/map");
+    if (!keep) { SKY.sel = null; SKY.star = null; }
+    renderPerson(); renderAbout(); applyView(keep && SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview());
+    $("sky-back").hidden = !SKY.sel; renderSky(); renderBar(); renderDetail();
+  } catch (e) { $("person").innerHTML = `<div class="card">${empty("wifi-off", "Could not load", e.message)}</div>`; }
+  icons();
+}
+$("sky-back").addEventListener("click", backToBody);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && SKY.sel && $("profile").classList.contains("active")) backToBody(); });
+window.addEventListener("resize", () => { if (SKY.map && $("profile").classList.contains("active")) { applyView(SKY.sel ? { cx: BODY[SKY.sel].x, cy: BODY[SKY.sel].y + 24, w: 580 } : overview()); renderSky(); } });
 
 /* Scenarios */
 let SCEN = [], scenCur = null;
-const SC_ICON = { doc_draft: "file-pen-line", music_recommend: "music", day_plan: "calendar-days", choice_help: "git-compare" };
+const SC_ICON = { doc_draft: "file-pen-line", music_recommend: "music", day_plan: "calendar-days", choice_help: "git-compare", code_review: "git-pull-request", writing_tone: "mail", decision_recap: "history", deadline_pressure: "timer", learning_style: "graduation-cap", ai_instructions: "bot", collaboration: "users", shopping: "shopping-cart", energy_routine: "battery-medium", travel_plan: "plane" };
 async function loadScen() {
   if (!SCEN.length) { try { SCEN = (await api("/api/scenarios")).scenarios; } catch (e) { $("scen-pick").innerHTML = empty("wifi-off", "Could not load", e.message); return; } }
-  $("scen-pick").innerHTML = SCEN.map(s => `<button class="sc${scenCur === s.id ? " on" : ""}" data-sc="${s.id}"><span class="ic"><i data-lucide="${SC_ICON[s.id] || "sparkles"}"></i></span><b>${esc(s.name)}</b><span>${esc(s.summary)}</span></button>`).join("");
+  $("scen-pick").innerHTML = SCEN.map(s => `<button class="sc${scenCur === s.id ? " on" : ""}" data-sc="${s.id}"><span class="ic"><i data-lucide="${SC_ICON[s.id] || "sparkles"}"></i></span><b>${esc(s.name)}</b><span>${esc(s.summary)}</span>${s.triggers.length ? '<em class="hk">auto-detect</em>' : ""}</button>`).join("");
   $("scen-pick").querySelectorAll(".sc").forEach(b => b.addEventListener("click", () => { scenCur = b.dataset.sc; $("scen-out").innerHTML = ""; loadScen(); }));
   const s = SCEN.find(x => x.id === scenCur);
-  $("scen-form").innerHTML = s ? `<div class="card">${s.fields.map(f => {
+  $("scen-form").innerHTML = s ? `<div class="card"><div class="hook"><i data-lucide="webhook"></i><div><b>Hook-ready.</b> ${s.triggers.length} trigger patterns detect this situation in a request, so a hook, the gateway or an MCP client can call it automatically.
+    <code>mirror_scenario("${esc(s.id)}", {...})</code></div></div>${s.fields.map(f => {
     const id = `sc-${f.key}`;
     const ctl = f.kind === "select" ? `<select id="${id}">${f.options.map(o => `<option>${esc(o)}</option>`).join("")}</select>`
       : f.kind === "textarea" ? `<textarea id="${id}" rows="3" placeholder="${esc(f.placeholder)}"></textarea>`
@@ -517,41 +663,6 @@ async function runScen(s) {
   } catch (e) { $("scen-out").innerHTML = `<div class="card" style="margin-top:12px">${empty("circle-alert", "Could not run", e.message)}</div>`; }
   $("sc-run").disabled = false; icons();
 }
-
-/* Memory */
-async function loadMems(q) {
-  const list = $("mem-list"); list.innerHTML = skel(3);
-  try {
-    const data = await api("/api/memories?q=" + encodeURIComponent(q || ""));
-    if (!data.items.length) { list.innerHTML = `<div class="card">${empty("library", q ? "No results" : "No memories yet", q ? "Try different words." : "Add your first memory above.")}</div>`; icons(); return; }
-    list.innerHTML = "";
-    data.items.forEach(o => {
-      const div = document.createElement("div"); div.className = "item";
-      div.innerHTML = `<div class="top"><div class="txt">${esc(o.text)}</div></div>
-        <div class="foot"><span class="pill"><i data-lucide="calendar" style="width:12px;height:12px"></i>${esc(day(o.occurred_at) || "-")}</span><span class="id">${esc(o.id)}</span>
-        ${o.score !== undefined ? `<span class="pill accent">relevance ${o.score}</span>` : ""}</div>`;
-      const del = document.createElement("button"); del.className = "btn ghost icon danger sm"; del.setAttribute("aria-label", "Delete");
-      del.innerHTML = '<i data-lucide="trash-2"></i>';
-      del.addEventListener("click", async () => {
-        if (!confirm("Delete this memory? What was learned from it will be removed too.")) return;
-        try { await api("/api/memories/" + o.id, { method: "DELETE" }); toast("Deleted"); loadMems($("mem-q").value); loadStatus(); }
-        catch (e) { toast("Could not delete: " + e.message, "bad"); }
-      });
-      div.querySelector(".top").appendChild(del); list.appendChild(div);
-    });
-  } catch (e) { list.innerHTML = `<div class="card">${empty("wifi-off", "Could not load", e.message)}</div>`; }
-  icons();
-}
-$("mem-search").addEventListener("click", () => loadMems($("mem-q").value));
-$("mem-q").addEventListener("keydown", e => { if (e.key === "Enter") loadMems($("mem-q").value); });
-$("mem-add-btn").addEventListener("click", async () => {
-  const t = $("mem-add").value.trim(); if (!t) return;
-  const b = $("mem-add-btn"); b.disabled = true; b.textContent = "Reading...";
-  try { await api("/api/memories", { method: "POST", headers: JSONH, body: JSON.stringify({ text: t }) });
-    $("mem-add").value = ""; toast("Memory added"); loadMems(); loadStatus();
-  } catch (e) { toast("Could not add: " + e.message, "bad"); }
-  b.disabled = false; b.innerHTML = '<i data-lucide="plus"></i>Add memory'; icons();
-});
 
 /* Graph */
 const KCOL = { Observation: "#6bb3e0", Entity: "#e3b341", Context: "#a78bdb", Preference: "#4cc38a", Criterion: "#ee8a8a", Hypothesis: "#f09a55", Style: "#9aa8a6", Correction: "#e06666" };
