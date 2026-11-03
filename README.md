@@ -249,7 +249,8 @@ Google and Meta sign-in, and a hook against a deployed address. Steps and what i
 - **Muse Spark** through the Meta Model API reads memories and extracts what repeats.
 - **Muse Image** draws the characters. Each one is designed from the person's own profile, with
   sensitive areas left out.
-- **Muse Code** is a supported client: a hook, an MCP entry and a skill are included.
+- **Muse Code** wrote the initial implementation of Mirror: the knowledge graph, the extraction pipeline
+  and the first version of the app. It is also a supported client, with a hook, an MCP entry and a skill included.
 - Claude Code is a supported client too, through the same hook.
 - Kuzu for the graph, Starlette for the app, fastembed for local embeddings, Supabase for the hosted version.
 - The ideas of a dynamic ontology and a chat-first memory app come from MiroFish and personal.ai.
