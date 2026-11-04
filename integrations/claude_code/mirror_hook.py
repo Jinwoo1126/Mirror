@@ -163,7 +163,9 @@ def run(payload: dict, cfg: dict) -> dict | None:
         prior = last_assistant_reply(payload.get("transcript_path"))
         spawn_capture({"text": text,
                        "prior_answer": "" if looks_secret(prior) else prior[:MAX_CAPTURE],
-                       "episode": str(payload.get("session_id") or "")})
+                       "episode": str(payload.get("session_id") or ""),
+                       # the background process must find the same config file
+                       "cwd": str(payload.get("cwd") or "")})
     data = _post(cfg["url"], "/api/retrieve", {"request": text, "budget": 6},
                  cfg.get("token", ""), RETRIEVE_TIMEOUT)
     items = data.get("items") or []
@@ -222,7 +224,6 @@ def spawn_capture(body: dict) -> None:
 
 
 def capture_from_stdin() -> None:
-    cfg = load_config()
     raw = sys.stdin.read()
     try:
         body = json.loads(raw)
@@ -230,6 +231,7 @@ def capture_from_stdin() -> None:
         body = None
     if not isinstance(body, dict):        # older callers sent the bare prompt
         body = {"text": raw}
+    cfg = load_config(body.get("cwd") or None)
     body = {k: v for k, v in body.items() if k in ("text", "prior_answer", "episode") and v}
     _post(cfg["url"], "/api/memories", body, cfg.get("token", ""), 180)
 

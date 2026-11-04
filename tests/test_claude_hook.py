@@ -231,3 +231,21 @@ def test_last_assistant_reply_handles_missing_and_odd_transcripts(tmp_path):
     t = tmp_path / "t.jsonl"
     t.write_text('not json\n{"type": "assistant", "message": {"content": "plain string"}}\n')
     assert hook.last_assistant_reply(str(t)) == "plain string"
+
+
+def test_capture_finds_the_project_config_without_any_environment(server, tmp_path):
+    """Muse Code clears the environment: the background capture must still reach the
+    url in the project's config, not the default."""
+    url, seen = server
+    proj = tmp_path / "proj"
+    (proj / ".muse").mkdir(parents=True)
+    (proj / ".muse" / "mirror-hook.json").write_text(json.dumps({"url": url, "capture": True}))
+    subprocess.run([sys.executable, str(HOOK)], text=True, capture_output=True, timeout=20,
+                   env={"PATH": "/usr/bin:/bin", "HOME": str(tmp_path)},
+                   input=json.dumps({"prompt": "I always pick the quiet table", "cwd": str(proj)}))
+    for _ in range(30):
+        if [p for p, *_ in seen if p == "/api/memories"]:
+            break
+        time.sleep(0.1)
+    assert [b for p, b, _ in seen if p == "/api/memories"] == [
+        {"text": "I always pick the quiet table"}]
