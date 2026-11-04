@@ -1,0 +1,1 @@
+Reject negative quantity in apply_discount

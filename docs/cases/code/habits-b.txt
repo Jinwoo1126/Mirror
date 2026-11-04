@@ -1,0 +1,6 @@
+I prototype first and clean up later.
+I try a new library in a throwaway branch before I decide anything.
+I write short commit messages and tidy them up in the pull request.
+When I am stuck I pair with someone instead of reading the docs alone.
+I ship small experiments behind a flag and watch what happens.
+I would rather get a quick rough review today than a thorough one next week.

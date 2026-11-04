@@ -1,0 +1,6 @@
+When I review code, I read the tests before the implementation.
+I keep pull requests under 200 lines and split anything bigger.
+I write commit messages as a short summary line followed by a bulleted list.
+I want a written plan before I start a big change.
+I prefer explicit names over clever ones, even if they are longer.
+I never merge on a Friday.

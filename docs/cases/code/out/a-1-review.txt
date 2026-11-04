@@ -1,0 +1,5 @@
+invoice.py is correct for the happy path but fragile to ship.
+Unknown codes are silently ignored, so typos overcharge.
+No validation: missing price/qty keys crash, negative qty/price corrupts total.
+Float math works here, but use Decimal for real money.
+Ship after: reject unknown codes explicitly, validate inputs, add tests for SAVE10/20/invalid/empty/edge cases.

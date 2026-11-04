@@ -57,6 +57,17 @@ can correct, suppress or delete it.
 
 The two users in the screenshots are made up. Their memories are in `data/demo/` and `data/demo2/`.
 
+## A case: coding with Muse Code
+
+The same file and the same three requests go to Muse Code twice, each time connected to a different user's
+Mirror over MCP. The commit messages come back in each user's own style, and a decision stated in the
+conversation is saved into that user's Mirror and attached to a hypothesis as evidence.
+
+<p align="center"><img src="docs/media/code-case-compare.jpg" alt="The same task for two users: reviews, commit messages and what was saved" width="820"></p>
+
+Details, the exact requests and how to run it yourself are in [`docs/cases/code`](docs/cases/code/README.md).
+It is one run per user, with the habits told to Mirror by hand; the page says what it does and does not show.
+
 ## Quick start
 
 One container per user. Each mounts only its own data folder, so users never see each other's

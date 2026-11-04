@@ -1,0 +1,5 @@
+invoice.py `apply_discount` correctly totals price*qty and applies SAVE10/SAVE20 with 2-decimal rounding.
+Risks: KeyError on missing price/qty, no check for negative prices/qtys, unknown codes silently ignored, case-sensitive match.
+Fix: validate items is list, require numeric price/qty >=0, decide to raise ValueError on unknown code.
+Cleanup: extract DISCOUNTS dict, use `total *= 0.9/0.8`, add type hints and docstring.
+Ship: add tests for empty list, bad items, unknown/lowercase code, and rounding, then ship as patch release.

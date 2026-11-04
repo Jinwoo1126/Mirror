@@ -1,0 +1,2 @@
+Fix apply_discount to reject negative quantity
+- Validate quantity and raise on negative values
