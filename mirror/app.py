@@ -490,6 +490,8 @@ async def api_retrieve(request):
                 continue
             items.append({"kind": it["kind"], "id": it["id"],
                           "statement": it["statement"], "status": it["status"],
+                          "conditions": list(it.get("conditions") or []),
+                          "domain": it.get("domain", ""),
                           "score": it.get("score"),
                           "use_policy": it["use_policy"],
                           "evidence": len(it.get("supports", [])),

@@ -175,7 +175,9 @@ def test_muse_skill_is_installed_and_removed_without_touching_other_skills(tmp_p
     (other / "SKILL.md").write_text("---\nname: other\ndescription: x\n---\n")
     dest = hook.install_skill(str(proj))
     assert (dest / "SKILL.md").read_text().startswith("---\nname: mirror")
-    assert hook.remove_skill(str(proj)) is True and not dest.exists()
+    use = dest.parent / "mirror-use" / "SKILL.md"     # the reply guidance, beside it
+    assert use.read_text().startswith("---\nname: mirror-use")
+    assert hook.remove_skill(str(proj)) is True and not dest.exists() and not use.exists()
     assert (other / "SKILL.md").exists() and hook.remove_skill(str(proj)) is False
 
 

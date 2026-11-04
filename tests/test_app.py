@@ -151,3 +151,16 @@ def test_gate_drops_items_far_behind_the_best_and_caps_the_count():
     kept = app_mod.gate_by_relevance(items, matched=False, hybrid=True)
     assert len(kept) == app_mod.MAX_ITEMS and "far" not in [i["id"] for i in kept]
     assert [i["id"] for i in kept] == ["0", "1", "2", "3", "4"]   # best first
+
+
+def test_retrieve_for_outside_callers_keeps_conditions(client):
+    from mirror import schema
+    store = app_mod.get_store()
+    store.add_hypothesis(schema.Hypothesis(
+        id="hyp-cond", statement="피곤한 저녁에는 익숙한 배달을 고른다",
+        conditions=["피곤한 저녁"], status=schema.STATUS_ACTIVE, domain="food"))
+    store.bump_revision()
+    items = client.post("/api/retrieve", json={"request": "피곤한 저녁에 뭐 먹지"}).json()["items"]
+    item = next(i for i in items if i["id"] == "hyp-cond")
+    assert item["conditions"] == ["피곤한 저녁"] and item["domain"] == "food"
+    assert item["status"] == "active" and "counter_examples" in item

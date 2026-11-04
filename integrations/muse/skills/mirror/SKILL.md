@@ -26,6 +26,8 @@ the `mirror` MCP server (`mirror_context`, `mirror_remember`, `mirror_feedback`,
 ## How to use what comes back
 
 - Treat each statement as a possibility with some evidence, not a fact. Weigh the evidence count.
+- Keep to each item's conditions. A candidate, or an item with contrary evidence, is a weak clue.
+- The `mirror-use` skill, installed beside this one, says how to apply an item to the current task.
 - Use it quietly. Do not recite the list or say "my memory says". Let it shape the answer.
 - Never describe the user's personality or type, and never use it to diagnose anything.
 - If nothing comes back, answer normally.
