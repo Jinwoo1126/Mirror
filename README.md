@@ -97,6 +97,7 @@ docker compose down                    # stop. Your data stays in data/
 | How | What you need | Notes |
 |---|---|---|
 | **Hooks** for Claude Code and Muse Code | Nothing | The simplest, and the one checked end to end. Every prompt gets the relevant memories added, and unrelated prompts get nothing. |
+| **MCP** in Claude Code and Muse Code | An edge container and a token | Checked with both: a fresh session called `mirror_context` and got that user's memories back. See `docs/CONNECT.md`. |
 | **MCP** (`/mcp`), **plain HTTP** (`/v1/context`, `/v1/remember`), an **OpenAI-compatible gateway** | An edge container and a token | `echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env`, then `docker compose --profile edge up -d`. Edges listen on 8111 (user A) and 8112 (user B). |
 | **The Muse agent** (muse.ai) | A public HTTPS address and an edge token | It is a cloud service, so it cannot reach a local address. Needs a tunnel. Not verified. See `docs/CONNECT.md`. |
 

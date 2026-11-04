@@ -54,7 +54,19 @@ python3 integrations/claude_code/mirror_hook.py --install --url http://127.0.0.1
 python3 integrations/claude_code/mirror_hook.py --install --target muse --url http://127.0.0.1:8011    # Muse Code
 ```
 
-**Muse Code over MCP:** `python3 integrations/claude_code/mirror_hook.py --print-mcp http://127.0.0.1:8111/mcp --token-file <file holding MIRROR_TOKEN_A>`,
+**Claude Code over MCP** (checked against the edge container: a fresh Claude Code called
+`mirror_context` and got that user's memories back):
+
+```sh
+claude mcp add --transport http --scope local mirror http://127.0.0.1:8111/mcp \
+  --header "Authorization: Bearer $(cat <file holding MIRROR_TOKEN_A>)"
+claude mcp list                      # mirror ... Connected
+claude -p "Call mirror_context for: I am tired and need to pick dinner" --allowedTools mcp__mirror__mirror_context
+```
+
+Use `--scope local` (or `user`), not `project`: `project` writes the token into `.mcp.json` inside the repository.
+
+**Muse Code over MCP** (checked: `muse exec` called `mirror_context` against the edge container and printed that user's memories; the "workspace is untrusted" notices it prints are about project skills and do not affect MCP): `python3 integrations/claude_code/mirror_hook.py --print-mcp http://127.0.0.1:8111/mcp --token-file <file holding MIRROR_TOKEN_A>`,
 then add the printed entry to `~/.config/muse/settings.json`.
 
 To reach these from your other devices, set `MIRROR_BIND` and `MIRROR_HOST` in `.env` to this
