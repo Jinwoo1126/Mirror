@@ -1,8 +1,8 @@
-# Two people, two containers. Each mounts its own data folder, so they never see each
-# other's memories. Start with:  docker compose up -d --build
+# Two separate users, two containers. Each mounts its own data folder, so they never see
+# each other's memories, and neither knows the other exists. Start with:  docker compose up -d --build
 #
-#   Persona A  http://127.0.0.1:8011      data/demo
-#   Persona B  http://127.0.0.1:8012      data/demo2
+#   User A  http://127.0.0.1:8011      data/demo
+#   User B  http://127.0.0.1:8012      data/demo2
 #
 # There is no sign-in here, so the ports are published on this machine only. To reach them
 # from your other devices (for example over tailscale) set MIRROR_BIND to this machine's
@@ -11,7 +11,7 @@
 # Needs META_API_KEY (put it in .env, which git ignores) to learn from new memories and
 # to write chat answers. Reading what is already there works without it.
 
-x-persona: &persona
+x-user: &user
   build:
     context: .
     dockerfile: Dockerfile.local
@@ -21,32 +21,30 @@ x-persona: &persona
     META_API_KEY: ${META_API_KEY:-}
     MIRROR_LLM_TRANSPORT: http
     MIRROR_EXTRACTOR: spark
-    # The person switcher in the page links the two, by the address a browser can reach.
-    MIRROR_PERSONAS: '[{"name":"Persona A","url":"http://${MIRROR_HOST:-127.0.0.1}:8011"},{"name":"Persona B","url":"http://${MIRROR_HOST:-127.0.0.1}:8012"}]'
   volumes:
     - ./data/models:/models
 
 services:
-  persona-a:
-    <<: *persona
-    container_name: mirror-persona-a
-    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "Persona A"]
+  user-a:
+    <<: *user
+    container_name: mirror-user-a
+    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "User A"]
     environment:
       <<: *env
-      MIRROR_PERSONA_NAME: Persona A
+      MIRROR_PERSONA_NAME: User A
     ports:
       - "${MIRROR_BIND:-127.0.0.1}:8011:8080"
     volumes:
       - ./data/demo:/data
       - ./data/models:/models
 
-  persona-b:
-    <<: *persona
-    container_name: mirror-persona-b
-    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "Persona B"]
+  user-b:
+    <<: *user
+    container_name: mirror-user-b
+    command: ["--db", "/data/mirror.kuzu", "--avatar-dir", "/data/avatar", "--name", "User B"]
     environment:
       <<: *env
-      MIRROR_PERSONA_NAME: Persona B
+      MIRROR_PERSONA_NAME: User B
     ports:
       - "${MIRROR_BIND:-127.0.0.1}:8012:8080"
     volumes:
@@ -65,10 +63,10 @@ services:
     entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
     command: []
     depends_on:
-      persona-a:
+      user-a:
         condition: service_healthy
     environment: &edge-env
-      MIRROR_BACKEND: http://persona-a:8080
+      MIRROR_BACKEND: http://user-a:8080
       MIRROR_TOKEN: ${MIRROR_TOKEN_A:-}
       MIRROR_UPSTREAM_BASE: ${MIRROR_UPSTREAM_BASE:-https://api.openai.com/v1}
       MIRROR_UPSTREAM_KEY: ${MIRROR_UPSTREAM_KEY:-}
@@ -82,11 +80,11 @@ services:
     entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
     command: []
     depends_on:
-      persona-b:
+      user-b:
         condition: service_healthy
     environment:
       <<: *edge-env
-      MIRROR_BACKEND: http://persona-b:8080
+      MIRROR_BACKEND: http://user-b:8080
       MIRROR_TOKEN: ${MIRROR_TOKEN_B:-}
     ports:
       - "${MIRROR_BIND:-127.0.0.1}:8112:8100"

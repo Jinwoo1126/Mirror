@@ -18,7 +18,7 @@ service's own documentation before you rely on one.
 hooks. MCP, the gateway and the plain HTTP endpoints go through an **edge** container,
 one per person with its own token. It only starts when you ask for it.
 
-| | Persona A | Persona B |
+| | User A | User B |
 |---|---|---|
 | App and UI (no sign-in, keep on this machine) | `http://127.0.0.1:8011` | `http://127.0.0.1:8012` |
 | Edge (needs its token) | `http://127.0.0.1:8111` | `http://127.0.0.1:8112` |

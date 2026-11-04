@@ -16,7 +16,7 @@ META_API_KEY=... python -m mirror.avatar_gen --design --map-url http://HOST:8001
 # look at data/demo/avatar/candidates/, then install the one you like
 python -m mirror.avatar_gen --input data/demo/avatar/candidates/avatar2.png --out data/demo/avatar \
     --parts '{"brain":[0.5,0.1],"eyes":[0.43,0.245],"ears":[0.77,0.26],"mouth":[0.54,0.29],"heart":[0.64,0.435],"hands":[0.88,0.475],"feet":[0.5,0.9]}'
-python -m mirror.app --db data/demo/mirror.kuzu --avatar-dir data/demo/avatar --name "Persona A"
+python -m mirror.app --db data/demo/mirror.kuzu --avatar-dir data/demo/avatar --name "User A"
 ```
 
 `design.json` in the output folder records the profile items that were sent and the design
@@ -24,9 +24,6 @@ that came back. `--parts` is needed because every picture is a little different;
 looking at where the headgear, glasses, headphones, smile, chest item, held item and shoes
 are. `avatar.json` can also hold `"labels": {"heart": [1, -8, 1.0]}` (side, vertical offset,
 distance) to move a label that collides with something in the picture.
-
-Set `MIRROR_PERSONAS='[{"name": "A", "url": "http://HOST:8001"}, ...]'` to get a person
-switcher in the sidebar.
 
 ## Fastest: Muse Image
 

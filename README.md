@@ -1,49 +1,75 @@
+<div align="center">
+
 # Mirror
 
-**A personal-understanding agent that sits next to the AI tools you already use.**
-It keeps what it learns about you as a time-aware knowledge graph, shows it back to you as a map
-of your own body, and hands the relevant parts to other AI services when you ask it to.
+**An agent that learns how you think and choose, and lends that to the AI tools you already use.**
 
-<p align="center">
-  <img src="docs/media/body-map.gif" alt="Tapping Brain, Hands and Heart flies into each region of the body map" width="860">
-</p>
+It keeps what it learns as a time-aware knowledge graph, shows it back to you as a map of your own
+body, and gives the relevant part to another AI when you ask it to.
 
-Mirror is not a diary. You tell it what happened, in your own words. It works out the things
-that repeat (what you reach for when you are tired, how you like documents written, what you
-do under a deadline), keeps the evidence next to each one, and lets you say "that is wrong".
-Nothing it shows you is a verdict about your personality: every claim comes with the memories
-behind it, and you can correct, suppress or delete it.
+![Python 3.11](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-362%20passing-2ea44f)
+![Graph](https://img.shields.io/badge/graph-Kuzu-7B61FF)
+![MCP](https://img.shields.io/badge/MCP-supported-0F766E)
+![Built with Muse](https://img.shields.io/badge/built%20with-Muse-0866FF)
+
+[Quick start](#quick-start) ·
+[Connect it to other AI](#connect-it-to-other-ai-services) ·
+[How it works](#how-it-works) ·
+[Run without containers](#run-it-without-containers) ·
+[Hosted version](#a-hosted-multi-user-version-shelved)
+
+<img src="docs/media/body-map.gif" alt="Tapping Brain, Hands and Heart flies into each region of the body map" width="860">
+
+</div>
+
+---
+
+Mirror is not a diary. You tell it what happened, in your own words. It works out what repeats
+(what you reach for when you are tired, how you like a document written, what you cut under a
+deadline), keeps the evidence next to each pattern, and lets you say "that is wrong". Nothing it
+shows is a verdict about your personality: every claim comes with the memories behind it, and you
+can correct, suppress or delete it.
 
 ## What you see
 
-| | |
-|---|---|
-| <img src="docs/media/body-map-persona-a.jpg" alt="Persona A body map"> | <img src="docs/media/body-map-persona-b.jpg" alt="Persona B body map"> |
-| **Persona A**, who likes routine. Everything Mirror knows is sorted by the part of the body it belongs to: the brain thinks and chooses, the ears listen, the mouth eats, the hands write and make. Tap a part to fly in. | **Persona B**, the opposite: spontaneous, social, drawn to novelty. Same app, a different person, a different character, built from that person's own profile. |
-
-| | |
-|---|---|
-| <img src="docs/media/hypotheses.jpg" alt="Hypotheses with evidence and counter-examples"> | <img src="docs/media/scenarios.jpg" alt="Fourteen everyday scenarios"> |
-| **Hypotheses.** Each pattern lists the memories that support it and the ones that contradict it. Mark it Correct, Wrong or Don't use. | **Scenarios.** Fourteen everyday tasks (write a document, pick music, plan a trip, review code, work with someone) helped by what Mirror knows. A hook can fire one automatically. |
+<table>
+<tr>
+<td width="50%"><img src="docs/media/body-map-user-a.jpg" alt="Body map of user A"></td>
+<td width="50%"><img src="docs/media/body-map-user-b.jpg" alt="Body map of user B"></td>
+</tr>
+<tr>
+<td valign="top"><b>The body map.</b> Everything Mirror knows is sorted by the part of the body it belongs to: the brain thinks and chooses, the ears listen, the mouth eats, the hands write and make. Tap a part to fly in.</td>
+<td valign="top"><b>Every person gets their own.</b> This is a different user, who likes the opposite things. The character is drawn from that person's own profile, and sensitive areas are left out.</td>
+</tr>
+<tr>
+<td><img src="docs/media/hypotheses.jpg" alt="Hypotheses with evidence and counter-examples"></td>
+<td><img src="docs/media/scenarios.jpg" alt="Fourteen everyday scenarios"></td>
+</tr>
+<tr>
+<td valign="top"><b>Hypotheses.</b> Each pattern lists the memories that support it and the ones that contradict it. Mark it Correct, Wrong or Don't use.</td>
+<td valign="top"><b>Scenarios.</b> Fourteen everyday tasks (write a document, pick music, plan a trip, review code, work with someone) helped by what Mirror knows. A hook can start one for you.</td>
+</tr>
+</table>
 
 <p align="center"><img src="docs/media/graph.jpg" alt="Knowledge graph of memories, things, situations and hypotheses" width="720"></p>
 
-The two characters are fictional demo people, drawn from their own profiles. Their memories are in
-`data/demo/` and `data/demo2/`.
+The two users in the screenshots are made up. Their memories are in `data/demo/` and `data/demo2/`.
 
 ## Quick start
 
-One container per person. Each mounts only its own data folder, so people never see each other's
-memories.
+One container per user. Each mounts only its own data folder, so users never see each other's
+memories and neither knows the other exists.
 
 ```sh
 echo 'META_API_KEY=...' > .env        # to learn from new memories and write answers. Git ignores .env
 docker compose up -d --build
 
-# Persona A   http://127.0.0.1:8011     data/demo
-# Persona B   http://127.0.0.1:8012     data/demo2
-docker compose ps                       # open it once the status is healthy
-docker compose down                     # stop. Your data stays in data/
+# User A   http://127.0.0.1:8011     data/demo
+# User B   http://127.0.0.1:8012     data/demo2
+docker compose ps                      # open it once the status is healthy
+docker compose down                    # stop. Your data stays in data/
 ```
 
 - You can **read everything that is already there without a key**: memories, profile, body map,
@@ -54,14 +80,13 @@ docker compose down                     # stop. Your data stays in data/
 - **Only one process may open a database file** (Kuzu allows one). Do not run
   `python -m mirror.app` on the same `data/demo` while its container is up.
 - **Ports 8011 and 8012** avoid 8001 and 8002, which other containers on a developer machine often hold.
-- **Starting from a fresh clone** is fine: the demo databases are rebuilt from the observations
+- **Starting from a fresh clone** is fine. The demo databases are rebuilt from the observations
   (needs `META_API_KEY`, takes a few minutes):
   ```sh
-  docker compose run --rm --entrypoint python persona-a -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
-  docker compose run --rm --entrypoint python persona-b -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
+  docker compose run --rm --entrypoint python user-a -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
+  docker compose run --rm --entrypoint python user-b -m mirror.ingest /data/persona_observations.jsonl --db /data/mirror.kuzu
   ```
-- **To add a person**, copy one service in `docker-compose.yml`, change the port and the `data/<folder>`,
-  and add a line to `MIRROR_PERSONAS` (the chips that switch between people).
+- **To add a user**, copy one service in `docker-compose.yml` and change the port and the `data/<folder>`.
 - Kuzu's file format is tied to its version. It must match the version that wrote the databases
   (`KUZU_VERSION` in `Dockerfile.local`, currently 0.11.3).
 - The embedding model is shared from `data/models` as `/models`. If it is missing it is downloaded on
@@ -72,21 +97,19 @@ docker compose down                     # stop. Your data stays in data/
 | How | What you need | Notes |
 |---|---|---|
 | **Hooks** for Claude Code and Muse Code | Nothing | The simplest, and the one checked end to end. Every prompt gets the relevant memories added, and unrelated prompts get nothing. |
-| **MCP** (`/mcp`), **plain HTTP** (`/v1/context`, `/v1/remember`), an **OpenAI-compatible gateway** | An edge container and a token | `echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env`, then `docker compose --profile edge up -d`. Edges listen on 8111 (A) and 8112 (B). |
+| **MCP** (`/mcp`), **plain HTTP** (`/v1/context`, `/v1/remember`), an **OpenAI-compatible gateway** | An edge container and a token | `echo "MIRROR_TOKEN_A=$(openssl rand -hex 24)" >> .env`, then `docker compose --profile edge up -d`. Edges listen on 8111 (user A) and 8112 (user B). |
 | **The Muse agent** (muse.ai) | A public HTTPS address and an edge token | It is a cloud service, so it cannot reach a local address. Needs a tunnel. Not verified. See `docs/CONNECT.md`. |
 
 The app ports (8011, 8012) have no sign-in. Only the edge should ever be exposed.
 
-### Hooks
-
-No token is needed. From the project you want to use it in:
+**Hooks.** No token is needed. From the project you want to use it in:
 
 ```sh
 python integrations/claude_code/mirror_hook.py --install --target muse --url http://127.0.0.1:8011
-# Claude Code: --target claude (the default). For the other person, use port 8012.
+# Claude Code: --target claude (the default). For the other user, use port 8012.
 ```
 
-Full details, the MCP and gateway setup and the cloud-agent notes are in [`docs/CONNECT.md`](docs/CONNECT.md).
+Full details, the MCP and gateway setup, and the cloud-agent notes are in [`docs/CONNECT.md`](docs/CONNECT.md).
 
 ## Principles
 
@@ -113,6 +136,9 @@ Full details, the MCP and gateway setup and the cloud-agent notes are in [`docs/
                                                                     2 distinct days with no contradiction
 ```
 
+<details>
+<summary><b>Where things live</b></summary>
+
 ```
 mirror/
   schema.py store.py          ontology and the Kuzu two-time store
@@ -135,7 +161,7 @@ mirror/
 integrations/claude_code/     the hook for Claude Code and Muse Code, and a Muse Code skill
 supabase/                     migrations for the hosted version
 Dockerfile.local docker-compose.yml     the containers above
-data/demo/ data/demo2/        two fictional people: observations, a ready database, their characters
+data/demo/ data/demo2/        two made-up users: observations, a ready database, their characters
 docs/                         CONNECT.md, AVATAR.md, DEPLOY.md, media/
 eval/                         scoring guide and recorded results
 tests/                        unit and integration tests
@@ -144,6 +170,8 @@ tests/                        unit and integration tests
 Personal sample data and generated reports are not in the repository. Bring your own JSONL in the
 same format as `data/demo/persona_observations.jsonl`. The scoring format is in `eval/GUIDELINE.md` and
 the recorded measurements are in `eval/RESULTS.md`.
+
+</details>
 
 ## Run it without containers
 
@@ -213,6 +241,9 @@ account (without one the machine is stopped every five minutes), and putting the
 server in the same region (with the server in Tokyo and the database in Ireland, a single request
 spent over ten seconds waiting on the database).
 
+<details>
+<summary><b>What it does, and what is verified</b></summary>
+
 With `MIRROR_HOSTED=1`, Mirror stores each person's data in Postgres (Supabase) instead of Kuzu and
 every `/api/*` call needs a Supabase sign-in token.
 
@@ -244,13 +275,15 @@ Google and Meta sign-in, and a hook against a deployed address. Steps and what i
 | `MIRROR_RATE_ALL`, `MIRROR_RATE_COSTLY` | Per-person limits per minute (default 120 and 10) |
 | `MIRROR_WORKER=0` | Turn off the worker thread in web processes (when running `python -m mirror.worker` separately) |
 
+</details>
+
 ## Built with
 
-- **Muse Spark** through the Meta Model API reads memories and extracts what repeats.
-- **Muse Image** draws the characters. Each one is designed from the person's own profile, with
-  sensitive areas left out.
 - **Muse Code** wrote the initial implementation of Mirror: the knowledge graph, the extraction pipeline
   and the first version of the app. It is also a supported client, with a hook, an MCP entry and a skill included.
+- **Muse Spark**, through the Meta Model API, reads memories and extracts what repeats.
+- **Muse Image** draws the characters. Each one is designed from the person's own profile, with
+  sensitive areas left out.
 - Claude Code is a supported client too, through the same hook.
 - Kuzu for the graph, Starlette for the app, fastembed for local embeddings, Supabase for the hosted version.
 - The ideas of a dynamic ontology and a chat-first memory app come from MiroFish and personal.ai.
