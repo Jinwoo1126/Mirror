@@ -11,6 +11,14 @@
 # Needs META_API_KEY (put it in .env, which git ignores) to learn from new memories and
 # to write chat answers. Reading what is already there works without it.
 
+x-edge-health: &edge-health
+  healthcheck:
+    test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8100), 3)"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 15s
+
 x-user: &user
   build:
     context: .
@@ -58,6 +66,7 @@ services:
   # With no token set the edge refuses to start, so it can never run open.
   edge-a:
     profiles: ["edge"]
+    <<: *edge-health
     image: mirror-local:latest
     container_name: mirror-edge-a
     entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
@@ -75,6 +84,7 @@ services:
 
   edge-b:
     profiles: ["edge"]
+    <<: *edge-health
     image: mirror-local:latest
     container_name: mirror-edge-b
     entrypoint: ["python", "-m", "mirror.edge", "--host", "0.0.0.0", "--port", "8100"]
