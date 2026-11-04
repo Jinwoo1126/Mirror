@@ -198,9 +198,13 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         except Exception:
             return [], []     # Mirror being down must never break the user's request
 
-    async def remember(text: str) -> dict:
-        r = await backend.post("/api/memories", headers=backend_headers(),
-                               json={"text": text})
+    async def remember(text: str, prior_answer: str = "", episode: str = "") -> dict:
+        body = {"text": text}
+        if prior_answer:
+            body["prior_answer"] = prior_answer[:MAX_CAPTURE_CHARS]
+        if episode:
+            body["episode"] = episode[:200]
+        r = await backend.post("/api/memories", headers=backend_headers(), json=body)
         return r.json()
 
     async def capture(text: str) -> None:
@@ -229,9 +233,14 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         return r.json()
 
     @mcp.tool()
-    async def mirror_remember(text: str) -> dict:
-        """Remember something the user said, in their own words."""
-        return await remember(text)
+    async def mirror_remember(text: str, prior_answer: str = "", episode: str = "") -> dict:
+        """Remember something the user said, in their own words.
+
+        When the user is correcting or rejecting your reply, pass that reply as
+        prior_answer, so Mirror can tell what was corrected. It is kept as context and is
+        never stored as the user's words. episode groups the turns of one task.
+        """
+        return await remember(text, prior_answer, episode)
 
     @mcp.tool()
     async def mirror_feedback(hypothesis_id: str, verdict: str) -> dict:
@@ -319,7 +328,8 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         if not (MIN_CAPTURE_CHARS <= len(text) <= MAX_CAPTURE_CHARS):
             return JSONResponse({"error": f"text must be {MIN_CAPTURE_CHARS}-"
                                           f"{MAX_CAPTURE_CHARS} characters"}, 400)
-        return JSONResponse(await remember(text))
+        return JSONResponse(await remember(text, str(body.get("prior_answer") or ""),
+                                           str(body.get("episode") or "")))
 
     app.router.routes.append(Route("/v1/context", context_endpoint, methods=["POST"]))
     app.router.routes.append(Route("/v1/remember", remember_endpoint, methods=["POST"]))

@@ -264,6 +264,11 @@ def test_remember_endpoint_stores_text_through_the_backend(make):
     assert rec.backend[-1] == ("/api/memories", {"text": "I prefer short meetings."})
     assert client.post("/v1/remember", headers=AUTH, json={"text": "no"}).status_code == 400
     assert client.post("/v1/remember", headers=AUTH, json={"text": "x" * 3000}).status_code == 400
+    client.post("/v1/remember", headers=AUTH, json={
+        "text": "No, not that one on weekends.", "prior_answer": "Get the usual.", "episode": "e1"})
+    assert rec.backend[-1] == ("/api/memories", {"text": "No, not that one on weekends.",
+                                                 "prior_answer": "Get the usual.",
+                                                 "episode": "e1"})
 
 
 def test_multiuser_context_endpoint_forwards_the_callers_own_token(multi):

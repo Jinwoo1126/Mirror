@@ -292,6 +292,16 @@ async def api_memories_list(request):
         return _json({"items": items})
 
 
+def _episode_fields(body: dict) -> dict:
+    """The optional episode id and the assistant reply the person is reacting to."""
+    out = {}
+    for key, limit in (("episode", 200), ("prior_answer", 2000)):
+        value = str(body.get(key) or "").strip()[:limit]
+        if value:
+            out[key] = value
+    return out
+
+
 async def api_memories_add(request):
     body = await request.json()
     text = (body.get("text") or "").strip()
@@ -310,7 +320,8 @@ async def api_memories_add(request):
         try:
             job_id = store.enqueue_job("learn", {
                 "text": text, "source_id": source_id,
-                "occurred_at": body.get("occurred_at") or schema.utcnow_iso()})
+                "occurred_at": body.get("occurred_at") or schema.utcnow_iso(),
+                **_episode_fields(body)})
         except ValueError as e:
             return _json({"error": str(e)}, 429)
         return _json({"ok": True, "queued": True, "job_id": job_id, "status": "queued"}, 202)
@@ -319,7 +330,8 @@ async def api_memories_add(request):
         res = observe_mod.observe(
             store, get_extractor(), source_id,
             {"text": text,
-             "occurred_at": body.get("occurred_at") or schema.utcnow_iso()},
+             "occurred_at": body.get("occurred_at") or schema.utcnow_iso(),
+             **_episode_fields(body)},
             store.get_revision())
         if res.ok and not res.duplicate and get_index() is not None:
             get_index().refresh(store)

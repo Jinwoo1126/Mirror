@@ -27,6 +27,12 @@ class ObservationInput:
     occurred_at: str
     raw_ref: str = ""
     visibility: str = "private"
+    # the assistant's reply the person is reacting to: context for reading a correction,
+    # never the person's own words and never evidence on its own
+    prior_answer: str = ""
+
+
+EXISTING = "hyp:"   # an edge or revision ref that names a hypothesis already in the graph
 
 
 @dataclass
@@ -48,9 +54,19 @@ class EdgeSpec:
 
 
 @dataclass
+class RevisionSpec:
+    """A change to an existing hypothesis. "narrow": it holds only under `condition`."""
+
+    hypothesis_ref: str
+    action: str
+    condition: str = ""
+
+
+@dataclass
 class ExtractionResult:
     nodes: list[NodeSpec] = field(default_factory=list)
     edges: list[EdgeSpec] = field(default_factory=list)
+    revisions: list[RevisionSpec] = field(default_factory=list)
 
 
 class Extractor(Protocol):
@@ -67,7 +83,8 @@ class Extractor(Protocol):
 EXTRACTION_SYSTEM_PROMPT = """You extract a personal knowledge graph from ONE observed scene.
 Output JSON only, no prose. Shape:
 {"nodes": [{"kind": "...", "ref": "...", "attrs": {...}}],
- "edges": [{"rel": "...", "from_ref": "...", "to_ref": "...", "evidence_ref": "..."}]}
+ "edges": [{"rel": "...", "from_ref": "...", "to_ref": "...", "evidence_ref": "..."}],
+ "revisions": []}
 
 The top-level "kind" of a node is ALWAYS one of: Entity, Context, Preference,
 Criterion, Hypothesis, Style. The Korean sub-kinds (사람, 장소, 시간대, 상태 ...)
@@ -116,22 +133,54 @@ Rules:
 10. LANGUAGE: write every free-text value (names, Context values, hypothesis
     statements, Style patterns, phrases) in the same language as the scene. Keep the
     kind and domain values exactly as listed above; they are fixed labels.
+11. EXISTING HYPOTHESES may be listed with refs like "hyp:hyp-1a2b". When the scene bears
+    on the same idea as one of them, even in other words, point the edge at that ref
+    instead of writing a near-duplicate: {"rel": "SUPPORTS", "from_ref": "obs",
+    "to_ref": "hyp:hyp-1a2b", "evidence_ref": "obs"}. Use CONTRADICTS when the scene goes
+    against it. Never invent a "hyp:" ref that is not listed.
+12. When the scene shows that an existing hypothesis holds only under some condition (a
+    state, a time, a kind of task) and that condition explains the difference, narrow it
+    instead of writing a new hypothesis: "revisions": [{"hypothesis": "hyp:hyp-1a2b",
+    "action": "narrow", "condition": "<when it holds, in the scene's language>"}]. Narrow
+    only when the scene itself shows the boundary; otherwise leave "revisions" empty.
+13. An "assistant's previous reply" may be given. It is context only: not the person's
+    words, and never evidence on its own. When the person corrects or rejects it, what the
+    person said is their own boundary. Keep the exact numbers, names and phrasings that
+    mark what they accept or reject.
 """
 
 
+def _known_line(h: str | dict) -> str:
+    if isinstance(h, str):
+        return f"- {h}"
+    when = "; ".join(h.get("conditions") or [])
+    return (f"- {EXISTING}{h['id']} [{h.get('status', 'candidate')}"
+            + (f"; when: {when}" if when else "") + f"] {h['statement']}")
+
+
 def build_user_prompt(obs: ObservationInput,
-                      known_hypotheses: list[str] | None = None) -> str:
+                      known_hypotheses: list | None = None) -> str:
     known = ""
     if known_hypotheses:
-        known = (
-            "Existing hypotheses about this person. If the scene supports the "
-            "same idea as one of them, reuse its statement EXACTLY (same words) "
-            "instead of writing a new one. Write a new hypothesis only when "
-            "none of them fits:\n"
-            + "\n".join(f"- {h}" for h in known_hypotheses[:30]) + "\n")
+        if any(isinstance(h, dict) for h in known_hypotheses):
+            intro = ("Existing hypotheses about this person, with their refs. Link this "
+                     "scene to one by its ref (rules 11 and 12) instead of writing a new "
+                     "hypothesis that means the same. Write a new hypothesis only when "
+                     "none of them fits:\n")
+        else:
+            intro = ("Existing hypotheses about this person. If the scene supports the "
+                     "same idea as one of them, reuse its statement EXACTLY (same words) "
+                     "instead of writing a new one. Write a new hypothesis only when "
+                     "none of them fits:\n")
+        known = intro + "\n".join(_known_line(h) for h in known_hypotheses[:30]) + "\n"
+    scene = f"scene: {obs.text}\n"
+    if obs.prior_answer.strip():
+        scene = ("assistant's previous reply (context only, not the person's words; "
+                 f"rule 13): {obs.prior_answer.strip()[:2000]}\n"
+                 f"scene (the person's own words): {obs.text}\n")
     return (
         f"observation_id: {obs.source_id}\noccurred_at: {obs.occurred_at}\n"
-        f"scene: {obs.text}\n{known}"
+        f"{scene}{known}"
         "Hypothesis statements must be short, general tendencies of the person "
         "that other scenes could also support (e.g. \"When tired, picks the familiar "
         "option\"), not a description of this one scene. Write it in the same "
@@ -154,10 +203,17 @@ _REQUIRED_ATTRS: dict[str, tuple[str, ...]] = {
 }
 
 
-def validate_extraction(result: ExtractionResult) -> list[str]:
-    """위반 목록 반환. 빈 리스트면 통과."""
+def validate_extraction(result: ExtractionResult,
+                        known_ids: set[str] | None = None) -> list[str]:
+    """위반 목록 반환. 빈 리스트면 통과.
+
+    known_ids: hypotheses already in the graph that edges and revisions may name as
+    "hyp:<id>". Without it, no such ref is accepted.
+    """
     errors: list[str] = []
     kinds: dict[str, str] = {"obs": schema.OBSERVATION}
+    for hid in known_ids or ():
+        kinds[EXISTING + hid] = schema.HYPOTHESIS
     for node in result.nodes:
         if node.kind not in schema.NODE_TYPES:
             errors.append(f"node {node.ref}: unknown kind {node.kind}")
@@ -223,6 +279,15 @@ def validate_extraction(result: ExtractionResult) -> list[str]:
             continue
         if edge.rel in schema.EVIDENCE_REQUIRED and edge.evidence_ref != "obs":
             errors.append(f"{tag}: evidence_ref must be 'obs'")
+    for i, rev in enumerate(result.revisions):
+        tag = f"revision[{i}] {rev.action} {rev.hypothesis_ref}"
+        if rev.action != "narrow":
+            errors.append(f"{tag}: unknown action")
+        elif kinds.get(rev.hypothesis_ref) != schema.HYPOTHESIS or \
+                not rev.hypothesis_ref.startswith(EXISTING):
+            errors.append(f"{tag}: not an existing hypothesis")
+        elif not rev.condition.strip():
+            errors.append(f"{tag}: missing condition")
     return errors
 
 
@@ -257,7 +322,17 @@ def parse_extraction_json(data: dict) -> ExtractionResult:
                 phrase=str(e.get("phrase", "")),
             )
         )
-    return ExtractionResult(nodes=nodes, edges=edges)
+    raw_revs = data.get("revisions") or []
+    if not isinstance(raw_revs, list):
+        raise ExtractionError("'revisions' must be a list")
+    revisions = []
+    for r in raw_revs:
+        if not isinstance(r, dict) or "hypothesis" not in r:
+            raise ExtractionError(f"bad revision entry: {r!r}")
+        revisions.append(RevisionSpec(hypothesis_ref=str(r["hypothesis"]),
+                                      action=str(r.get("action", "")),
+                                      condition=str(r.get("condition", ""))))
+    return ExtractionResult(nodes=nodes, edges=edges, revisions=revisions)
 
 
 # ---------------------------------------------------------------------------
@@ -549,6 +624,8 @@ class ClaudeExtractor:
 
     name = "Muse"
 
+    known_hypotheses: list | None = None  # observe가 저장소에서 채운다
+
     def __init__(self, model: str = "claude-haiku-4-5", api_key: str | None = None):
         self.model = model
         self.api_key = api_key
@@ -556,7 +633,7 @@ class ClaudeExtractor:
     def extract(self, obs: ObservationInput) -> ExtractionResult:
         try:
             data = llm_mod.call_claude_json(
-                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs),
+                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs, self.known_hypotheses),
                 model=self.model, api_key=self.api_key)
         except llm_mod.LlmError as e:
             msg = str(e)
@@ -564,7 +641,7 @@ class ClaudeExtractor:
                 raise ExtractionError(msg) from e
             raise NotConfigured(msg) from e
         result = parse_extraction_json(data)
-        errors = validate_extraction(result)
+        errors = validate_extraction(result, _known_ids(self.known_hypotheses))
         if errors:
             raise ExtractionError("; ".join(errors))
         return result
@@ -575,13 +652,15 @@ class OllamaExtractor:
 
     name = "ollama"
 
+    known_hypotheses: list | None = None  # observe가 저장소에서 채운다
+
     def __init__(self, model: str = "llama3.1"):
         self.model = model
 
     def extract(self, obs: ObservationInput) -> ExtractionResult:
         try:
             data = llm_mod.call_ollama_json(
-                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs),
+                EXTRACTION_SYSTEM_PROMPT, build_user_prompt(obs, self.known_hypotheses),
                 model=self.model)
         except llm_mod.LlmError as e:
             msg = str(e)
@@ -589,25 +668,30 @@ class OllamaExtractor:
                 raise ExtractionError(msg) from e
             raise NotConfigured(msg) from e
         result = parse_extraction_json(data)
-        errors = validate_extraction(result)
+        errors = validate_extraction(result, _known_ids(self.known_hypotheses))
         if errors:
             raise ExtractionError("; ".join(errors))
         return result
 
 
-def _drop_bad_edges(result: ExtractionResult,
-                    errors: list[str]) -> tuple[ExtractionResult, list[str]]:
-    """엣지 오류만 있으면 그 엣지만 버리고 나머지를 살린다. 노드 오류는 그대로 둔다."""
-    bad = set()
+def _known_ids(known: list | None) -> set[str]:
+    return {h["id"] for h in known or () if isinstance(h, dict) and h.get("id")}
+
+
+def _drop_bad_edges(result: ExtractionResult, errors: list[str],
+                    known_ids: set[str] | None = None) -> tuple[ExtractionResult, list[str]]:
+    """엣지·수정 오류만 있으면 그것만 버리고 나머지를 살린다. 노드 오류는 그대로 둔다."""
+    bad, bad_rev = set(), set()
     for err in errors:
-        m = re.match(r"edge\[(\d+)\]", err)
+        m = re.match(r"(edge|revision)\[(\d+)\]", err)
         if m is None:
             return result, errors
-        bad.add(int(m.group(1)))
+        (bad if m.group(1) == "edge" else bad_rev).add(int(m.group(2)))
     kept = ExtractionResult(
         nodes=result.nodes,
-        edges=[e for i, e in enumerate(result.edges) if i not in bad])
-    return kept, validate_extraction(kept)
+        edges=[e for i, e in enumerate(result.edges) if i not in bad],
+        revisions=[r for i, r in enumerate(result.revisions) if i not in bad_rev])
+    return kept, validate_extraction(kept, known_ids)
 
 
 class SparkExtractor:
@@ -631,7 +715,7 @@ class SparkExtractor:
         self.effort = effort
         self.timeout = timeout
 
-    known_hypotheses: list[str] | None = None  # observe가 저장소에서 채운다
+    known_hypotheses: list | None = None  # observe가 저장소에서 채운다
 
     def _prompt_text(self, obs: ObservationInput) -> str:
         return (EXTRACTION_SYSTEM_PROMPT + "\n\n"
@@ -649,7 +733,7 @@ class SparkExtractor:
             result = parse_extraction_json(data)
         except (llm_mod.LlmError, ExtractionError) as e:
             return None, [f"{e}"[:300]]
-        return result, validate_extraction(result)
+        return result, validate_extraction(result, _known_ids(self.known_hypotheses))
 
     def extract(self, obs: ObservationInput) -> ExtractionResult:
         prompt = self._prompt_text(obs)
@@ -660,7 +744,7 @@ class SparkExtractor:
                      + "\nReturn corrected JSON only, following the example.")
             result, errors = self._once(retry)
         if errors and result is not None:
-            result, errors = _drop_bad_edges(result, errors)
+            result, errors = _drop_bad_edges(result, errors, _known_ids(self.known_hypotheses))
         if errors or result is None:
             raise ExtractionError("; ".join(errors) or "empty extraction")
         return result

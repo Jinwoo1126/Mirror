@@ -443,6 +443,13 @@ class MirrorStore:
             )
         return True
 
+    def set_hypothesis_conditions(self, hyp_id: str, conditions: list[str]) -> bool:
+        if self.get_node(HYPOTHESIS, hyp_id) is None:
+            return False
+        self._conn.execute("MATCH (h:Hypothesis {id: $id}) SET h.conditions = $c",
+                           {"id": hyp_id, "c": schema.json_list(conditions)})
+        return True
+
     def set_hypothesis_use_policy(self, hyp_id: str, use_policy: str) -> bool:
         """Change how a hypothesis may be used. Sensitive domains stay internal_only."""
         hyp = self.get_hypothesis(hyp_id)
@@ -882,6 +889,14 @@ class MirrorStore:
 
     def hypothesis_statements(self) -> list[str]:
         return [r[0] for r in self._rows("MATCH (h:Hypothesis) RETURN h.statement")]
+
+    def hypothesis_catalog(self) -> list[dict]:
+        """Candidate and active hypotheses with ids, for the extractor to link evidence to."""
+        rows = self._rows(
+            "MATCH (h:Hypothesis) WHERE h.status IN ['candidate', 'active'] "
+            "RETURN h.id, h.statement, h.status, h.conditions ORDER BY h.recorded_at")
+        return [{"id": r[0], "statement": r[1], "status": r[2],
+                 "conditions": schema.parse_json_list(r[3])} for r in rows]
 
     def hypothesis_brief(self, limit: int) -> list[list]:
         """(statement, status) for the first `limit` hypotheses."""

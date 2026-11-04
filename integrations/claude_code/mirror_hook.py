@@ -160,7 +160,10 @@ def run(payload: dict, cfg: dict) -> dict | None:
     if skip_reason(payload, text):
         return None
     if cfg.get("capture") and MIN_CAPTURE <= len(text) <= MAX_CAPTURE and not looks_secret(text):
-        spawn_capture(text)
+        prior = last_assistant_reply(payload.get("transcript_path"))
+        spawn_capture({"text": text,
+                       "prior_answer": "" if looks_secret(prior) else prior[:MAX_CAPTURE],
+                       "episode": str(payload.get("session_id") or "")})
     data = _post(cfg["url"], "/api/retrieve", {"request": text, "budget": 6},
                  cfg.get("token", ""), RETRIEVE_TIMEOUT)
     items = data.get("items") or []
@@ -171,19 +174,64 @@ def run(payload: dict, cfg: dict) -> dict | None:
         "additionalContext": build_context(items, data.get("scenarios"))}}
 
 
-def spawn_capture(text: str) -> None:
+TRANSCRIPT_TAIL = 400_000   # bytes read from the end of the transcript
+
+
+def last_assistant_reply(transcript_path) -> str:
+    """The assistant's last text reply in a Claude Code transcript (JSONL), or ''.
+
+    A correction means little without what it corrects. Muse Code sends no transcript,
+    so there this is always ''.
+    """
+    if not isinstance(transcript_path, str) or not transcript_path:
+        return ""
+    try:
+        with open(transcript_path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - TRANSCRIPT_TAIL))
+            lines = f.read().decode("utf-8", "replace").splitlines()
+    except OSError:
+        return ""
+    for line in reversed(lines):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        msg = entry.get("message") if isinstance(entry, dict) else None
+        if entry.get("type") != "assistant" or not isinstance(msg, dict):
+            continue
+        content = msg.get("content")
+        if isinstance(content, str):
+            parts = [content]
+        else:
+            parts = [c.get("text", "") for c in content or ()
+                     if isinstance(c, dict) and c.get("type") == "text"]
+        reply = "\n".join(p for p in parts if p).strip()
+        if reply:
+            return reply
+    return ""
+
+
+def spawn_capture(body: dict) -> None:
     """Remember the prompt without making the user wait for the extractor."""
     p = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--capture"],
                          stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
-    p.stdin.write(text.encode("utf-8"))
+    p.stdin.write(json.dumps(body).encode("utf-8"))
     p.stdin.close()
 
 
 def capture_from_stdin() -> None:
     cfg = load_config()
-    text = sys.stdin.read()
-    _post(cfg["url"], "/api/memories", {"text": text}, cfg.get("token", ""), 180)
+    raw = sys.stdin.read()
+    try:
+        body = json.loads(raw)
+    except ValueError:
+        body = None
+    if not isinstance(body, dict):        # older callers sent the bare prompt
+        body = {"text": raw}
+    body = {k: v for k, v in body.items() if k in ("text", "prior_answer", "episode") and v}
+    _post(cfg["url"], "/api/memories", body, cfg.get("token", ""), 180)
 
 
 # -- install / uninstall -------------------------------------------------------
