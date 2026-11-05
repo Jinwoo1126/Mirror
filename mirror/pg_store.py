@@ -353,6 +353,10 @@ class PostgresStore(MirrorStore):
                         "where user_id=%s and id=%s", (status, now, self.uid, hyp_id))
         return n == 1
 
+    def set_hypothesis_conditions(self, hyp_id: str, conditions: list[str]) -> bool:
+        return self._x("update public.hypotheses set conditions=%s where user_id=%s and id=%s",
+                       (schema.json_list(conditions), self.uid, hyp_id)) == 1
+
     def set_hypothesis_use_policy(self, hyp_id: str, use_policy: str) -> bool:
         hyp = self.get_hypothesis(hyp_id)
         if hyp is None:
@@ -675,6 +679,13 @@ class PostgresStore(MirrorStore):
         return [r[0] for r in self._q(
             "select statement from public.hypotheses where user_id=%s order by seq",
             (self.uid,))]
+
+    def hypothesis_catalog(self) -> list[dict]:
+        rows = self._q(
+            "select id, statement, status, conditions from public.hypotheses "
+            "where user_id=%s and status in ('candidate', 'active') order by seq", (self.uid,))
+        return [{"id": r[0], "statement": r[1], "status": r[2],
+                 "conditions": schema.parse_json_list(r[3])} for r in rows]
 
     def hypothesis_brief(self, limit: int) -> list[list]:
         return [list(r) for r in self._q(

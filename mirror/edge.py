@@ -34,6 +34,8 @@ from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 
+from . import delivery
+
 INSTRUCTIONS = (
     "Mirror keeps what it has learned about the user from past conversations. "
     "At the start of a task that depends on the user's preferences or habits, call "
@@ -42,7 +44,9 @@ INSTRUCTIONS = (
     "review or deadline pressure); mirror_scenario can run one of them in full. Never reveal it unprompted and never make claims about the user's "
     "personality. When the user states a decision, a preference or a correction, call "
     "mirror_remember with their own words. If the user says a remembered point is "
-    "wrong, call mirror_feedback."
+    "wrong, call mirror_feedback. Each item is a hypothesis, not a fact: keep to its "
+    "conditions, and treat a candidate or one with contrary evidence as a weak clue. "
+    + delivery.load_guidance()
 )
 
 MIN_CAPTURE_CHARS = 8
@@ -94,17 +98,7 @@ def last_user_text(messages: list) -> str:
 
 
 def context_message(items: list[dict], scenarios: list[dict] | None = None) -> str:
-    lines = [
-        "Background about the user, from Mirror's memory of their past conversations. "
-        "Use it only when it is relevant, do not mention it unprompted, and never "
-        "make claims about the user's personality or type."]
-    if scenarios:
-        lines.append("Situation this looks like: "
-                     + ", ".join(s["name"] for s in scenarios) + ".")
-    for it in items:
-        lines.append(f"- {it['statement']} ({it.get('evidence', 0)} evidence, "
-                     f"{it.get('status', 'candidate')})")
-    return "\n".join(lines)
+    return delivery.render(items, scenarios)
 
 
 def with_context(messages: list, items: list[dict],
@@ -204,9 +198,13 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         except Exception:
             return [], []     # Mirror being down must never break the user's request
 
-    async def remember(text: str) -> dict:
-        r = await backend.post("/api/memories", headers=backend_headers(),
-                               json={"text": text})
+    async def remember(text: str, prior_answer: str = "", episode: str = "") -> dict:
+        body = {"text": text}
+        if prior_answer:
+            body["prior_answer"] = prior_answer[:MAX_CAPTURE_CHARS]
+        if episode:
+            body["episode"] = episode[:200]
+        r = await backend.post("/api/memories", headers=backend_headers(), json=body)
         return r.json()
 
     async def capture(text: str) -> None:
@@ -220,7 +218,10 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
 
     @mcp.tool()
     async def mirror_context(request: str, budget: int = 6) -> dict:
-        """What Mirror has learned about the user that is relevant to this task."""
+        """What Mirror has learned about the user that is relevant to this task.
+
+        Each item keeps its status, its conditions and how much supports or contradicts it.
+        """
         items, scenarios = await fetch_context(request)
         return {"items": items[:max(1, min(budget, 20))], "scenarios": scenarios}
 
@@ -232,9 +233,14 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         return r.json()
 
     @mcp.tool()
-    async def mirror_remember(text: str) -> dict:
-        """Remember something the user said, in their own words."""
-        return await remember(text)
+    async def mirror_remember(text: str, prior_answer: str = "", episode: str = "") -> dict:
+        """Remember something the user said, in their own words.
+
+        When the user is correcting or rejecting your reply, pass that reply as
+        prior_answer, so Mirror can tell what was corrected. It is kept as context and is
+        never stored as the user's words. episode groups the turns of one task.
+        """
+        return await remember(text, prior_answer, episode)
 
     @mcp.tool()
     async def mirror_feedback(hypothesis_id: str, verdict: str) -> dict:
@@ -322,7 +328,8 @@ def create_app(cfg: Config, backend: httpx.AsyncClient | None = None,
         if not (MIN_CAPTURE_CHARS <= len(text) <= MAX_CAPTURE_CHARS):
             return JSONResponse({"error": f"text must be {MIN_CAPTURE_CHARS}-"
                                           f"{MAX_CAPTURE_CHARS} characters"}, 400)
-        return JSONResponse(await remember(text))
+        return JSONResponse(await remember(text, str(body.get("prior_answer") or ""),
+                                           str(body.get("episode") or "")))
 
     app.router.routes.append(Route("/v1/context", context_endpoint, methods=["POST"]))
     app.router.routes.append(Route("/v1/remember", remember_endpoint, methods=["POST"]))

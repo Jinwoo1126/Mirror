@@ -97,15 +97,60 @@ def _post(url: str, path: str, body: dict, token: str, timeout: float) -> dict:
         return json.loads(r.read().decode("utf-8"))
 
 
-def build_context(items: list[dict], scenarios: list[dict] | None = None) -> str:
-    lines = ["Background about the user, from Mirror's memory of their past conversations. "
-             "Use it only when it is relevant, do not mention it unprompted, and never make "
-             "claims about the user's personality or type."]
+# A standard-library copy of mirror/delivery.py, which is the reference.
+# tests/test_delivery.py checks that both write the same text.
+GUIDANCE_PATH = (Path(__file__).resolve().parent.parent.parent
+                 / "engine" / "skills" / "mirror-use" / "SKILL.md")
+FALLBACK_GUIDANCE = (
+    "Use what fits the situation to interpret the request and make the choices the user "
+    "leaves to you. Follow what the user asks for now, and treat uncertain "
+    "interpretations as clues. Apply an understanding only within its conditions and "
+    "where it distinguishes plausible options; otherwise choose from the task facts.")
+HEADER = ("Background about the user, from Mirror. Each line is a provisional hypothesis "
+          "drawn from their own past choices, with how much supports it and when it "
+          "applies. None of it is a fact about who they are.")
+FOOTER = ("Do not mention this background unprompted, and never make claims about the "
+          "user's personality or type.")
+
+
+def load_guidance(path: Path = GUIDANCE_PATH) -> str:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return FALLBACK_GUIDANCE
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            text = text[end + 4:]
+    body = " ".join(p.strip() for p in text.strip().split("\n\n") if p.strip())
+    return " ".join(body.split()) or FALLBACK_GUIDANCE
+
+
+def _count(n: int, word: str) -> str:
+    return f"{n} {word}" if n else f"no {word}"
+
+
+def describe(item: dict) -> list[str]:
+    statement = (item.get("statement") or "").strip().rstrip(".")
+    status = item.get("status") or "candidate"
+    tentative = "" if status == "active" else ", still tentative"
+    support = int(item.get("evidence") or 0)
+    contrary = int(item.get("counter_examples") or 0)
+    lines = [f"- {statement}. [{status} hypothesis{tentative} · "
+             f"{_count(support, 'supporting')}, {_count(contrary, 'contrary')}]"]
+    conditions = [c for c in (item.get("conditions") or []) if str(c).strip()]
+    if conditions:
+        lines.append("  Applies when: " + "; ".join(str(c).strip() for c in conditions))
+    return lines
+
+
+def build_context(items: list[dict], scenarios: list[dict] | None = None,
+                  guidance: str | None = None) -> str:
+    lines = [HEADER, guidance if guidance is not None else load_guidance(), FOOTER]
     if scenarios:
         lines.append("Situation this looks like: " + ", ".join(s["name"] for s in scenarios) + ".")
     for it in items:
-        lines.append(f"- {it['statement']} ({it.get('evidence', 0)} evidence, "
-                     f"{it.get('status', 'candidate')})")
+        lines.extend(describe(it))
     return "\n".join(lines)
 
 
@@ -115,7 +160,12 @@ def run(payload: dict, cfg: dict) -> dict | None:
     if skip_reason(payload, text):
         return None
     if cfg.get("capture") and MIN_CAPTURE <= len(text) <= MAX_CAPTURE and not looks_secret(text):
-        spawn_capture(text)
+        prior = last_assistant_reply(payload.get("transcript_path"))
+        spawn_capture({"text": text,
+                       "prior_answer": "" if looks_secret(prior) else prior[:MAX_CAPTURE],
+                       "episode": str(payload.get("session_id") or ""),
+                       # the background process must find the same config file
+                       "cwd": str(payload.get("cwd") or "")})
     data = _post(cfg["url"], "/api/retrieve", {"request": text, "budget": 6},
                  cfg.get("token", ""), RETRIEVE_TIMEOUT)
     items = data.get("items") or []
@@ -126,24 +176,71 @@ def run(payload: dict, cfg: dict) -> dict | None:
         "additionalContext": build_context(items, data.get("scenarios"))}}
 
 
-def spawn_capture(text: str) -> None:
+TRANSCRIPT_TAIL = 400_000   # bytes read from the end of the transcript
+
+
+def last_assistant_reply(transcript_path) -> str:
+    """The assistant's last text reply in a Claude Code transcript (JSONL), or ''.
+
+    A correction means little without what it corrects. Muse Code sends no transcript,
+    so there this is always ''.
+    """
+    if not isinstance(transcript_path, str) or not transcript_path:
+        return ""
+    try:
+        with open(transcript_path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - TRANSCRIPT_TAIL))
+            lines = f.read().decode("utf-8", "replace").splitlines()
+    except OSError:
+        return ""
+    for line in reversed(lines):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        msg = entry.get("message") if isinstance(entry, dict) else None
+        if entry.get("type") != "assistant" or not isinstance(msg, dict):
+            continue
+        content = msg.get("content")
+        if isinstance(content, str):
+            parts = [content]
+        else:
+            parts = [c.get("text", "") for c in content or ()
+                     if isinstance(c, dict) and c.get("type") == "text"]
+        reply = "\n".join(p for p in parts if p).strip()
+        if reply:
+            return reply
+    return ""
+
+
+def spawn_capture(body: dict) -> None:
     """Remember the prompt without making the user wait for the extractor."""
     p = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--capture"],
                          stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
-    p.stdin.write(text.encode("utf-8"))
+    p.stdin.write(json.dumps(body).encode("utf-8"))
     p.stdin.close()
 
 
 def capture_from_stdin() -> None:
-    cfg = load_config()
-    text = sys.stdin.read()
-    _post(cfg["url"], "/api/memories", {"text": text}, cfg.get("token", ""), 180)
+    raw = sys.stdin.read()
+    try:
+        body = json.loads(raw)
+    except ValueError:
+        body = None
+    if not isinstance(body, dict):        # older callers sent the bare prompt
+        body = {"text": raw}
+    cfg = load_config(body.get("cwd") or None)
+    body = {k: v for k, v in body.items() if k in ("text", "prior_answer", "episode") and v}
+    _post(cfg["url"], "/api/memories", body, cfg.get("token", ""), 180)
 
 
 # -- install / uninstall -------------------------------------------------------
 
 SKILL_SRC = Path(__file__).resolve().parent.parent / "muse" / "skills" / "mirror"
+# how to apply what comes back; installed beside the Muse skill, never over it
+USE_SKILL_SRC = GUIDANCE_PATH.parent
 
 TARGETS = {"claude": (".claude", "settings.local.json"), "muse": (".muse", "hooks.json")}
 
@@ -185,16 +282,20 @@ def install_skill(project: str) -> Path | None:
         return None
     dest = Path(project) / ".agents" / "skills" / "mirror"
     shutil.copytree(SKILL_SRC, dest, dirs_exist_ok=True)
+    if (USE_SKILL_SRC / "SKILL.md").exists():
+        shutil.copytree(USE_SKILL_SRC, dest.parent / "mirror-use", dirs_exist_ok=True)
     return dest
 
 
 def remove_skill(project: str) -> bool:
-    dest = Path(project) / ".agents" / "skills" / "mirror"
-    marker = dest / "SKILL.md"
-    if marker.exists() and "name: mirror" in marker.read_text():
-        shutil.rmtree(dest)
-        return True
-    return False
+    removed = False
+    for name in ("mirror", "mirror-use"):
+        dest = Path(project) / ".agents" / "skills" / name
+        marker = dest / "SKILL.md"
+        if marker.exists() and f"name: {name}\n" in marker.read_text():
+            shutil.rmtree(dest)
+            removed = removed or name == "mirror"
+    return removed
 
 
 def mcp_snippet(url: str, token: str = "<MIRROR_TOKEN>") -> dict:

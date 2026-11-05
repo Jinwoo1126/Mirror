@@ -101,7 +101,8 @@ def _learn(dsn: str, job: dict, extractor) -> tuple[bool, dict, str, bool]:
     try:
         res = observe_mod.observe(
             store, extractor, p.get("source_id", ""),
-            {"text": p.get("text", ""), "occurred_at": p.get("occurred_at")},
+            {"text": p.get("text", ""), "occurred_at": p.get("occurred_at"),
+             "episode": p.get("episode", ""), "prior_answer": p.get("prior_answer", "")},
             store.get_revision())
     finally:
         store.close()

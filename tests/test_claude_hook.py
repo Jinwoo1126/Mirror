@@ -175,7 +175,9 @@ def test_muse_skill_is_installed_and_removed_without_touching_other_skills(tmp_p
     (other / "SKILL.md").write_text("---\nname: other\ndescription: x\n---\n")
     dest = hook.install_skill(str(proj))
     assert (dest / "SKILL.md").read_text().startswith("---\nname: mirror")
-    assert hook.remove_skill(str(proj)) is True and not dest.exists()
+    use = dest.parent / "mirror-use" / "SKILL.md"     # the reply guidance, beside it
+    assert use.read_text().startswith("---\nname: mirror-use")
+    assert hook.remove_skill(str(proj)) is True and not dest.exists() and not use.exists()
     assert (other / "SKILL.md").exists() and hook.remove_skill(str(proj)) is False
 
 
@@ -200,3 +202,50 @@ def test_install_can_store_a_token_from_a_file_with_private_permissions(tmp_path
     assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
     hook.install(str(tmp_path / "b"), "https://mirror.example", False, "claude")
     assert json.loads((tmp_path / "b" / ".claude" / "mirror-hook.json").read_text())["token"] == ""
+
+
+def test_capture_sends_the_reply_being_corrected_with_the_prompt(server, tmp_path):
+    url, seen = server
+    transcript = tmp_path / "t.jsonl"
+    transcript.write_text("\n".join(json.dumps(e) for e in [
+        {"type": "user", "message": {"role": "user", "content": "Plan my dinner"}},
+        {"type": "assistant", "message": {"role": "assistant", "content": [
+            {"type": "text", "text": "Order your usual fried chicken."},
+            {"type": "tool_use", "name": "x", "input": {}}]}},
+        {"type": "system", "content": "noise"},
+    ]) + "\n")
+    call({"prompt_text": "No, on weekends I want somewhere new", "session_id": "s-1",
+          "transcript_path": str(transcript)}, url, cfg={"capture": True}, tmp=tmp_path)
+    for _ in range(30):
+        if [p for p, *_ in seen if p == "/api/memories"]:
+            break
+        time.sleep(0.1)
+    (saved,) = [b for p, b, _ in seen if p == "/api/memories"]
+    assert saved == {"text": "No, on weekends I want somewhere new",
+                     "prior_answer": "Order your usual fried chicken.", "episode": "s-1"}
+
+
+def test_last_assistant_reply_handles_missing_and_odd_transcripts(tmp_path):
+    assert hook.last_assistant_reply(None) == ""
+    assert hook.last_assistant_reply(str(tmp_path / "missing.jsonl")) == ""
+    t = tmp_path / "t.jsonl"
+    t.write_text('not json\n{"type": "assistant", "message": {"content": "plain string"}}\n')
+    assert hook.last_assistant_reply(str(t)) == "plain string"
+
+
+def test_capture_finds_the_project_config_without_any_environment(server, tmp_path):
+    """Muse Code clears the environment: the background capture must still reach the
+    url in the project's config, not the default."""
+    url, seen = server
+    proj = tmp_path / "proj"
+    (proj / ".muse").mkdir(parents=True)
+    (proj / ".muse" / "mirror-hook.json").write_text(json.dumps({"url": url, "capture": True}))
+    subprocess.run([sys.executable, str(HOOK)], text=True, capture_output=True, timeout=20,
+                   env={"PATH": "/usr/bin:/bin", "HOME": str(tmp_path)},
+                   input=json.dumps({"prompt": "I always pick the quiet table", "cwd": str(proj)}))
+    for _ in range(30):
+        if [p for p, *_ in seen if p == "/api/memories"]:
+            break
+        time.sleep(0.1)
+    assert [b for p, b, _ in seen if p == "/api/memories"] == [
+        {"text": "I always pick the quiet table"}]

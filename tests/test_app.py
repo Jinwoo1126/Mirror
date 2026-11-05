@@ -151,3 +151,33 @@ def test_gate_drops_items_far_behind_the_best_and_caps_the_count():
     kept = app_mod.gate_by_relevance(items, matched=False, hybrid=True)
     assert len(kept) == app_mod.MAX_ITEMS and "far" not in [i["id"] for i in kept]
     assert [i["id"] for i in kept] == ["0", "1", "2", "3", "4"]   # best first
+
+
+def test_retrieve_for_outside_callers_keeps_conditions(client):
+    from mirror import schema
+    store = app_mod.get_store()
+    store.add_hypothesis(schema.Hypothesis(
+        id="hyp-cond", statement="피곤한 저녁에는 익숙한 배달을 고른다",
+        conditions=["피곤한 저녁"], status=schema.STATUS_ACTIVE, domain="food"))
+    store.bump_revision()
+    items = client.post("/api/retrieve", json={"request": "피곤한 저녁에 뭐 먹지"}).json()["items"]
+    item = next(i for i in items if i["id"] == "hyp-cond")
+    assert item["conditions"] == ["피곤한 저녁"] and item["domain"] == "food"
+    assert item["status"] == "active" and "counter_examples" in item
+
+
+def test_memories_endpoint_passes_the_episode_and_prior_answer(client, monkeypatch):
+    seen = {}
+    real = app_mod.observe_mod.observe
+
+    def spy(store, extractor, source_id, event, base_revision):
+        seen.update(event)
+        return real(store, extractor, source_id, event, base_revision)
+
+    monkeypatch.setattr(app_mod.observe_mod, "observe", spy)
+    res = client.post("/api/memories", json={
+        "text": "아니, 주말엔 새로운 데 가고 싶어", "episode": "s-9",
+        "prior_answer": "늘 가던 치킨집 시키세요", "ignored": "x"})
+    assert res.status_code == 200 and res.json()["ok"]
+    assert seen["episode"] == "s-9" and seen["prior_answer"] == "늘 가던 치킨집 시키세요"
+    assert "ignored" not in seen

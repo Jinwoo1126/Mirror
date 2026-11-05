@@ -148,6 +148,16 @@ Full details, the MCP and gateway setup, and the cloud-agent notes are in [`docs
                                                                     2 distinct days with no contradiction
 ```
 
+**Learning from corrections.** A new memory can name an existing hypothesis by its id, so the
+evidence lands on it even when the words differ. When an experience shows where a hypothesis
+stops holding, Mirror narrows it: the condition is added, with the memory as its evidence, and it
+stays in use. When a contrary experience has no such explanation, an active hypothesis goes back
+to candidate. A hook or MCP client can send the assistant's reply the person is correcting as
+`prior_answer`; it is read as context and never stored as the person's words. Whatever is handed
+to another AI keeps its status, conditions and contrary evidence, together with the reply
+guidance in `engine/skills/mirror-use`. The guidance came from the team handoff; see
+[`engine/README.md`](engine/README.md) for what is wired and what is not.
+
 <details>
 <summary><b>Where things live</b></summary>
 
@@ -170,7 +180,9 @@ mirror/
   edge.py                     MCP, plain HTTP and the OpenAI-compatible gateway
   app.py static/app.html      the web app
   pg_store.py auth.py tokens.py worker.py privacy.py    the hosted version (see below)
+  delivery.py                 how a hypothesis is written for another AI (hook, MCP, gateway)
 integrations/claude_code/     the hook for Claude Code and Muse Code, and a Muse Code skill
+engine/skills/                the understanding guidance (select, form, check-revise, mirror-use)
 supabase/                     migrations for the hosted version
 Dockerfile.local docker-compose.yml     the containers above
 data/demo/ data/demo2/        two made-up users: observations, a ready database, their characters

@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 MIRROR_MODEL_DIR=/models
 WORKDIR /app
 COPY pyproject.toml ./
 COPY mirror ./mirror
+COPY engine ./engine
 # Kuzu's file format is tied to its version: keep this equal to the version that made the
 # databases in data/*/ (see `python -c "import kuzu; print(kuzu.__version__)"`).
 ARG KUZU_VERSION=0.11.3

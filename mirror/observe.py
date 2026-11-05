@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 
 from . import extract as ex
@@ -33,6 +34,7 @@ class ObserveResult:
     edges_added: int = 0
     reused_nodes: int = 0
     skipped_blocked: list[str] = field(default_factory=list)
+    revised: list[str] = field(default_factory=list)   # what changed in existing hypotheses
     error: str = ""
 
 
@@ -58,7 +60,12 @@ def observe(
 ) -> ObserveResult:
     """관찰 1건을 그래프에 반영.
 
-    event: {"text": 필수, "occurred_at"?, "raw_ref"?, "visibility"?}
+    event: {"text": 필수, "occurred_at"?, "raw_ref"?, "visibility"?,
+            "episode"?, "prior_answer"?}
+
+    prior_answer is the assistant's reply the person is reacting to. The extractor reads it
+    as context, and it is kept in raw_ref with the episode id so the correction can be
+    traced back to what it corrected. It is never stored as the person's words.
     """
     revision = store.get_revision()
     if base_revision != revision:
@@ -78,20 +85,29 @@ def observe(
             ok=True, revision=revision, obs_id=existing.id, duplicate=True
         )
 
+    prior_answer = (event.get("prior_answer") or "").strip()[:2000]
+    episode = (event.get("episode") or "").strip()
+    raw_ref = event.get("raw_ref", "")
+    if prior_answer or episode:
+        raw_ref = json.dumps({"episode": episode, "prior_answer": prior_answer,
+                              **({"ref": raw_ref} if raw_ref else {})}, ensure_ascii=False)
     obs_in = ex.ObservationInput(
         source_id=source_id, text=text,
         occurred_at=event.get("occurred_at") or schema.utcnow_iso(),
-        raw_ref=event.get("raw_ref", ""),
+        raw_ref=raw_ref,
         visibility=event.get("visibility", "private"),
+        prior_answer=prior_answer,
     )
+    catalog = store.hypothesis_catalog()
+    known_ids = {h["id"] for h in catalog}
     try:
         if hasattr(extractor, "known_hypotheses"):
-            # LLM 추출기가 같은 뜻의 가설 문구를 재사용하도록 기존 가설을 알려준다
-            extractor.known_hypotheses = store.hypothesis_statements()
+            # 기존 가설을 id와 함께 알려줘서, 같은 뜻이면 새로 쓰지 않고 그 가설에 근거를 잇게 한다
+            extractor.known_hypotheses = catalog
         result = extractor.extract(obs_in)
     except (ex.ExtractionError, ex.NotConfigured) as e:
         return ObserveResult(ok=False, revision=revision, error=f"extract: {e}")
-    errors = ex.validate_extraction(result)
+    errors = ex.validate_extraction(result, known_ids)
     if errors:
         return ObserveResult(
             ok=False, revision=revision, error="validate: " + "; ".join(errors)
@@ -99,6 +115,8 @@ def observe(
 
     # 차단된 이해(삭제된 것의 재출현)는 저장 전에 걸러낸다.
     kinds: dict[str, str] = {"obs": OBSERVATION}
+    for hid in known_ids:
+        kinds[ex.EXISTING + hid] = HYPOTHESIS
     for node in result.nodes:
         kinds[node.ref] = node.kind
     dropped: set[str] = set()
@@ -128,7 +146,7 @@ def observe(
         visibility=obs_in.visibility,
     )
     store.add_observation(obs)
-    refmap = {"obs": obs.id}
+    refmap = {"obs": obs.id, **{ex.EXISTING + hid: hid for hid in known_ids}}
     nodes_added = 1
     reused_nodes = 0
 
@@ -215,9 +233,52 @@ def observe(
         ))
         edges_added += 1
 
+    revised = _revise_existing(store, result, live_edges, refmap, obs.id)
+
     revision = store.bump_revision()
     return ObserveResult(
         ok=True, revision=revision, obs_id=obs.id,
         nodes_added=nodes_added, edges_added=edges_added,
-        reused_nodes=reused_nodes, skipped_blocked=skipped,
+        reused_nodes=reused_nodes, skipped_blocked=skipped, revised=revised,
     )
+
+
+def _revise_existing(store: MirrorStore, result: ex.ExtractionResult, edges: list,
+                     refmap: dict[str, str], obs_id: str) -> list[str]:
+    """Check and revise hypotheses the new experience bears on (engine/skills check-revise).
+
+    narrow: the scene shows where the hypothesis holds, so the condition is added, with a
+            Context node and a CONDITIONED_ON edge whose evidence is this observation.
+    hold:   an active hypothesis meets a contrary experience that no narrowing explains,
+            so it goes back to candidate. Promotion skips a hypothesis with a
+            contradiction, so it stays there until a narrowing or the person settles it.
+    """
+    notes: list[str] = []
+    narrowed: set[str] = set()
+    for rev in result.revisions:
+        hid = refmap.get(rev.hypothesis_ref)
+        hyp = store.get_hypothesis(hid) if hid else None
+        if hyp is None:
+            continue
+        cond = " ".join(rev.condition.split())
+        if cond not in hyp.conditions:
+            store.set_hypothesis_conditions(hid, hyp.conditions + [cond])
+        ctx_id = store.find_context("condition", cond)
+        if ctx_id is None:
+            ctx_id = schema.new_id("ctx")
+            store.add_context(schema.Context(id=ctx_id, kind="condition", value=cond))
+        store.add_edge(schema.Edge(
+            rel="CONDITIONED_ON", from_kind=HYPOTHESIS, from_id=hid,
+            to_kind=CONTEXT, to_id=ctx_id, evidence=obs_id))
+        narrowed.add(hid)
+        notes.append(f"narrowed {hid}: {cond}")
+    for edge in edges:
+        if edge.rel != "CONTRADICTS":
+            continue
+        hid = refmap.get(edge.to_ref)
+        hyp = store.get_hypothesis(hid) if hid else None
+        if hyp is None or hyp.status != schema.STATUS_ACTIVE or hid in narrowed:
+            continue
+        store.set_hypothesis_status(hid, schema.STATUS_CANDIDATE)
+        notes.append(f"held back {hid}: contrary experience")
+    return notes

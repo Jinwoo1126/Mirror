@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use Mirror"
+  short_description: "Use Mirror’s understanding to guide personal decisions"
+  default_prompt: "Use $mirror-use to tailor this task to the user using the supplied Mirror context."

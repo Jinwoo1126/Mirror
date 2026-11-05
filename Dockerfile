@@ -10,6 +10,7 @@ RUN pip install "starlette>=0.40" "uvicorn>=0.30" "httpx>=0.27" "mcp>=1.0" \
 
 COPY pyproject.toml ./
 COPY mirror ./mirror
+COPY engine ./engine
 RUN pip install --no-deps .
 
 RUN useradd --create-home app
